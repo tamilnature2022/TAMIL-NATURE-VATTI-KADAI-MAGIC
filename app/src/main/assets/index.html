@@ -1,181 +1,92 @@
 <!doctype html>
-<!-- Tamil Nature Vattikadai Magic Version 13 | Full standalone offline app -->
 <html lang="ta">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#102a43">
-<title>Tamil Nature Vattikadai Magic - Version 13</title>
+<title>Tamil Nature Vattikadai Magic</title>
 <style>
-:root{--navy:#102a43;--teal:#087e8b;--gold:#d6a84f;--bg:#f3f6f8;--ink:#172b4d;--muted:#62748a}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans Tamil",sans-serif}
-header{background:linear-gradient(135deg,#102a43,#087e8b);color:#fff;padding:27px 18px 23px;border-radius:0 0 24px 24px}
-.wrap{max-width:800px;margin:auto;padding:0 16px}header .eyebrow{font-size:12px;letter-spacing:2px;opacity:.8}h1{font-size:23px;margin:8px 0}header p{margin:0;color:#e1edf2;font-size:14px}
-main{padding:18px 0 36px}.panel{background:white;border-radius:18px;padding:17px;margin:13px 0;box-shadow:0 5px 20px #17324d0d}
-label{display:block;font-weight:650;margin-bottom:8px}.entry{display:flex;gap:8px}input{width:100%;min-width:0;padding:13px;border:1px solid #cbd5df;border-radius:12px;font-size:17px;outline-color:var(--teal)}
-button{border:0;border-radius:12px;padding:12px 16px;background:var(--teal);color:white;font-size:14px;font-weight:700;cursor:pointer}
-.hint,.muted{font-size:12px;color:var(--muted);line-height:1.55}.error{color:#b42318;font-size:13px;margin-top:8px}
-h2{font-size:18px;margin:0 0 13px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-.result{border:1px solid #e3eaf0;border-radius:13px;padding:12px;background:#fbfdfe;cursor:pointer;text-align:left;width:100%;color:inherit}.result:focus{outline:2px solid var(--teal);outline-offset:2px}
-.result .name{font-size:12px;color:var(--muted)}.result .num{font-size:25px;font-weight:800;color:var(--navy);margin:3px 0}
-.result .desc{font-size:11px;color:var(--muted);line-height:1.45}
-.bookitem{border-top:1px solid #e8edf2;padding:12px 0}.bookitem:first-of-type{border-top:0}
-.bookhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.booknum{font-weight:800;color:var(--navy);font-size:18px}
-.tag{font-size:10px;padding:4px 7px;border-radius:99px;background:#fff2d6;color:#79530c;white-space:nowrap}
-.booktext{font-size:14px;line-height:1.65;margin-top:7px;white-space:pre-wrap}
-.searchrow{display:flex;gap:8px}.searchrow input{font-size:15px}
-footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
-@media(min-width:600px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-</style></head>
+:root{--navy:#102a43;--teal:#087e8b;--bg:#f3f6f8;--ink:#172b4d;--muted:#62748a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans Tamil",sans-serif}
+header{background:linear-gradient(135deg,#102a43,#087e8b);color:white;padding:28px 18px 24px;border-radius:0 0 26px 26px}
+.wrap{max-width:760px;margin:auto;padding:0 16px}
+.eyebrow{font-size:12px;letter-spacing:1.5px;opacity:.85}
+h1{font-size:25px;line-height:1.25;margin:9px 0}
+header p{margin:0;color:#e1edf2;font-size:15px}
+main{padding:18px 0 32px}
+.panel{background:white;border-radius:20px;padding:20px;margin:14px 0;box-shadow:0 5px 20px #17324d0d}
+label{display:block;font-weight:700;font-size:19px;margin-bottom:12px}
+.entry{display:flex;gap:10px}
+input{width:100%;min-width:0;padding:15px;border:1.5px solid #cbd5df;border-radius:14px;font-size:21px;outline-color:var(--teal)}
+button{border:0;border-radius:14px;padding:14px 18px;background:var(--teal);color:white;font-size:18px;font-weight:750;white-space:nowrap}
+.hint,.error{font-size:14px;line-height:1.6;color:var(--muted);margin:12px 0 0}
+.error{color:#b42318}
+#results{display:none}
+h2{font-size:21px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.card{background:#f8fbfc;border:1px solid #dfe8ee;border-radius:16px;padding:15px}
+.card .name{font-size:14px;color:var(--muted);line-height:1.45;font-weight:650}
+.card .number{font-size:34px;font-weight:850;color:var(--navy);margin-top:5px}
+.total{background:#e8f5f5;border-color:#b9dfe0}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:10px 0 25px}
+@media(max-width:420px){.entry{gap:7px}button{padding:12px 13px;font-size:16px}.grid{gap:8px}.card{padding:12px}.card .number{font-size:30px}}
+</style>
+</head>
 <body>
-<header><div class="wrap"><div class="eyebrow">TAMIL NATURE • NUMEROLOGY • VERSION 13</div><h1>TAMIL NATURE<br>VATTIKADAI MAGIC</h1><p>Rajanilai Numerology • Mobile Number Analysis</p></div></header>
+<header><div class="wrap">
+<div class="eyebrow">TAMIL NATURE • VERSION 14</div>
+<h1>TAMIL NATURE<br>VATTIKADAI MAGIC</h1>
+<p>ராஜநிலை எண் கணக்கீடு / Mobile Number Calculation</p>
+</div></header>
 <main class="wrap">
 <section class="panel">
 <label for="mobile">மொபைல் எண் / Mobile Number</label>
-<div class="entry"><input id="mobile" inputmode="numeric" maxlength="16" placeholder="9087417333"><button id="analyze">கணக்கிடு</button></div>
-<p class="hint">+91 உள்ளிட்டாலும் பரவாயில்லை. கடைசி 10 இலக்கங்கள் மட்டும் கணக்கில் எடுத்துக்கொள்ளப்படும்.</p><div id="error" class="error"></div>
+<div class="entry">
+<input id="mobile" type="tel" inputmode="numeric" maxlength="16" placeholder="9087417333" autocomplete="off">
+<button id="calculate" type="button">கணக்கிடு</button>
+</div>
+<p class="hint">+91 உள்ளிட்டாலும் பரவாயில்லை. கடைசி 10 இலக்கங்கள் மட்டும் கணக்கிடப்படும்.</p>
+<div id="error" class="error" role="alert"></div>
 </section>
-<section class="panel" id="output" hidden>
-<h2>ஆறு பிரிவுகளின் முடிவுகள் / Six Sections</h2>
+<section class="panel" id="results" aria-live="polite">
+<h2>கணக்கீட்டு முடிவுகள்</h2>
 <div class="grid" id="cards"></div>
-<div id="allpredictions" style="margin-top:18px"></div>
 </section>
-<section class="panel"><h2>எண் பலன் தேடல் / Number Result Lookup</h2><p class="muted">மேலே கணக்கிட்ட ஆறு எண்களில் ஏதேனும் ஒன்றைத் தொட்டால் அதன் பலன் இங்கே திறக்கும்.</p>
-<div class="searchrow"><input id="lookup" type="number" min="1" max="99" placeholder="1 முதல் 99 வரை"><button id="find">தேடு</button></div>
-<div id="bookresult" style="margin-top:12px"></div>
-</section>
-<section class="panel"><h2>தரவுத்தள நிலை / Database Status</h2>
-<p class="muted">1–99 எண்களுக்கான பதிவுகள் அமைக்கப்பட்டுள்ளன. கிடைத்த முந்தைய குறிப்புகளிலிருந்து சில எண்களுக்கு தேடல் தலைப்புகள் சேர்க்கப்பட்டுள்ளன; அவை அசல் புத்தகத்தின் முழு உரை அல்ல. சில பக்கங்களுக்கு படம் கிடைத்துள்ளது, ஆனால் துல்லியமான உரை இன்னும் பதிவு செய்யப்படவில்லை. அசல் புத்தக உரை சரிபார்த்த பிறகே உறுதிப்படுத்தப்படும். சரிபார்க்கப்படாத எண்களுக்கு பலன் கற்பனை செய்து காட்டப்படாது.</p>
-<p class="muted"><b>83 — பயனர் வழங்கிய குறிப்பு:</b> புத்தக உரை என்று அல்ல; தனியாக வழங்கிய குறிப்பாகவே சேமிக்கப்பட்டுள்ளது.</p>
-</section></main>
-<footer class="wrap">TamilNatureShanmugam • Prototype v12</footer>
+</main>
+<footer class="wrap">TamilNatureShanmugam</footer>
 <script>
-const book = {};
-for(let n=1;n<=99;n++) book[n]={status:"pending",english:"",tamil:"",source:""};
-book[1]={status:"provisional",english:"No Fruitful Prediction",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[2]={status:"provisional",english:"Overall Profit, Winning Instinct",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[3]={status:"provisional",english:"Nothing Will Remain in Rolling",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[4]={status:"provisional",english:"Overall Profit",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[5]={status:"provisional",english:"Balanced Situation",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[6]={status:"provisional",english:"Development in Business",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[7]={status:"provisional",english:"Loss of Money",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[8]={status:"provisional",english:"Good Will Happen",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[9]={status:"provisional",english:"Will Have to Beg",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[10]={status:"provisional",english:"All Good Things Will Happen",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[11]={status:"provisional",english:"No Development in Business",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[12]={status:"provisional",english:"Development in Business",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[13]={status:"provisional",english:"Disappointment in Expectation",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[14]={status:"provisional",english:"Will Get Benefited",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[15]={status:"provisional",english:"Loss of Things",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[16]={status:"provisional",english:"Overall Profit",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[17]={status:"provisional",english:"Lots of Trials / Tests",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[18]={status:"provisional",english:"All Goes Waste",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[19]={status:"provisional",english:"Both Good and Bad Will Happen",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[20]={status:"provisional",english:"Sudden Luck",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[21]={status:"provisional",english:"Beginning Good, End Disappointment",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[22]={status:"provisional",english:"All Is Well",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[23]={status:"provisional",english:"Unwanted Expenses",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[24]={status:"provisional",english:"Overall Only Loans Will Remain",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[25]={status:"provisional",english:"Money Will Not Remain",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[26]={status:"provisional",english:"Treasure of Poems",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[27]={status:"provisional",english:"Unwanted / Unnecessary Expenses",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[28]={status:"provisional",english:"Will Have Disappointment",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[29]={status:"provisional",english:"Can Have a Dairy Farm",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[30]={status:"provisional",english:"Good for Godown",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[31]={status:"provisional",english:"No Money",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[32]={status:"provisional",english:"Will Regain All Lost Things",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[33]={status:"provisional",english:"Lots of Good Things Will Happen",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[34]={status:"provisional",english:"No Permanent House",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[35]={status:"provisional",english:"Goddess of Wealth",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[36]={status:"provisional",english:"Will Be Brave",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[37]={status:"provisional",english:"New Energy – New Business",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[38]={status:"provisional",english:"Only Loans Will Remain",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[39]={status:"provisional",english:"Lots of Honour",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[40]={status:"provisional",english:"Will Be Worried",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[41]={status:"provisional",english:"Fantastic Blessings",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[42]={status:"provisional",english:"Blessings of Goddess of Wealth",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[43]={status:"provisional",english:"Bad",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[44]={status:"provisional",english:"Eyes Will Be There But No Sight",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[45]={status:"provisional",english:"Will Have Children",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[46]={status:"provisional",english:"Only Evil Will Prevail",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[47]={status:"provisional",english:"No Permanent House",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[48]={status:"provisional",english:"Problems Like Fire",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[49]={status:"provisional",english:"Will Be Bad for Owner",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[50]={status:"provisional",english:"Will Have Fear",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[51]={status:"provisional",english:"Sudden Improvement / Development",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[52]={status:"provisional",english:"Good Will Happen",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[53]={status:"provisional",english:"Will Incur Expenses With Money",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[54]={status:"provisional",english:"Will Have a Kingdom",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[55]={status:"provisional",english:"Will Have Enemies Within the Family",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[56]={status:"provisional",english:"Good Will Happen",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[57]={status:"provisional",english:"Will Not Have Children",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[58]={status:"provisional",english:"Will Make You Poor",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[59]={status:"provisional",english:"Will Have Lots of Worries",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[60]={status:"provisional",english:"Will Develop",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[61]={status:"provisional",english:"Will Fight With Others and Will Have Loans",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[62]={status:"provisional",english:"Will Be Suffering From Poverty",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[63]={status:"provisional",english:"Beginning Good, Loss at the End",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[64]={status:"provisional",english:"Will Be Like a King",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[65]={status:"provisional",english:"Will Be Doomed by Lady and Money Will Be Lost",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[66]={status:"provisional",english:"WILL BE BLESSED WITH CHILDREN",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[67]={status:"provisional",english:"WILL BE DISAPPOINTED AND NOT HAPPY",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[68]={status:"provisional",english:"WILL HAVE GOD’S BLESSINGS",tamil:"",source:"முன்னைய பக்கக் குறிப்பிலிருந்து தயாரிக்கப்பட்ட குறியீட்டுத் தலைப்பு; புத்தகத்தின் முழு அசல் உரையாகக் கருத வேண்டாம்."};
-book[69]={status:"transcribed",english:"WILL SUFFER AS IN FIRE",tamil:"",fullEnglish:"IT WILL SEEM AS IF THERE IS DEVELOPMENT IN EVERYTHING, BUT AT THE END EVERYONE WILL CHEAT YOU. WILL HAVE TO INCUR UNWANTED EXPENSES. WILL BE BENEFITED BY COURT AND PANCHAYAT CASES. BUT WHATEVER EFFORTS ARE PUT, IT WILL BE LIKE PUTTING THEM IN FIRE.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை; விளிம்பு/படத் தெளிவால் சிறிய OCR/வாசிப்பு பிழைகள் இருக்கலாம்."};
-book[70]={status:"transcribed",english:"WILL BE HELPFUL TO OTHERS",tamil:"",fullEnglish:"WILL BE TRUTHFUL TO EVERYONE. WILL GAIN POPULARITY. WHENEVER MONEY IS REQUIRED, WILL ACQUIRE LOAN. WILL PUT GUARANTOR SIGNATURE FOR OTHERS AND HELP EVERYONE. WILL BE BURDENED BY LOANS.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை; விளிம்பு/படத் தெளிவால் சிறிய OCR/வாசிப்பு பிழைகள் இருக்கலாம்."};
-book[71]={status:"transcribed",english:"WILL GET RICH PERSON’S HELP",tamil:"",fullEnglish:"WITH YOUR EFFORTS, YOU WILL GET RICH PERSON’S SUPPORT. FANTASTIC STATUS. WILL BE LUCKY TO PURCHASE A VEHICLE. WILL BENEFIT IN ALL WAYS. BUT NOTHING WILL REMAIN. WILL BE DISAPPOINTED AT THE END, ONLY OTHERS WILL BE BENEFITED. WILL HAVE TO PERFORM YOUR DUTY WELL WITH MD, HIGHER OFFICIALS AS WELL AS POOR PERSONS.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை; விளிம்பு/படத் தெளிவால் சிறிய OCR/வாசிப்பு பிழைகள் இருக்கலாம்."};
-book[72]={status:"transcribed",english:"VERY LUCKY",tamil:"",fullEnglish:"FROM BEGINNING TILL END, IT WILL BE FANTASTIC. WILL HAVE A GOOD STATUS. GOOD DEVELOPMENT. WILL HAVE GOOD PROFITS AND LOTS OF MONEY. WILL NOT SUFFER ANY LOSSES. FROM THE BEGINNING ITSELF WILL BE LUCKY TO BE AN OWNER/MD. WILL HAVE PROFITS WITH REGARD TO LAND, MACHINERY, JEWELLERY. WILL GET EVERYTHING, IF HIS/HER DUTY IS PERFORMED WELL.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை; விளிம்பு/படத் தெளிவால் சிறிய OCR/வாசிப்பு பிழைகள் இருக்கலாம்."};
-book[73]={status:"transcribed",english:"LUCKY TO PURCHASE A VEHICLE",tamil:"",fullEnglish:"DEVELOPMENT IN BUSINESS. PROFIT IN MONEY. HAPPINESS IN ALL WAYS. WILL BE LUCKY TO BE LIKE A OWNER/MD. WILL BE LUCKY WITH VEHICLE. MONEY WILL COME IN VARIOUS WAYS AND THERE WILL BE NO SHORTAGE FOR MONEY.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[74]={status:"transcribed",english:"WILL GAIN POPULARITY",tamil:"",fullEnglish:"WILL GAIN FAME AND POPULARITY IN ALL WAYS. DEVELOPMENT IN BUSINESS. WILL BE LUCKY IN ALL WAYS. GOOD FORTUNE IN ALL WAYS.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[75]={status:"transcribed",english:"LOANS WILL NOT GET CLOSED",tamil:"",fullEnglish:"WILL INCUR LOSSES DAILY BE IT IN BUSINESS OR ANY OTHER EFFORT TAKEN. THE END WILL BE VERY VERY BAD IN ALL THE WAYS. LOANS WILL NOT GET CLOSED. WILL HAVE ENMITY WITH NEIGHBOURS BUT WILL HAVE SUPPORT FROM BIG PEOPLE. STATUS WILL DEVELOP.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[79]={status:"transcribed",english:"HUGE POPULARITY",tamil:"",fullEnglish:"WILL DO WHOLESALE BUSINESS. CAN DO SHIPPING BUSINESS. LOTS OF DEVELOPMENT. WILL GET DIFFERENT TYPES OF CONTRACT. FANTASTIC PROFIT. GOOD DEVELOPMENT. THERE WILL BE SAVINGS IN ALL AREAS. WILL WIN IN ALL WAYS AND PROFIT WILL BE THERE.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[80]={status:"transcribed",english:"FORTUNE FOR FULL DEVELOPMENT",tamil:"",fullEnglish:"GODDESS OF WEALTH WILL BE WITH THIS PERSON. WILL HAVE A VEHICLE. THERE WILL BE PROFIT IN EVERYTHING. THERE WILL BE GOOD DEVELOPMENT. WILL REGAIN LOST STATUS. HAS THE GOOD FORTUNE TO GAIN POPULARITY IN BUSINESS.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[81]={status:"transcribed",english:"BALANCED LIFE",tamil:"",fullEnglish:"NO FORTUNE FOR TRUTH AND STRAIGHTFORWARDNESS. WILL BE GOOD ONLY IF YOU DO ILLEGAL THINGS. WILL BE AFRAID. WILL BE HARMFUL TO OWNERS AND BOSSES OR WILL BE AFRAID OF DEATH. BEGINNING WILL BE GOOD, BUT THE END IN ALL AREAS WILL BE BAD. DOING YOUR DUTY IS IMPORTANT.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[82]={status:"transcribed",english:"POOR",tamil:"",fullEnglish:"WILL BECOME A CROREPATI, IF NOT, WILL LOSE EVERYTHING AND BECOME VERY POOR. IF LIVING IN A BIG HOUSE, THEN GOOD FORTUNE TO BECOME A CROREPATI. IF LIVING IN A SMALL HOUSE, THERE IS NO GOOD FORTUNE.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[84]={status:"transcribed",english:"WILL BE POPULAR",tamil:"",fullEnglish:"ALL IS WELL. WILL DO BIG ADMINISTRATION. WILL HAVE SMALL FORTUNE. BUT CANNOT GO AS PER THE CALCULATION OF 7 FEET IN THE HOUSE WHICH HE/SHE IS STAYING. BAD FORTUNE CAN BE SEEN.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[85]={status:"transcribed",english:"LOTS OF MONEY",tamil:"",fullEnglish:"HAS THE FORTUNE TO BE A KING. DEVELOPMENT IN BUSINESS. WILL GAIN POPULARITY. HAS THE POWER TO MAKE A POOR PERSON, RICH. HAS THE POWER TO DO A GOOD ADMINISTRATION. WILL BE LUCKY TO MANAGE EVERYTHING.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[86]={status:"transcribed",english:"BALANCED LIFE",tamil:"",fullEnglish:"NO FORTUNE FOR DEVELOPMENT. WILL INDULGE IN LOTS OF TROUBLE. GOOD CAN HAPPEN. AT THE END, THERE WILL BE DISAPPOINTMENT. UNWANTED LOSSES. HEAVY LOANS. NO DEVELOPMENT IN BUSINESS.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[87]={status:"transcribed",english:"HAS THE FORTUNE TO BUILD HOUSE",tamil:"",fullEnglish:"THE RESULTS ARE NORMAL. AT THE END THERE WILL BE HUGE DEVELOPMENT, HUGE PROFIT, WILL BUY VEHICLE. WILL GET A TREASURE. ALSO HAS THE FORTUNE OF BUILDING MORE AND MORE HOUSES.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[88]={status:"transcribed",english:"LOTS OF GOOD FORTUNE",tamil:"",fullEnglish:"HAS THE FORTUNE TO BE A LAKHPATHI. WILL GET POPULARITY. BEGINNING WILL BE NORMAL. THE END, THERE WILL BE FANTASTIC PROGRESS, HAPPINESS, WIN, DEVELOPMENT WILL ALWAYS BE THERE. WILL BE OWNER OF LAKHS OF MONEY.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[89]={status:"transcribed",english:"HAS THE FORTUNE TO BUILD HOUSES",tamil:"",fullEnglish:"HAS FULL BLESSINGS OF GODDESS OF WEALTH. ALL THE WORK WILL BE SUCCESSFUL. DEVELOPMENT IN BUSINESS. HAS THE FORTUNE TO BUILD MORE AND MORE HOUSES. THERE WILL BE NO SHORTAGE OF MONEY. IMMOVABLE PROPERTIES WILL ACCUMULATE.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[90]={status:"transcribed",english:"CAN HAVE A DAIRY FARM",tamil:"",fullEnglish:"WILL GET ALL HAPPINESS. FANTASTIC SITUATION. BEGINNING IS NORMAL. BUT AT THE END, THERE WILL BE DEVELOPMENT. WILL BE GOOD IF YOU WORK PER YOUR DUTY.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்ட English உரை."};
-book[91]={status:"transcribed",english:"WILL BE VERY POOR",tamil:"",fullEnglish:"BEGINNING WILL BE GOOD. BUT AT THE END, ONLY [UNCLEAR IN PHOTO] AND POPULARITY WILL REMAIN. MONEY WILL NOT REMAIN. WILL MAKE YOU POOR. WILL GET NAME AS SCHOLAR.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; படத்தில் வெட்டுப்பட்ட/தெளிவில்லாத இடங்கள் [குறிப்பு] எனக் காட்டப்பட்டுள்ளன."};
-book[92]={status:"transcribed",english:"LOTS OF WEALTH",tamil:"",fullEnglish:"GOOD WILL HAPPEN FOR EVERYONE. BEGINNING WILL BE NORMAL. BUT AT THE END, THERE WILL BE DEVELOPMENT IN BUSINESS, DEVELOPMENT IN PURCHASE OF IMMOVABLE PROPERTIES. IF ONE DOES IS DUTY, WILL BE BENEFITED TO THE MAXIMUM EXTENT.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; படத்தில் வெட்டுப்பட்ட/தெளிவில்லாத இடங்கள் [குறிப்பு] எனக் காட்டப்பட்டுள்ளன."};
-book[93]={status:"transcribed",english:"WILL BE VERY RICH",tamil:"",fullEnglish:"HAVE GOOD FORTUNE TO BUY VEHICLE. GOOD RESULT. DEVELOPMENT IN BUSINESS. HUGE ADMINISTRATION. HUGE AMOUNT OF MONEY WILL REVEAL. EVEN THOUGH ENEMIES WILL EMERGE, WILL HAVE THE COURAGE TO OVERCOME/WIN THEM.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; படத்தில் வெட்டுப்பட்ட/தெளிவில்லாத இடங்கள் [குறிப்பு] எனக் காட்டப்பட்டுள்ளன."};
-book[94]={status:"transcribed",english:"WILL GO TO FOREIGN COUNTRY",tamil:"",fullEnglish:"EVERYONE HERE HAVE TO STRIVE HARD, BUT WILL NOT ACHIEVE THE DESIRED RESULTS. THERE WILL BE DISAPPOINTMENT. LOSS OF MONEY. BUT THERE IS NO RISK TO LIFE. SINCE THERE IS NO FORTUNE AS REGARDS MONEY, IF THERE IS GOOD FORTUNE IN OTHER THINGS, WILL HAVE CHANCE TO GO TO A FOREIGN COUNTRY.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; படத்தில் வெட்டுப்பட்ட/தெளிவில்லாத இடங்கள் [குறிப்பு] எனக் காட்டப்பட்டுள்ளன."};
-book[95]={status:"transcribed",english:"WILL HAVE LOTS OF MONEY",tamil:"",fullEnglish:"WILL HAVE INFLUENCE IN RULING A KINGDOM. NO [LEFT EDGE OF PHOTO CUT OFF] OR EVIL WILL HAPPEN. ALL GOOD THINGS WILL COME ON ITS OWN. BEGINNING WILL BE NORMAL. BUT AT THE END, LOTS OF DEVELOPMENT WILL HAPPEN. IF ONE DOES IS DUTY, WILL BE BENEFITTED TO THE MAXIMUM EXTENT.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; படத்தில் வெட்டுப்பட்ட/தெளிவில்லாத இடங்கள் [குறிப்பு] எனக் காட்டப்பட்டுள்ளன."};
-book[96]={status:"transcribed",english:"HATRED AMONGST FRIENDS",tamil:"",fullEnglish:"IT WILL SEEM AS IF BEGINNING IS LUCKY, BUT THE END WILL SUFFER FROM LOSSES. EVERYTHING WILL END UP IN DISAPPOINTMENT. WILL SUFFER FROM COURT CASES. BAD FORTUNE. WILL BE HATED BY FRIENDS.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; வெட்டுப்பட்ட பகுதி இருந்தால் தனியாகக் குறிக்கப்பட்டுள்ளது."};
-book[97]={status:"transcribed",english:"SHIP BUSINESS",tamil:"",fullEnglish:"WORK IN SHIP WILL BE GOOD FOR DEVELOPMENT. WILL BE LUCKY TO HAVE LOTS OF MONEY. EVEN A POOR PERSON WILL BECOME RICH.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; வெட்டுப்பட்ட பகுதி இருந்தால் தனியாகக் குறிக்கப்பட்டுள்ளது."};
-book[98]={status:"transcribed",english:"BALANCED LIFE",tamil:"",fullEnglish:"NO DEVELOPMENT IN ALL THE AREAS. WILL SUFFER FROM LOANS. WILL LIVE A TRUTHFUL LIFE BUT WITH NO RESULT. EVEN IF TRY HARD, ONLY ILLEGAL THINGS WILL DO [REMAINING TEXT CUT OFF IN PHOTO].",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; வெட்டுப்பட்ட பகுதி இருந்தால் தனியாகக் குறிக்கப்பட்டுள்ளது."};
-book[99]={status:"transcribed",english:"WILL RULE A KINGDOM",tamil:"",fullEnglish:"HAVE THE FORTUNE TO RULE A KINGDOM. GOOD WILL HAPPEN IN EVERYTHING.",source:"புத்தகப் படத்திலிருந்து தட்டச்சு செய்யப்பட்டது; வெட்டுப்பட்ட பகுதி இருந்தால் தனியாகக் குறிக்கப்பட்டுள்ளது."};
-book[76]={status:"pending",english:"",tamil:"",source:"மூல உரை சரிபார்க்கப்பட வேண்டும்."};
-book[77]={status:"pending",english:"",tamil:"",source:"மூல உரை சரிபார்க்கப்பட வேண்டும்."};
-book[78]={status:"pending",english:"",tamil:"",source:"மூல உரை சரிபார்க்கப்பட வேண்டும்."};
-book[83]={status:"user_note",english:"",tamil:"மன உளைச்சல்; குடி, தலையில் அடிபடல்; 8 கண்டம்; 3 டூவீலர் சிறுதூர பயணத்தில் அடிபடல்.",source:"பயனர் வழங்கிய குறிப்பு (புத்தக உரை அல்ல)"};
-function showBook(n){
- const el=document.getElementById("bookresult");
- if(!Number.isInteger(n)||n<1||n>99){el.innerHTML='<p class="error">1 முதல் 99 வரை எண்ணை உள்ளிடவும்.</p>';return;}
- const d=book[n];
- let html=`<div class="bookitem"><div class="bookhead"><span class="booknum">எண் ${n}</span><span class="tag">${d.status==="user_note"?"USER NOTE":d.status==="transcribed"?"TEXT TRANSCRIBED":d.status==="provisional"?"INDEX SUMMARY":d.status==="page_received"?"PAGE RECEIVED":d.status==="partial"?"PARTIAL":"TEXT PENDING"}</span></div>`;
- if(d.english) html+=`<div class="booktext"><b>Original English heading:</b>\n${d.english}</div>`;
- if(d.fullEnglish) html+=`<div class="booktext"><b>English text:</b>\n${d.fullEnglish}</div>`;
- if(d.tamil) html+=`<div class="booktext"><b>தமிழ்:</b>\n${d.tamil}</div>`;
- html+=`<p class="muted">${d.source||"மூலப் புத்தக உரை இன்னும் சரிபார்க்கப்படவில்லை."}</p></div>`;
- el.innerHTML=html;
-}
-function analyze(){
+const labels = [
+ ["ஜாதகர்","முதல் இரண்டு இலக்கங்கள்"],
+ ["கணவன் / மனைவி / நண்பர்கள் / கூட்டாளிகள்","இரண்டாவது இரண்டு இலக்கங்கள்"],
+ ["தொழில் / வேலை","மூன்றாவது இரண்டு இலக்கங்கள்"],
+ ["சொத்து","நான்காவது இரண்டு இலக்கங்கள்"],
+ ["குழந்தை","ஐந்தாவது இரண்டு இலக்கங்கள்"],
+ ["குடும்பம்","மொத்தம் 10 இலக்கங்களின் கூட்டுத்தொகை"]
+];
+function calculate(){
  const raw=document.getElementById("mobile").value.replace(/\D/g,"");
- const m=raw.length>10?raw.slice(-10):raw,err=document.getElementById("error");
- if(m.length!==10){err.textContent="சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும்.";document.getElementById("output").hidden=true;return;}
- err.textContent="";
- const pairs=Array.from({length:5},(_,i)=>m.slice(i*2,i*2+2));
- const total=[...m].reduce((s,d)=>s+Number(d),0);
+ const mobile=raw.length>10?raw.slice(-10):raw;
+ const error=document.getElementById("error");
+ const results=document.getElementById("results");
+ if(mobile.length!==10){
+   error.textContent="சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும்.";
+   results.style.display="none";
+   return;
+ }
+ error.textContent="";
+ const pairs=[];
+ for(let i=0;i<10;i+=2) pairs.push(mobile.slice(i,i+2));
+ const total=[...mobile].reduce((sum,digit)=>sum+Number(digit),0);
  const values=[...pairs,String(total)];
- document.getElementById("cards").innerHTML=values.map((v,i)=>`<button type="button" class="result" data-number="${v}"><div class="name">${labels[i][0]}</div><div class="num">${v}</div><div class="desc">${labels[i][1]}<br>விளக்கத்தை கீழே பார்க்கவும்</div></button>`).join("");
- document.getElementById("allpredictions").innerHTML='<h2>பலன் விளக்கங்கள் / Predictions</h2>'+values.map((v,i)=>{const n=Number(v),d=book[n];const status=d.status==="user_note"?"USER NOTE":d.status==="transcribed"?"TEXT TRANSCRIBED":d.status==="provisional"?"INDEX SUMMARY":d.status==="page_received"?"PAGE RECEIVED":d.status==="partial"?"PARTIAL":"TEXT PENDING";return `<div class="bookitem"><div class="bookhead"><span class="booknum">${labels[i][0]} — ${v}</span><span class="tag">${status}</span></div>${d.english?`<div class="booktext"><b>Original English heading:</b>\\n${d.english}</div>`:''}${d.fullEnglish?`<div class="booktext"><b>English text:</b>\\n${d.fullEnglish}</div>`:''}${d.tamil?`<div class="booktext"><b>தமிழ்:</b>\\n${d.tamil}</div>`:''}<p class="muted">${d.source||"மூலப் புத்தக உரை இன்னும் சரிபார்க்கப்படவில்லை."}</p></div>`;}).join("");
- document.querySelectorAll("#cards [data-number]").forEach(btn=>btn.addEventListener("click",()=>{const n=Number(btn.dataset.number);document.getElementById("lookup").value=n;showBook(n);document.getElementById("bookresult").scrollIntoView({behavior:"smooth",block:"nearest"});}));
- document.getElementById("output").hidden=false;
+ document.getElementById("cards").innerHTML=values.map((value,i)=>
+   `<div class="card ${i===5?'total':''}"><div class="name">${labels[i][0]}<br>${labels[i][1]}</div><div class="number">${value}</div></div>`
+ ).join("");
+ results.style.display="block";
+ results.scrollIntoView({behavior:"smooth",block:"start"});
 }
-document.getElementById("analyze").onclick=analyze;
-document.getElementById("mobile").addEventListener("keydown",e=>{if(e.key==="Enter")analyze()});
-document.getElementById("find").onclick=()=>showBook(Number(document.getElementById("lookup").value));
-document.getElementById("lookup").addEventListener("keydown",e=>{if(e.key==="Enter")showBook(Number(e.target.value))});
-</script></body></html>
+document.getElementById("calculate").addEventListener("click",calculate);
+document.getElementById("mobile").addEventListener("keydown",e=>{if(e.key==="Enter")calculate();});
+</script>
+</body>
+</html>
