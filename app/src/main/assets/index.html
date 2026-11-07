@@ -40,7 +40,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <div id="error" class="error" role="alert"></div>
 </section>
 <section class="panel" id="output" hidden><div id="customerHighlight" class="customer-highlight"></div><div id="results"></div></section>
-<section class="panel" id="financeReport" hidden><h2>நிதிநிலை அறிக்கை 💸💰</h2><div id="financeDetails"></div><div id="financeWarning"></div></section>
+<section class="panel" id="financeReport" hidden><h2>கடனை திருப்பி செலுத்தும் தகுதி உள்ளதா?? வரவு செலவு செய்யலாமா/வேண்டாமா?? நிதிநிலை அறிக்கை எப்படி உள்ளது?? 💸💰</h2><div id="financeDetails"></div><div id="financeWarning"></div></section>
 </main>
 <footer class="wrap">
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
@@ -61,7 +61,7 @@ const labels=[
 ["வாடிக்கையாளர்","முதல் இரண்டு இலக்கங்கள்"],
 ["கணவன் / மனைவி / நண்பர்கள் / கூட்டாளிகள்","இரண்டாவது இரண்டு இலக்கங்கள்"],
 ["தொழில் / வேலை","மூன்றாவது இரண்டு இலக்கங்கள்"],
-["சொத்து நிதிநிலை அறிக்கை 💸💰","நான்காவது இரண்டு இலக்கங்கள்"],
+["சொத்து நிதிநிலை 💸💰","நான்காவது இரண்டு இலக்கங்கள்"],
 ["குழந்தை","ஐந்தாவது இரண்டு இலக்கங்கள்"],
 ["குடும்பம்","மொத்தம் 10 இலக்கங்களின் கூட்டுத்தொகை"]
 ];
@@ -83,7 +83,7 @@ function analyze(){
  const pairs=Array.from({length:5},(_,i)=>m.slice(i*2,i*2+2));
  const total=[...m].reduce((sum,d)=>sum+Number(d),0);
  const values=[...pairs,String(total)];
- document.getElementById("customerHighlight").innerHTML=`<div class="customer-label">வாடிக்கையாளர்</div><div class="customer-number">${escapeHtml(pairs[0])}</div><div class="customer-caption">வாடிக்கையாளர் எண்</div>`;
+ document.getElementById("customerHighlight").innerHTML=`<div class="customer-label">வாடிக்கையாளர்</div><div class="customer-number">${escapeHtml(pairs[0])}</div>`;
  document.getElementById("results").innerHTML=values.map((v,i)=>{
    const n=Number(v),has=!!bookData[String(n).padStart(2,"0")];
    const status=has?"":"<span class=\"status pending\">பலன் சேர்க்கப்பட வேண்டும்</span>";
@@ -96,7 +96,7 @@ function analyze(){
  const financeReport=document.getElementById("financeReport");
  const warning=document.getElementById("financeWarning");
  details.innerHTML=`<div class="finance-row"><h3>தொழில் / வேலை</h3><p>${profession?`<b>${escapeHtml(profession.title)}</b>
-${escapeHtml(profession.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை."}</p></div><div class="finance-row"><h3>சொத்து நிதிநிலை அறிக்கை 💸💰</h3><p>${property?`<b>${escapeHtml(property.title)}</b>
+${escapeHtml(profession.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை."}</p></div><div class="finance-row"><h3>சொத்து நிதிநிலை 💸💰</h3><p>${property?`<b>${escapeHtml(property.title)}</b>
 ${escapeHtml(property.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை."}</p></div>`;
  const negativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","சிரமம்","தடைகள்"];
  const combined=(profession?.prediction||"")+" "+(property?.prediction||"")+" "+(profession?.title||"")+" "+(property?.title||"");
