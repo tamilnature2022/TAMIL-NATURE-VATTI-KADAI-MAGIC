@@ -35,11 +35,12 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <main class="wrap">
 <section class="panel">
 <label for="mobile">மொபைல் எண் / Mobile Number</label>
-<div class="entry"><input id="mobile" inputmode="numeric" maxlength="16" placeholder="9087417333"><button id="analyze" type="button">Check ✅</button></div>
+<div class="entry"><input id="mobile" inputmode="numeric" maxlength="16" placeholder="9087417333"></div>
 <p class="hint">+91 உள்ளிட்டாலும் பரவாயில்லை. கடைசி 10 இலக்கங்கள் மட்டும் கணக்கில் எடுத்துக்கொள்ளப்படும்.</p>
 <label for="businessName" style="margin-top:18px">Business Name / தொழில் பெயர்</label>
 <input id="businessName" type="text" maxlength="80" placeholder="Vasanth &amp; Co" autocomplete="organization">
 <p class="hint">English A–Z, 0–9 மற்றும் &amp; மட்டும். கணக்கில் &amp; என்பது AND என எடுத்துக்கொள்ளப்படும்.</p>
+<button id="analyze" type="button" style="width:100%;margin-top:16px">Check ✅</button>
 <div id="error" class="error" role="alert"></div>
 </section>
 <section class="panel" id="output" hidden><div id="results"></div></section>
@@ -95,40 +96,53 @@ function analyze(){
  const raw=document.getElementById("mobile").value.replace(/\D/g,"");
  const m=raw.length>10?raw.slice(-10):raw;
  const businessRaw=document.getElementById("businessName").value.trim();
+ const hasMobile=m.length>0, hasBusiness=businessRaw.length>0;
  const err=document.getElementById("error"),out=document.getElementById("output");
- if(m.length!==10){err.textContent="சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும்.";out.hidden=true;return;}
- if(!businessRaw){err.textContent="Business Name-ஐ English எழுத்துகள் அல்லது எண்களில் உள்ளிடவும்.";out.hidden=true;return;}
- if(!/^[A-Za-z0-9& ]+$/.test(businessRaw)){err.textContent="Business Name-ல் English A–Z, 0–9, space மற்றும் & மட்டும் பயன்படுத்தவும்.";out.hidden=true;return;}
+ if(!hasMobile&&!hasBusiness){err.textContent="மொபைல் எண் அல்லது Business Name — ஏதாவது ஒன்றையாவது உள்ளிடவும்.";out.hidden=true;return;}
+ if(hasMobile&&m.length!==10){err.textContent="மொபைல் எண்ணை 10 இலக்கங்களாக உள்ளிடவும்.";out.hidden=true;return;}
+ if(hasBusiness&&!/^[A-Za-z0-9& ]+$/.test(businessRaw)){err.textContent="Business Name-ல் English A–Z, 0–9, space மற்றும் & மட்டும் பயன்படுத்தவும்.";out.hidden=true;return;}
  err.textContent="";
- const pairs=Array.from({length:5},(_,i)=>m.slice(i*2,i*2+2));
- const total=[...m].reduce((sum,d)=>sum+Number(d),0);
- const values=[...pairs,String(total)];
- const business=chaldeanBusinessTotal(businessRaw);
- // For business-name totals: 100, 200, 300... use book number 100.
- // Other totals above 100 use the last two digits: 101 -> 01, 202 -> 02.
- const businessResultNumber=business.total % 100 === 0 ? 100 : business.total % 100;
- const businessEntry=bookData[String(businessResultNumber).padStart(2,"0")];
- document.getElementById("results").innerHTML=values.map((v,i)=>{
-   const n=Number(v),has=!!bookData[String(n).padStart(2,"0")];
-   const status=has?"":"<span class=\"status pending\">பலன் சேர்க்கப்பட வேண்டும்</span>";
-   return `<article class="result"><div class="resulthead"><span class="resultname">${labels[i][0]}</span>${status}</div>${renderBenefit(n)}</article>`;
- }).join("");
- // Business name result is shown as a separate card, using the unreduced Chaldean total.
- document.getElementById("results").insertAdjacentHTML("beforeend",`<article class="result"><div class="resulthead"><span class="resultname">Business Name / தொழில் பெயர் பலன்</span></div><div class="benefit"><b>உள்ளிட்ட பெயர்:</b> ${escapeHtml(businessRaw)}<br><b>கணக்கீட்டுப் பெயர்:</b> ${escapeHtml(business.normalized)}<br><b>மொத்த எண்:</b> ${business.total}</div>${businessBenefit(business.total)}</article>`);
- // Finance report includes profession, property and the separate business-name result.
- const profession=bookData[String(Number(pairs[2])).padStart(2,"0")];
- const property=bookData[String(Number(pairs[3])).padStart(2,"0")];
+ let cards="";
+ let profession=null,property=null,business=null,businessResultNumber=null,businessEntry=null;
+ if(hasMobile){
+   const pairs=Array.from({length:5},(_,i)=>m.slice(i*2,i*2+2));
+   const total=[...m].reduce((sum,d)=>sum+Number(d),0);
+   const values=[...pairs,String(total)];
+   cards+=values.map((v,i)=>{
+     const n=Number(v),has=!!bookData[String(n).padStart(2,"0")];
+     const status=has?"":"<span class=\"status pending\">பலன் சேர்க்கப்பட வேண்டும்</span>";
+     return `<article class="result"><div class="resulthead"><span class="resultname">${labels[i][0]}</span>${status}</div>${renderBenefit(n)}</article>`;
+   }).join("");
+   profession=bookData[String(Number(pairs[2])).padStart(2,"0")];
+   property=bookData[String(Number(pairs[3])).padStart(2,"0")];
+ }
+ if(hasBusiness){
+   business=chaldeanBusinessTotal(businessRaw);
+   businessResultNumber=business.total % 100 === 0 ? 100 : business.total % 100;
+   businessEntry=bookData[String(businessResultNumber).padStart(2,"0")];
+   cards+=`<article class="result"><div class="resulthead"><span class="resultname">Business Name / தொழில் பெயர் பலன்</span></div><div class="benefit"><b>உள்ளிட்ட பெயர்:</b> ${escapeHtml(businessRaw)}<br><b>கணக்கீட்டுப் பெயர்:</b> ${escapeHtml(business.normalized)}<br><b>மொத்த எண்:</b> ${business.total}</div>${businessBenefit(business.total)}</article>`;
+ }
  const negativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","சிரமம்","தடைகள்"];
  const combined=(profession?.prediction||"")+" "+(property?.prediction||"")+" "+(profession?.title||"")+" "+(property?.title||"")+" "+(businessEntry?.prediction||"")+" "+(businessEntry?.title||"");
  const isNegative=negativeTerms.some(term=>combined.includes(term));
- const professionText=profession?`<b>${escapeHtml(profession.title)}</b><br>${escapeHtml(profession.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை.";
- const propertyText=property?`<b>${escapeHtml(property.title)}</b><br>${escapeHtml(property.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை.";
- const businessText=`<b>பெயர்:</b> ${escapeHtml(business.normalized)}<br><b>மொத்த எண்:</b> ${business.total}<br><b>பலன் பார்க்கும் எண்:</b> ${String(businessResultNumber).padStart(2,"0")}<br>${businessEntry?`<b>${escapeHtml(businessEntry.title)}</b><br>${escapeHtml(businessEntry.prediction)}`:"இந்த எண்ணுக்கான புத்தகப் பலன் சேர்க்கப்படவில்லை."}`;
+ const financeRows=[];
+ if(hasMobile){
+   const professionText=profession?`<b>${escapeHtml(profession.title)}</b><br>${escapeHtml(profession.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை.";
+   const propertyText=property?`<b>${escapeHtml(property.title)}</b><br>${escapeHtml(property.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை.";
+   financeRows.push(`<div class="finance-row"><h3>தொழில் / வேலை</h3><p>${professionText}</p></div>`);
+   financeRows.push(`<div class="finance-row"><h3>சொத்து நிதிநிலை 💸💰</h3><p>${propertyText}</p></div>`);
+ }
+ if(hasBusiness){
+   const businessText=`<b>பெயர்:</b> ${escapeHtml(business.normalized)}<br><b>மொத்த எண்:</b> ${business.total}<br><b>பலன் பார்க்கும் எண்:</b> ${String(businessResultNumber).padStart(2,"0")}<br>${businessEntry?`<b>${escapeHtml(businessEntry.title)}</b><br>${escapeHtml(businessEntry.prediction)}`:"இந்த எண்ணுக்கான புத்தகப் பலன் சேர்க்கப்படவில்லை."}`;
+   financeRows.push(`<div class="finance-row"><h3>Business Name / தொழில் பெயர்</h3><p>${businessText}</p></div>`);
+ }
  const warningHtml=isNegative?'<div class="finance-warning">⚠️ நிதிநிலை பலன் சாதகமாக இல்லை. நீங்கள் கொடுத்த பணத்தைத் திரும்பப் பெறுவதில் சிக்கல் ஏற்படலாம். கடன் கொடுப்பதிலும் பணப் பரிவர்த்தனைகளிலும் கவனமாக இருக்கவும்.</div>':"";
- document.getElementById("results").insertAdjacentHTML("afterbegin",`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2><div class="finance-row"><h3>தொழில் / வேலை</h3><p>${professionText}</p></div><div class="finance-row"><h3>சொத்து நிதிநிலை 💸💰</h3><p>${propertyText}</p></div><div class="finance-row"><h3>Business Name / தொழில் பெயர்</h3><p>${businessText}</p></div>${warningHtml}</section>`);
+ cards+=`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2>${financeRows.join("")}${warningHtml}</section>`;
+ document.getElementById("results").innerHTML=cards;
  out.hidden=false;
  out.scrollIntoView({behavior:"smooth",block:"start"});
 }
 document.getElementById("analyze").addEventListener("click",analyze);
 document.getElementById("mobile").addEventListener("keydown",e=>{if(e.key==="Enter")analyze();});
+document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key==="Enter")analyze();});
 </script></body></html>
