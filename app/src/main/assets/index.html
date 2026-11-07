@@ -16,9 +16,9 @@ label{display:block;font-weight:700;margin-bottom:9px;font-size:18px}.entry{disp
 input{width:100%;min-width:0;padding:14px;border:1.5px solid #cbd5df;border-radius:13px;font-size:20px;outline-color:var(--teal)}
 button{border:0;border-radius:13px;padding:13px 17px;background:var(--teal);color:#fff;font-size:17px;font-weight:750;white-space:nowrap}
 .hint,.muted{font-size:13px;color:var(--muted);line-height:1.6}.error{color:#b42318;font-size:13px;margin-top:8px}
-h2{font-size:20px;margin:0 0 13px}.result{border:1px solid #e0e8ee;border-radius:15px;padding:14px;background:#f9fcfd;margin:10px 0}
+h2{font-size:20px;margin:0 0 13px}.customer-highlight{border:3px solid #087e8b;border-radius:17px;padding:15px 17px;margin:2px 0 16px;background:linear-gradient(135deg,#e1f7f4,#f4fbff);box-shadow:0 4px 14px #087e8b18}.customer-highlight .customer-label{font-size:13px;font-weight:800;color:#087e8b;letter-spacing:.3px}.customer-highlight .customer-number{font-size:30px;font-weight:900;color:#102a43;margin-top:3px}.customer-highlight .customer-caption{font-size:14px;color:#456;margin-top:2px}.result{border:2px solid #0b8790;border-left:6px solid #0b8790;border-radius:15px;padding:14px;background:linear-gradient(135deg,#eaf8f7,#ffffff);margin:12px 0;box-shadow:0 4px 13px #087e8b18}
 .resulthead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.resultname{font-weight:800;font-size:17px}.number{font-size:29px;font-weight:900;color:var(--teal)}
+.resultname{font-weight:900;font-size:18px;color:#075e68}.number{font-size:29px;font-weight:900;color:var(--teal)}
 .booktitle{font-weight:800;color:#087e8b;font-size:15px;margin-top:10px}
 .benefit{font-size:14px;line-height:1.7;margin-top:7px;white-space:pre-wrap}
 .status{font-size:10px;border-radius:20px;padding:4px 8px;background:#e4f5ed;color:#176b45}
@@ -39,7 +39,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <p class="hint">+91 உள்ளிட்டாலும் பரவாயில்லை. கடைசி 10 இலக்கங்கள் மட்டும் கணக்கில் எடுத்துக்கொள்ளப்படும்.</p>
 <div id="error" class="error" role="alert"></div>
 </section>
-<section class="panel" id="output" hidden><h2>ஆறு கணக்குகள் மற்றும் பலன்கள்</h2><div id="results"></div></section>
+<section class="panel" id="output" hidden><div id="customerHighlight" class="customer-highlight"></div><div id="results"></div></section>
 <section class="panel" id="financeReport" hidden><h2>நிதிநிலை அறிக்கை 💸💰</h2><div id="financeDetails"></div><div id="financeWarning"></div></section>
 </main>
 <footer class="wrap">
@@ -83,6 +83,7 @@ function analyze(){
  const pairs=Array.from({length:5},(_,i)=>m.slice(i*2,i*2+2));
  const total=[...m].reduce((sum,d)=>sum+Number(d),0);
  const values=[...pairs,String(total)];
+ document.getElementById("customerHighlight").innerHTML=`<div class="customer-label">வாடிக்கையாளர்</div><div class="customer-number">${escapeHtml(pairs[0])}</div><div class="customer-caption">வாடிக்கையாளர் எண்</div>`;
  document.getElementById("results").innerHTML=values.map((v,i)=>{
    const n=Number(v),has=!!bookData[String(n).padStart(2,"0")];
    const status=has?"":"<span class=\"status pending\">பலன் சேர்க்கப்பட வேண்டும்</span>";
