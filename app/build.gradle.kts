@@ -12,8 +12,8 @@ android {
         applicationId = "com.tamilnature.vattikadaimagic"
         minSdk = 23
         targetSdk = 35
-        versionCode = 56
-        versionName = "56"
+        versionCode = 66
+        versionName = "66"
     }
 
     compileOptions {
