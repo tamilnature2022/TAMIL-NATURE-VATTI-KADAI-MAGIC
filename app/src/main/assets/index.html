@@ -35,10 +35,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <main class="wrap">
 <section class="panel">
 <label for="mobile">மொபைல் எண் / Mobile Number</label>
-<div class="entry"><input id="mobile" inputmode="numeric" maxlength="16" placeholder="9087417333"></div>
+<div class="entry"><input id="mobile" inputmode="numeric" maxlength="16" placeholder=""></div>
 <p class="hint">+91 உள்ளிட்டாலும் பரவாயில்லை. கடைசி 10 இலக்கங்கள் மட்டும் கணக்கில் எடுத்துக்கொள்ளப்படும்.</p>
 <label for="businessName" style="margin-top:18px">Business Name / தொழில் பெயர்</label>
-<input id="businessName" type="text" maxlength="80" placeholder="Vasanth &amp; Co" autocomplete="organization">
+<input id="businessName" type="text" maxlength="80" placeholder="" autocomplete="organization">
 <p class="hint">English A–Z, 0–9 மற்றும் &amp; மட்டும். கணக்கில் &amp; என்பது AND என எடுத்துக்கொள்ளப்படும்.</p>
 <button id="analyze" type="button" style="width:100%;margin-top:16px">Check ✅</button>
 <div id="error" class="error" role="alert"></div>
@@ -120,7 +120,7 @@ function analyze(){
    business=chaldeanBusinessTotal(businessRaw);
    businessResultNumber=business.total % 100 === 0 ? 100 : business.total % 100;
    businessEntry=bookData[String(businessResultNumber).padStart(2,"0")];
-   cards+=`<article class="result"><div class="resulthead"><span class="resultname">Business Name / தொழில் பெயர் பலன்</span></div><div class="benefit"><b>உள்ளிட்ட பெயர்:</b> ${escapeHtml(businessRaw)}<br><b>கணக்கீட்டுப் பெயர்:</b> ${escapeHtml(business.normalized)}<br><b>மொத்த எண்:</b> ${business.total}</div>${businessBenefit(business.total)}</article>`;
+   cards+=`<article class="result"><div class="resulthead"><span class="resultname">Business Name / தொழில் பெயர் பலன்</span></div><div class="benefit"><b>BUSINESS NAME:</b> ${escapeHtml(business.normalized.toUpperCase())}<br><b>மொத்த எண்:</b> ${business.total}</div>${businessBenefit(business.total)}</article>`;
  }
  const negativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","சிரமம்","தடைகள்"];
  const combined=(profession?.prediction||"")+" "+(property?.prediction||"")+" "+(profession?.title||"")+" "+(property?.title||"")+" "+(businessEntry?.prediction||"")+" "+(businessEntry?.title||"");
