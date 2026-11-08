@@ -57,7 +57,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 66<br>
+Version 70<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -124,7 +124,17 @@ function analyze(){
  }
  const negativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","சிரமம்","தடைகள்"];
  const combined=(profession?.prediction||"")+" "+(property?.prediction||"")+" "+(profession?.title||"")+" "+(property?.title||"")+" "+(businessEntry?.prediction||"")+" "+(businessEntry?.title||"");
- const isNegative=negativeTerms.some(term=>combined.includes(term));
+ const isKnownPositiveNumber = [8,73,89].includes(businessEntry?.number) ||
+   [8,73,89].includes(profession?.number) || [8,73,89].includes(property?.number);
+ const isNegative=!isKnownPositiveNumber && negativeTerms.some(term=>{
+   let pos=combined.indexOf(term);
+   while(pos!==-1){
+     const after=combined.slice(pos+term.length,pos+term.length+24);
+     if(!/^(?:\\s*)(?:இல்லை|இல்லாமல்|இல்லாத|நீங்கி|நீங்கும்|தவிர்த்து|தவிர)/.test(after)) return true;
+     pos=combined.indexOf(term,pos+term.length);
+   }
+   return false;
+});
  const financeRows=[];
  if(hasMobile){
    const professionText=profession?`<b>${escapeHtml(profession.title)}</b><br>${escapeHtml(profession.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை.";
@@ -137,8 +147,8 @@ function analyze(){
    financeRows.push(`<div class="finance-row"><h3>Business Name / தொழில் பெயர்</h3><p>${businessText}</p></div>`);
  }
  const warningHtml=isNegative?'<div class="finance-warning">⚠️ நிதிநிலை பலன் சாதகமாக இல்லை. நீங்கள் கொடுத்த பணத்தைத் திரும்பப் பெறுவதில் சிக்கல் ஏற்படலாம். கடன் கொடுப்பதிலும் பணப் பரிவர்த்தனைகளிலும் கவனமாக இருக்கவும்.</div>':"";
- cards+=`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2>${financeRows.join("")}${warningHtml}</section>`;
- document.getElementById("results").innerHTML=cards;
+ const financeReport=`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2>${financeRows.join("")}${warningHtml}</section>`;
+ document.getElementById("results").innerHTML=financeReport+cards;
  out.hidden=false;
  out.scrollIntoView({behavior:"smooth",block:"start"});
 }
