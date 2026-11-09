@@ -361,16 +361,23 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
       <label>வாடிக்கையாளர் பெயர் / Customer Name
         <input id="faLoanCustomerSearch" type="text" list="faLoanCustomerOptions" autocomplete="off" placeholder="வாடிக்கையாளர் பெயரை type செய்யவும்" required>
         <datalist id="faLoanCustomerOptions"></datalist>
+        <select id="faLoanCustomerList" size="5" aria-label="வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:120px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface);color:var(--text)"><option value="">வாடிக்கையாளர்கள் பட்டியல்</option></select>
         <select id="faLoanCustomer" required class="finance-hidden" aria-hidden="true" tabindex="-1"><option value="">வாடிக்கையாளரைத் தேர்வு செய்யவும்</option></select>
         <small class="finance-note" id="faLoanCustomerHint">வாடிக்கையாளர் பதிவில் தேர்வு செய்த கடன் வகை மற்றும் வசூல் கிழமைக்கு ஏற்ப பெயர்கள் இங்கே வரும்.</small>
         <div id="faLoanCustomerPreview" class="finance-item finance-hidden" aria-live="polite"></div>
       </label>
       <label>வழங்கிய கடன் தொகை (₹)<input id="faPrincipal" type="number" min="0.01" step="0.01" required placeholder="உதா: 10000"></label>
+      <label>மகிமை / Document Charges (₹)
+        <input id="faDocumentCharges" type="number" min="0" step="0.01" inputmode="decimal" placeholder="ரூபாய் மட்டும் (விருப்பம்)">
+      </label>
       <label>மொத்தம் திரும்பப் பெற வேண்டிய தொகை (₹)<input id="faTotal" type="number" min="0.01" step="0.01" required placeholder="முதல்தொகை + ஒப்புக்கொண்ட வட்டி"></label>
-      <label>ஒவ்வொரு தவணைத் தொகை (₹)<input id="faInstallment" type="number" min="0.01" step="0.01" required placeholder="வார / தினசரி தவணை"></label>
       <label id="faInstallmentCountWrap" class="finance-hidden">மொத்த தவணைகள் / Total Installments
         <input id="faInstallmentCount" type="number" min="1" step="1" inputmode="numeric" placeholder="உதா: 20 தவணைகள்">
-        <small class="finance-note">வார வசூல் கடனுக்கு மொத்தம் எத்தனை வாரத் தவணைகள் என்பதை உள்ளிடவும்.</small>
+        <small class="finance-note">இந்தக் கடனுக்கு மொத்தம் எத்தனை தவணைகள் என்பதை உள்ளிடவும்.</small>
+      </label>
+      <label>ஒவ்வொரு தவணைத் தொகை (₹) / Installment Amount
+        <input id="faInstallment" type="number" min="0.01" step="0.01" required readonly placeholder="மொத்தத் தொகை ÷ மொத்த தவணைகள்">
+        <small class="finance-note">மொத்தம் திரும்பப் பெற வேண்டிய தொகையை மொத்த தவணைகளால் வகுத்து தானாகக் கணக்கிடப்படும்.</small>
       </label>
       <label>கடன் வழங்கிய தேதி / Loan Given Date<input id="faLoanDate" type="date" required></label>
       <label>முதல் தவணை தேதி / First Due Date<input id="faStartDate" type="date" readonly required></label>
@@ -378,7 +385,8 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
       <label>ஜாமீன் பெயர் / Guarantor Name (Optional)
         <input id="faGuarantorName" list="faGuarantorCustomerOptions" maxlength="100" autocomplete="off" placeholder="பெயரை type செய்யவும் / Customer-ஐ தேர்வு செய்யவும்">
         <datalist id="faGuarantorCustomerOptions"></datalist>
-        <small class="finance-note">ஏற்கனவே Customer-ஆக இருந்தால் பெயரை type செய்து பட்டியலில் தேர்வு செய்யவும். புதிய ஜாமீன் என்றால் பெயரை நேரடியாக உள்ளிடலாம்.</small>
+        <select id="faGuarantorCustomerList" size="5" aria-label="ஜாமீன் வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:120px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface);color:var(--text)"><option value="">ஜாமீன் பெயர்கள்</option></select>
+        <small class="finance-note">பட்டியலில் பெயரைத் தேர்வு செய்யலாம் அல்லது மேலே type செய்து தேடலாம். புதிய ஜாமீன் என்றால் பெயரை நேரடியாக உள்ளிடலாம்.</small>
       </label>
       <label>ஜாமீன் தொலைபேசி எண் / Guarantor Phone (Optional)<input id="faGuarantorPhone" type="tel" inputmode="tel" maxlength="20" placeholder="விருப்பம்"></label>
       <label>குறிப்பு<input id="faLoanNote" maxlength="160" placeholder="விருப்பக் குறிப்பு"></label>
@@ -814,6 +822,12 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       eligible.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+' – '+esc(c.mobile)+'</option>').join('');
     $('faLoanCustomer').value=eligible.some(c=>c.id===previous)?previous:'';
     $('faLoanCustomerOptions').innerHTML=eligible.map(c=>'<option value="'+esc(c.name)+' – '+esc(c.mobile)+'"></option>').join('');
+    const loanList=$('faLoanCustomerList');
+    if(loanList){
+      const query=String($('faLoanCustomerSearch').value||'').trim().toLocaleLowerCase();
+      const matches=eligible.filter(c=>(String(c.name||'')+' '+String(c.mobile||'')).toLocaleLowerCase().includes(query));
+      loanList.innerHTML=matches.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+' – '+esc(c.mobile)+'</option>').join('')||'<option value="">பொருத்தமான வாடிக்கையாளர் இல்லை</option>';
+    }
     const selectedCustomer=eligible.find(c=>c.id===$('faLoanCustomer').value);
     $('faLoanCustomerSearch').value=selectedCustomer?(selectedCustomer.name+' – '+selectedCustomer.mobile):'';
     const hint=$('faLoanCustomerHint');
@@ -871,7 +885,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       '<br>📍 முகவரி: '+esc(c.address||'பதிவு செய்யப்படவில்லை')+
       '<br>சேர்த்த தேதி: '+dateText(c.created||today())+'</div></div>').join(''):'<div class="finance-empty">இன்னும் வாடிக்கையாளர்கள் பதிவு செய்யப்படவில்லை.</div>';
     const newestLoans=db.loans.slice().sort((a,b)=>String(b.id||'').localeCompare(String(a.id||''))).slice(0,5);
-    $('faLoanList').innerHTML=newestLoans.length?'<div class="latest-loans-heading">✓ கடைசியாக சேமிக்கப்பட்ட 5 கடன்கள் / LAST 5 SAVED LOANS</div>'+newestLoans.map(l=>{const c=customer(l.customerId);return '<div class="finance-item '+(l.id===justAddedLoanId?'customer-just-added':'')+'" data-loan-id="'+esc(l.id)+'">'+(l.id===justAddedLoanId?'<div class="customer-added-title">✓ இப்போது சேர்க்கப்பட்ட கடன் / LOAN ADDED</div>':'')+'<div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">'+(l.frequency==='weekly'?'வார வசூல்':l.frequency==='daily'?'தின வசூல்':'வார வசூல் + தினசரி')+'</span></div><div class="finance-meta">📱 மொபைல்: '+esc(c?.mobile||'-')+'<br>கடன் ID: '+esc(l.id)+'<br>வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய தொகை: '+money(l.principal)+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(l.total)+'<br>தவணைத் தொகை: '+money(l.installment)+(l.installmentCount?'<br>மொத்த தவணைகள்: '+l.installmentCount:'')+'<br>இதுவரை வசூலித்தது: '+money(paid(l.id))+'<br><b>மீதமுள்ள கடன்: '+money(balance(l))+'</b><br>முதல் வசூல் தேதி: '+dateText(l.start)+(l.guarantorName?'<br>ஜாமீன்: '+esc(l.guarantorName):'')+(l.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(l.guarantorPhone):'')+'<br>குறிப்பு: '+esc(l.note||'-')+'</div></div>';}).join(''):'<div class="finance-empty">கடன் விவரங்கள் இல்லை. முதலில் Loan Details-ல் கடனைச் சேமிக்கவும்.</div>';
+    $('faLoanList').innerHTML=newestLoans.length?'<div class="latest-loans-heading">✓ கடைசியாக சேமிக்கப்பட்ட 5 கடன்கள் / LAST 5 SAVED LOANS</div>'+newestLoans.map(l=>{const c=customer(l.customerId);return '<div class="finance-item '+(l.id===justAddedLoanId?'customer-just-added':'')+'" data-loan-id="'+esc(l.id)+'">'+(l.id===justAddedLoanId?'<div class="customer-added-title">✓ இப்போது சேர்க்கப்பட்ட கடன் / LOAN ADDED</div>':'')+'<div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">'+(l.frequency==='weekly'?'வார வசூல்':l.frequency==='daily'?'தின வசூல்':'வார வசூல் + தினசரி')+'</span></div><div class="finance-meta">📱 மொபைல்: '+esc(c?.mobile||'-')+'<br>கடன் ID: '+esc(l.id)+'<br>வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய தொகை: '+money(l.principal)+(l.documentCharges?'<br>மகிமை / Document Charges: '+money(l.documentCharges):'')+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(l.total)+'<br>தவணைத் தொகை: '+money(l.installment)+(l.installmentCount?'<br>மொத்த தவணைகள்: '+l.installmentCount:'')+'<br>இதுவரை வசூலித்தது: '+money(paid(l.id))+'<br><b>மீதமுள்ள கடன்: '+money(balance(l))+'</b><br>முதல் வசூல் தேதி: '+dateText(l.start)+(l.guarantorName?'<br>ஜாமீன்: '+esc(l.guarantorName):'')+(l.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(l.guarantorPhone):'')+'<br>குறிப்பு: '+esc(l.note||'-')+'</div></div>';}).join(''):'<div class="finance-empty">கடன் விவரங்கள் இல்லை. முதலில் Loan Details-ல் கடனைச் சேமிக்கவும்.</div>';
     renderCollection('weekly');renderCollection('daily');renderHistory();
     $('faIncomeToday').textContent=$('faTodayCollected').textContent;
     $('faIncomeTotal').textContent=money(db.payments.reduce((a,p)=>a+Number(p.amount),0));
@@ -943,7 +957,11 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
         const paymentRows=loanPayments.length?'<div class="loan-payment-log"><b>✓ பணம் பெற்றது / வரவு பதிவு – முழு வசூல் வரலாறு</b>'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>'+(i===0?'✓ இப்போது வரவு வைத்தது':'முந்தைய வசூல்')+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'<div class="loan-payment-total"><span>இதுவரை மொத்த வசூல்</span><b>'+money(paid(chosen.id))+'</b></div></div>':'<div class="loan-payment-log muted">இந்தக் கடனுக்கு இதுவரை பணம் பெறப்படவில்லை.</div>';
         selectedCard='<div class="finance-item weekly-selected-account"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill pending">நிலுவை '+money(balance(chosen))+'</span></div><div class="finance-account-details"><h4>வாடிக்கையாளர் விவரம்</h4><div>📱 மொபைல்: '+esc(c?.mobile||'-')+'</div><div>🪪 ID: '+(c?.aadhaar?'XXXX-XXXX-'+esc(c.aadhaar.slice(-4)):'-')+'</div><div>📍 முகவரி: '+esc(c?.address||'-')+'</div><h4>கடன் விவரம்</h4><div>கடன் வகை: '+(chosen.frequency==='weekly_daily'?'வார + தினசரி': 'வார வசூல்')+'</div><div>வழங்கிய தேதி: '+dateText(chosen.loanDate||chosen.start)+'</div><div>வழங்கிய தொகை: '+money(chosen.principal)+'</div><div>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(chosen.total)+'</div><div>தவணைத் தொகை: '+money(chosen.installment)+'</div><div>இதுவரை பெற்ற தொகை / Total Received: <b>'+money(paid(chosen.id))+'</b></div>'+(loanPayments.length?'<div class="latest-received-line">✓ கடைசியாக பெற்றது: <b>'+money(loanPayments[0].amount)+'</b> | '+dateText(loanPayments[0].date)+' | '+esc(loanPayments[0].time||'-')+'</div>':'<div>இதுவரை பணம் பெறப்படவில்லை.</div>')+'<div><b>மீதமுள்ள கடன்: '+money(balance(chosen))+'</b></div><div>முதல் தவணை தேதி: '+dateText(chosen.start)+'</div></div><div class="finance-payrow"><input type="number" min="0.01" step="0.01" max="'+balance(chosen)+'" id="faAmount_'+chosen.id+'" placeholder="பெற்ற தொகை ₹" aria-label="பெற்ற தொகை"><button type="button" data-fa-pay="'+chosen.id+'">பணம் பெற்றது பதிவு</button></div>'+paymentRows+'</div>';
       }
-      list.innerHTML='<label class="weekly-customer-select"><b>'+weekdayNames[selectedWeekday]+' – வாடிக்கையாளர் பட்டியல்</b><select id="faWeeklyCustomerSelect">'+options+'</select></label>'+selectedCard;
+      const weeklySearchOptions=loans.map(l=>{const c=customer(l.customerId);return '<option value="'+esc((c?.name||'Customer')+' – '+(c?.mobile||'')+' – நிலுவை '+money(balance(l)))+'"></option>';}).join('');
+      const selectedWeeklyLoan=loans.find(l=>l.id===selectedWeeklyLoanId);
+      const selectedWeeklyCustomer=selectedWeeklyLoan?customer(selectedWeeklyLoan.customerId):null;
+      const selectedWeeklyText=selectedWeeklyLoan?(selectedWeeklyCustomer?.name||'Customer')+' – '+(selectedWeeklyCustomer?.mobile||'')+' – நிலுவை '+money(balance(selectedWeeklyLoan)):'';
+      list.innerHTML='<label class="weekly-customer-select"><b>'+weekdayNames[selectedWeekday]+' – வாடிக்கையாளர் பட்டியல்</b><input id="faWeeklyCustomerSearch" type="text" list="faWeeklyCustomerOptions" autocomplete="off" placeholder="வாடிக்கையாளர் பெயரை type செய்யவும்" value="'+esc(selectedWeeklyText)+'"><datalist id="faWeeklyCustomerOptions">'+weeklySearchOptions+'</datalist><select id="faWeeklyCustomerSelect" class="finance-hidden" aria-hidden="true" tabindex="-1">'+options+'</select></label>'+selectedCard;
     }else{
       list.innerHTML=loans.length?loans.map(l=>{
         const c=customer(l.customerId),due=Math.min(dueNow(l,freq),balance(l));
@@ -1025,21 +1043,42 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
   function refreshGuarantorCustomerOptions(){
     const list=$('faGuarantorCustomerOptions');
     if(!list)return;
-    list.innerHTML=db.customers.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ta')).map(c=>'<option value="'+esc(c.name)+'"></option>').join('');
+    const sorted=db.customers.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ta'));
+    list.innerHTML=sorted.map(c=>'<option value="'+esc(c.name)+'"></option>').join('');
+    const visible=$('faGuarantorCustomerList');
+    if(visible){
+      const query=String($('faGuarantorName').value||'').trim().toLocaleLowerCase();
+      const matches=sorted.filter(c=>(String(c.name||'')+' '+String(c.mobile||'')).toLocaleLowerCase().includes(query));
+      visible.innerHTML=matches.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+' – '+esc(c.mobile||'')+'</option>').join('')||'<option value="">பொருத்தமான வாடிக்கையாளர் இல்லை</option>';
+    }
   }
   refreshGuarantorCustomerOptions();
+  $('faGuarantorCustomerList').addEventListener('change',()=>{
+    const c=db.customers.find(x=>x.id===$('faGuarantorCustomerList').value);
+    if(c){$('faGuarantorName').value=c.name;$('faGuarantorPhone').value=c.mobile||'';refreshGuarantorCustomerOptions();}
+  });
   $('faGuarantorName').addEventListener('input',()=>{
     const typed=$('faGuarantorName').value.trim().toLocaleLowerCase();
     const match=db.customers.find(c=>String(c.name||'').trim().toLocaleLowerCase()===typed);
     if(match && match.mobile)$('faGuarantorPhone').value=match.mobile;
+    refreshGuarantorCustomerOptions();
   });
   $('faGuarantorName').addEventListener('change',()=>{
     const typed=$('faGuarantorName').value.trim().toLocaleLowerCase();
     const match=db.customers.find(c=>String(c.name||'').trim().toLocaleLowerCase()===typed);
     if(match && match.mobile)$('faGuarantorPhone').value=match.mobile;
   });
+  function calculateInstallmentAmount(){
+    const total=Number($('faTotal').value);
+    const count=Number($('faInstallmentCount').value);
+    $('faInstallment').value=(total>0 && Number.isInteger(count) && count>0)
+      ? (Math.round((total/count)*100)/100).toFixed(2) : '';
+  }
+  $('faTotal').addEventListener('input',calculateInstallmentAmount);
+  $('faInstallmentCount').addEventListener('input',calculateInstallmentAmount);
   $('faFrequency').addEventListener('change',syncLoanInstallmentCount);
   syncLoanInstallmentCount();
+  calculateInstallmentAmount();
 
   $('faLoanForm').addEventListener('submit',e=>{
     e.preventDefault();
@@ -1055,10 +1094,11 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     if(!db.customers.some(c=>c.id===customerId))return alert('முதலில் வாடிக்கையாளரைத் தேர்வு செய்யவும்.');
     if(!principal||!total||!installment||!loanDate||!start)return alert('அனைத்து கடன் விவரங்களையும் சரிபார்க்கவும்.');
     if(total<principal&&!confirm('மொத்த திருப்பிச் செலுத்த வேண்டிய தொகை, கடன் தொகையைவிடக் குறைவாக உள்ளது. தொடரவா?'))return;
-    const loanRecord={id:'L'+Date.now(),customerId,frequency,weekday:(frequency==='weekly'||frequency==='weekly_daily')?weekday:null,loanDate,principal,total,installment,installmentCount,start,guarantorName:$('faGuarantorName').value.trim(),guarantorPhone:$('faGuarantorPhone').value.trim(),note:$('faLoanNote').value.trim()};
+    const loanRecord={id:'L'+Date.now(),customerId,frequency,weekday:(frequency==='weekly'||frequency==='weekly_daily')?weekday:null,loanDate,principal,total,installment,installmentCount,start,documentCharges:Number($('faDocumentCharges').value)||0,guarantorName:$('faGuarantorName').value.trim(),guarantorPhone:$('faGuarantorPhone').value.trim(),note:$('faLoanNote').value.trim()};
     db.loans.push(loanRecord);
     if(!save()){db.loans=db.loans.filter(l=>l.id!==loanRecord.id);return;}
     e.target.reset();
+    $('faInstallment').value='';
     $('faLoanDate').value=today();
     $('faWeekday').value='';
     updateFirstDueDate();
@@ -1073,7 +1113,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       '<div class="customer-added-details"><b>'+esc(loanCustomer?.name||'வாடிக்கையாளர்')+'</b><br>📱 '+esc(loanCustomer?.mobile||'-')+
       '<br>கடன் வகை: '+loanTypeLabel+
       ((loanRecord.frequency==='weekly'||loanRecord.frequency==='weekly_daily')?'<br>வசூல் கிழமை: '+esc(weekdayNames[Number(loanRecord.weekday)]||'பதிவு இல்லை'):'')+
-      '<br>வழங்கிய தொகை: '+money(loanRecord.principal)+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(loanRecord.total)+
+      '<br>வழங்கிய தொகை: '+money(loanRecord.principal)+(loanRecord.documentCharges?'<br>மகிமை / Document Charges: '+money(loanRecord.documentCharges):'')+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(loanRecord.total)+
       '<br>ஒவ்வொரு தவணை: '+money(loanRecord.installment)+(loanRecord.installmentCount?'<br>மொத்த தவணைகள்: '+loanRecord.installmentCount:'')+'<br>கடன் வழங்கிய தேதி: '+dateText(loanRecord.loanDate)+
       '<br>முதல் தவணை தேதி: '+dateText(loanRecord.start)+(loanRecord.guarantorName?'<br>ஜாமீன்: '+esc(loanRecord.guarantorName):'')+(loanRecord.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(loanRecord.guarantorPhone):'')+'<br><b>மீதமுள்ள கடன்: '+money(balance(loanRecord))+'</b><br>✓ சேமிக்கப்பட்டது</div>';
     notice.classList.remove('finance-hidden');
@@ -1091,7 +1131,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       addedLoan.innerHTML='<div class="customer-added-title">✓ LOAN ADDED / கடன் சேர்க்கப்பட்டது</div>'+
         '<div class="finance-row"><h3>'+esc(loanCustomer?.name||'வாடிக்கையாளர்')+'</h3><span class="finance-pill">'+loanTypeLabel+'</span></div>'+
         '<div class="finance-meta">📱 மொபைல்: '+esc(loanCustomer?.mobile||'-')+'<br>கடன் ID: '+esc(loanRecord.id)+
-        '<br>வழங்கிய தேதி: '+dateText(loanRecord.loanDate)+'<br>வழங்கிய தொகை: '+money(loanRecord.principal)+
+        '<br>வழங்கிய தேதி: '+dateText(loanRecord.loanDate)+'<br>வழங்கிய தொகை: '+money(loanRecord.principal)+(loanRecord.documentCharges?'<br>மகிமை / Document Charges: '+money(loanRecord.documentCharges):'')+
         '<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(loanRecord.total)+'<br>தவணைத் தொகை: '+money(loanRecord.installment)+(loanRecord.installmentCount?'<br>மொத்த தவணைகள்: '+loanRecord.installmentCount:'')+
         '<br>இதுவரை வசூலித்தது: '+money(paid(loanRecord.id))+'<br><b>மீதமுள்ள கடன்: '+money(balance(loanRecord))+'</b>'+
         '<br>முதல் தவணை தேதி: '+dateText(loanRecord.start)+(loanRecord.guarantorName?'<br>ஜாமீன்: '+esc(loanRecord.guarantorName):'')+(loanRecord.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(loanRecord.guarantorPhone):'')+'<br>குறிப்பு: '+esc(loanRecord.note||'-')+'</div>';
@@ -1105,6 +1145,20 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
   document.addEventListener('change',e=>{
     if(e.target && e.target.id==='faWeeklyCustomerSelect'){
       selectedWeeklyLoanId=e.target.value;
+      renderCollection('weekly');
+    }
+  });
+  document.addEventListener('input',e=>{
+    if(e.target && e.target.id==='faWeeklyCustomerSearch'){
+      const typed=e.target.value.trim().toLocaleLowerCase();
+      const freqLoans=db.loans.filter(l=>l.frequency==='weekly'||l.frequency==='weekly_daily')
+        .filter(l=>normalizeCustomerWeekday(l.weekday)===selectedWeekday && balance(l)>0);
+      const match=freqLoans.find(l=>{
+        const c=customer(l.customerId);
+        const label=(c?.name||'Customer')+' – '+(c?.mobile||'')+' – நிலுவை '+money(balance(l));
+        return label.trim().toLocaleLowerCase()===typed;
+      });
+      selectedWeeklyLoanId=match?match.id:'';
       renderCollection('weekly');
     }
   });
@@ -1275,6 +1329,15 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
   $('showFinance').addEventListener('click',()=>{$('calculatorView').classList.add('finance-hidden');$('financeView').classList.remove('finance-hidden');$('showFinance').classList.add('active');$('showFinance').classList.remove('secondary');$('showCalculator').classList.remove('active');$('showCalculator').classList.add('secondary');showMainFinanceTab('customers');render();});
   $('faFrequency').addEventListener('change',()=>{$('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value==='daily');updateFirstDueDate();refreshLoanCustomerOptions();});
   $('faWeekday').addEventListener('change',()=>{updateFirstDueDate();refreshLoanCustomerOptions();});
+  $('faLoanCustomerList').addEventListener('change',()=>{
+    const id=$('faLoanCustomerList').value;
+    const c=db.customers.find(x=>x.id===id);
+    if(c){
+      $('faLoanCustomer').value=c.id;
+      $('faLoanCustomerSearch').value=c.name+' – '+c.mobile;
+      renderLoanCustomerPreview();
+    }
+  });
   $('faLoanCustomerSearch').addEventListener('input',()=>{
     const typed=$('faLoanCustomerSearch').value.trim().toLocaleLowerCase();
     const freq=normalizeCustomerLoanType($('faFrequency').value);
@@ -1288,6 +1351,8 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     });
     const match=eligible.find(c=>(c.name+' – '+c.mobile).trim().toLocaleLowerCase()===typed || String(c.name||'').trim().toLocaleLowerCase()===typed);
     $('faLoanCustomer').value=match?match.id:'';
+    const visibleList=$('faLoanCustomerList');
+    if(visibleList)visibleList.value=match?match.id:'';
     if(match)renderLoanCustomerPreview();
     else { $('faLoanCustomerPreview').classList.add('finance-hidden'); $('faLoanCustomerPreview').innerHTML=''; }
   });
