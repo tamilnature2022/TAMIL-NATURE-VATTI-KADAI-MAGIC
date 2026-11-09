@@ -244,14 +244,26 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 #faLatestCustomer .latest-customer-card{border:2px solid #168b78;background:#eaf8f1;padding:16px;box-shadow:0 4px 14px rgba(8,126,139,.12);overflow-wrap:anywhere}
 #faLatestCustomer .customer-added-title{display:block;margin-bottom:10px;padding:8px 10px;border-radius:9px;background:#d5f1e5;color:#087e63;font-weight:800}
 
-/* V125: show only the five most recently saved loans in Loan List */
+/* V126: show only the five most recently saved loans in Loan List */
 .latest-loans-heading{margin:8px 0 12px;padding:10px 12px;border-radius:10px;background:#eaf8f1;color:#087e63;font-weight:850;line-height:1.45}
 
-/* V125: make the actual Loan Details list show the latest five saved loans */
+/* V126: make the actual Loan Details list show the latest five saved loans */
 #faLoanList{display:flex;flex-direction:column;gap:12px;min-width:0}
 #faLoanList .finance-item{width:100%;box-sizing:border-box;overflow-wrap:anywhere}
 #faLoanList .finance-item.customer-just-added{border:2px solid #087e8b;background:#eaf8f1;padding:16px;box-shadow:0 4px 14px rgba(8,126,139,.12)}
 #faLoanList .latest-loans-heading{display:block;margin:8px 0 4px;padding:10px 12px;border-radius:10px;background:#eaf8f1;color:#087e63;font-weight:850}
+
+/* V126: force immediate customer-added confirmation visibility after successful save */
+#faCustomerSaveNotice{display:block!important;min-height:48px;position:relative;z-index:2}
+#faCustomerSaveNotice.finance-hidden{display:none!important}
+#faCustomerList .customer-just-added{display:block!important;visibility:visible!important;opacity:1!important;border:2px solid #087e8b!important;background:#eaf8f1!important;padding:16px!important;order:-1}
+
+/* V126: immediate, persistent loan-added confirmation and latest loan card */
+#faLoanSaveNotice{display:block!important;min-height:48px;position:relative;z-index:2}
+#faLoanSaveNotice.finance-hidden{display:none!important}
+#faLoanList{display:flex;flex-direction:column;gap:12px;min-width:0}
+#faLoanList .finance-item{display:block;width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+#faLoanList .finance-item.customer-just-added{order:-1!important;display:block!important;visibility:visible!important;opacity:1!important;border:2px solid #087e8b!important;background:#eaf8f1!important;padding:16px!important;box-shadow:0 4px 14px rgba(8,126,139,.12)}
 </style>
 </head>
 <body>
@@ -427,7 +439,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 125<br>
+Version 126<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -912,23 +924,33 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     if(!save()){db.customers=db.customers.filter(c=>c.id!==customerRecord.id);return;}
     e.target.reset();
     justAddedCustomerId=customerRecord.id;
-    render();
+    // Show the confirmation FIRST, so a later list-rendering issue cannot hide the successful save.
     const notice=$('faCustomerSaveNotice');
     notice.innerHTML='<div class="customer-added-title">✓ CUSTOMER ADDED / வாடிக்கையாளர் சேர்க்கப்பட்டார்</div>'+
       '<div class="customer-added-details"><b>'+esc(customerRecord.name)+'</b><br>📱 '+esc(customerRecord.mobile)+
-      '<br>கடன் வசூல் வகை: '+esc(customerRecord.collectionType==='weekly'?'வாரக் கடன்':customerRecord.collectionType==='daily'?'தினசரிக் கடன்':'வாரக் கடன் + தினசரி')+
-      '<br>வசூல் கிழமை: '+esc(weekdayNames[Number(customerRecord.collectionDay)])+
+      '<br>கடன் வகை: '+esc(customerRecord.collectionType==='weekly'?'வாரக் கடன்':customerRecord.collectionType==='daily'?'தினசரிக் கடன்':'வாரக் கடன் + தினசரி')+
+      '<br>வசூல் கிழமை: '+esc(weekdayNames[Number(customerRecord.collectionDay)]||'பதிவு இல்லை')+
       (customerRecord.aadhaar?'<br>ID: XXXX-XXXX-'+esc(customerRecord.aadhaar.slice(-4)):'')+
-      '<br>📍 '+esc(customerRecord.address||'முகவரி பதிவு செய்யப்படவில்லை')+'</div>';
+      '<br>📍 '+esc(customerRecord.address||'முகவரி பதிவு செய்யப்படவில்லை')+
+      '<br>✓ சேமிக்கப்பட்டது</div>';
     notice.classList.remove('finance-hidden');
+    notice.style.display='block';
+    notice.setAttribute('aria-live','assertive');
     if(customerNoticeTimer)clearTimeout(customerNoticeTimer);
-    // Keep the confirmation visible until the next customer is saved.
-    const addedCard=$('faCustomerList').querySelector('[data-customer-id="'+customerRecord.id+'"]');
-    if(addedCard){
-      addedCard.classList.add('customer-just-added');
-      addedCard.scrollIntoView({behavior:'smooth',block:'center'});
+    // Re-render the customer list, but do not let a display error undo the visible save confirmation.
+    try{render();}catch(renderError){console.error('Customer list refresh failed after successful save:',renderError);}
+    // Ensure the just-saved customer is visible even if the normal renderer fails.
+    const list=$('faCustomerList');
+    let addedCard=list.querySelector('[data-customer-id="'+customerRecord.id+'"]');
+    if(!addedCard){
+      addedCard=document.createElement('div');
+      addedCard.className='finance-item customer-just-added';
+      addedCard.setAttribute('data-customer-id',customerRecord.id);
+      addedCard.innerHTML='<div class="customer-added-title">✓ CUSTOMER ADDED</div><div class="finance-row"><h3>'+esc(customerRecord.name)+'</h3><span class="finance-pill">புதிய பதிவு</span></div><div class="finance-meta">📱 '+esc(customerRecord.mobile)+'<br>கடன் வகை: '+esc(customerRecord.collectionType==='weekly'?'வாரக் கடன்':customerRecord.collectionType==='daily'?'தினசரிக் கடன்':'வாரக் கடன் + தினசரி')+'<br>வசூல் கிழமை: '+esc(weekdayNames[Number(customerRecord.collectionDay)]||'பதிவு இல்லை')+(customerRecord.aadhaar?'<br>ID: XXXX-XXXX-'+esc(customerRecord.aadhaar.slice(-4)):'')+'<br>📍 '+esc(customerRecord.address||'முகவரி பதிவு செய்யப்படவில்லை')+'<br>சேர்த்த தேதி: '+dateText(customerRecord.created)+'</div>';
+      list.prepend(addedCard);
     }
-    $('faCustomerList').scrollIntoView({behavior:'smooth',block:'start'});
+    addedCard.classList.add('customer-just-added');
+    addedCard.scrollIntoView({behavior:'smooth',block:'center'});
     notice.scrollIntoView({behavior:'smooth',block:'center'});
   });
   $('faLoanForm').addEventListener('submit',e=>{
@@ -952,20 +974,41 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     $('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value==='daily');
     refreshLoanCustomerOptions();
     justAddedLoanId=loanRecord.id;
-    render();
     const notice=$('faLoanSaveNotice');
     const loanCustomer=customer(loanRecord.customerId);
+    const loanTypeLabel=loanRecord.frequency==='weekly'?'வாரக் கடன்':loanRecord.frequency==='daily'?'தினசரிக் கடன்':'வாரக் கடன் + தினசரி';
+    // Show the save confirmation before attempting a full UI refresh.
     notice.innerHTML='<div class="customer-added-title">✓ LOAN ADDED / கடன் விவரம் சேமிக்கப்பட்டது</div>'+
       '<div class="customer-added-details"><b>'+esc(loanCustomer?.name||'வாடிக்கையாளர்')+'</b><br>📱 '+esc(loanCustomer?.mobile||'-')+
-      '<br>கடன் வகை: '+(loanRecord.frequency==='weekly'?'வாரக் கடன்':loanRecord.frequency==='daily'?'தினசரிக் கடன்':'வாரக் கடன் + தினசரி')+
-      ((loanRecord.frequency==='weekly'||loanRecord.frequency==='weekly_daily')?'<br>வசூல் கிழமை: '+esc(weekdayNames[Number(loanRecord.weekday)]):'')+
+      '<br>கடன் வகை: '+loanTypeLabel+
+      ((loanRecord.frequency==='weekly'||loanRecord.frequency==='weekly_daily')?'<br>வசூல் கிழமை: '+esc(weekdayNames[Number(loanRecord.weekday)]||'பதிவு இல்லை'):'')+
       '<br>வழங்கிய தொகை: '+money(loanRecord.principal)+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(loanRecord.total)+
       '<br>ஒவ்வொரு தவணை: '+money(loanRecord.installment)+'<br>கடன் வழங்கிய தேதி: '+dateText(loanRecord.loanDate)+
-      '<br>முதல் தவணை தேதி: '+dateText(loanRecord.start)+'<br><b>மீதமுள்ள கடன்: '+money(balance(loanRecord))+'</b></div>';
+      '<br>முதல் தவணை தேதி: '+dateText(loanRecord.start)+'<br><b>மீதமுள்ள கடன்: '+money(balance(loanRecord))+'</b><br>✓ சேமிக்கப்பட்டது</div>';
     notice.classList.remove('finance-hidden');
+    notice.style.display='block';
+    notice.setAttribute('aria-live','assertive');
     if(loanNoticeTimer)clearTimeout(loanNoticeTimer);
-    const addedLoan=$('faLoanList').querySelector('[data-loan-id="'+loanRecord.id+'"]');
-    if(addedLoan)addedLoan.scrollIntoView({behavior:'smooth',block:'center'});
+    // Refresh list/dashboard, but keep the saved confirmation if another render step fails.
+    try{render();}catch(renderError){console.error('Loan list refresh failed after successful save:',renderError);}
+    const loanList=$('faLoanList');
+    let addedLoan=loanList.querySelector('[data-loan-id="'+loanRecord.id+'"]');
+    if(!addedLoan){
+      addedLoan=document.createElement('div');
+      addedLoan.className='finance-item customer-just-added';
+      addedLoan.setAttribute('data-loan-id',loanRecord.id);
+      addedLoan.innerHTML='<div class="customer-added-title">✓ LOAN ADDED / கடன் சேர்க்கப்பட்டது</div>'+
+        '<div class="finance-row"><h3>'+esc(loanCustomer?.name||'வாடிக்கையாளர்')+'</h3><span class="finance-pill">'+loanTypeLabel+'</span></div>'+
+        '<div class="finance-meta">📱 மொபைல்: '+esc(loanCustomer?.mobile||'-')+'<br>கடன் ID: '+esc(loanRecord.id)+
+        '<br>வழங்கிய தேதி: '+dateText(loanRecord.loanDate)+'<br>வழங்கிய தொகை: '+money(loanRecord.principal)+
+        '<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(loanRecord.total)+'<br>தவணைத் தொகை: '+money(loanRecord.installment)+
+        '<br>இதுவரை வசூலித்தது: '+money(paid(loanRecord.id))+'<br><b>மீதமுள்ள கடன்: '+money(balance(loanRecord))+'</b>'+
+        '<br>முதல் தவணை தேதி: '+dateText(loanRecord.start)+'<br>குறிப்பு: '+esc(loanRecord.note||'-')+'</div>';
+      loanList.prepend(addedLoan);
+    }
+    addedLoan.classList.add('customer-just-added');
+    addedLoan.scrollIntoView({behavior:'smooth',block:'center'});
+    notice.scrollIntoView({behavior:'smooth',block:'center'});
     // Keep the saved-loan confirmation visible until the next loan is saved.
   });
   document.addEventListener('change',e=>{
