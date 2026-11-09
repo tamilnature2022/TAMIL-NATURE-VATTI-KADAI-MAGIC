@@ -65,7 +65,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 81<br>
+Version 82<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -201,13 +201,6 @@ function analyze(){
  const professionNumber = hasMobile ? String(Number(m.slice(4,6))).padStart(2,"0") : "—";
  const propertyNumber = hasMobile ? String(Number(m.slice(6,8))).padStart(2,"0") : "—";
  const businessNumberText = hasBusiness ? String(businessResultNumber).padStart(2,"0") : "—";
- const professionScore = entryIsNegative(profession) === null ? null : (entryIsNegative(profession) ? 0 : 100);
- const propertyScore = entryIsNegative(property) === null ? null : (entryIsNegative(property) ? 0 : 100);
- const businessScore = entryIsNegative(businessEntry) === null ? null : (entryIsNegative(businessEntry) ? 0 : 100);
- const scoreValues = [professionScore, propertyScore, businessScore];
- const threeNumberAverage = scoreValues.every(value => value !== null)
-   ? (scoreValues.reduce((sum,value)=>sum+value,0) / 3).toFixed(2) + "/100"
-   : "—";
  const entryIsNegative = entry => {
    if(!entry) return null;
    const text=(String(entry.title||"")+" "+String(entry.prediction||"")).toLowerCase();
@@ -221,6 +214,13 @@ function analyze(){
      return false;
    });
  };
+ const professionScore = entryIsNegative(profession) === null ? null : (entryIsNegative(profession) ? 0 : 100);
+ const propertyScore = entryIsNegative(property) === null ? null : (entryIsNegative(property) ? 0 : 100);
+ const businessScore = entryIsNegative(businessEntry) === null ? null : (entryIsNegative(businessEntry) ? 0 : 100);
+ const scoreValues = [professionScore, propertyScore, businessScore];
+ const threeNumberAverage = scoreValues.every(value => value !== null)
+   ? (scoreValues.reduce((sum,value)=>sum+value,0) / 3).toFixed(2) + "/100"
+   : "—";
  const statusCard = (label, entry, present, missingText) => {
    const negative=entryIsNegative(entry);
    const mark=negative===null?"—":negative?"✖":"✔";
