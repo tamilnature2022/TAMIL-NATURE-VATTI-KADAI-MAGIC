@@ -220,6 +220,14 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 .loan-payment-row:first-of-type{background:#dcf5e9!important;border:2px solid #15966f;border-radius:12px;padding:12px;margin:8px 0}
 .weekly-selected-account,.finance-item[data-loan-id]{scroll-margin-top:24px}
 .finance-item[data-loan-id="'+ "never-match" +'"]{outline:none}
+
+/* V118: after tapping receive-payment, show the permanent receipt ledger directly under the button */
+.loan-payment-log.payment-just-recorded{border:2px solid #17956f!important;background:#effaf6!important;box-shadow:0 3px 14px rgba(23,149,111,.12)}
+.loan-payment-log.payment-just-recorded>b{color:#117b60!important;font-size:1.02em}
+.loan-payment-log .loan-payment-row:first-of-type{background:#dcf5e9!important;border:2px solid #17956f!important;border-radius:12px!important;padding:12px!important;margin:8px 0!important}
+.loan-payment-log .loan-payment-row{align-items:center;overflow-wrap:anywhere}
+.loan-payment-log .loan-payment-row span{min-width:0;flex:1}
+.loan-payment-log .loan-payment-row strong{flex-shrink:0}
 </style>
 </head>
 <body>
@@ -394,7 +402,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 117<br>
+Version 118<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -950,15 +958,12 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       render();
       const collectionList=(loan.frequency==='weekly'||loan.frequency==='weekly_daily')?'faWeeklyList':'faDailyList';
       renderCollection((loan.frequency==='weekly'||loan.frequency==='weekly_daily')?'weekly':'daily');
-      const receiptCard=$(collectionList).querySelector('.weekly-selected-account, .finance-item[data-loan-id="'+loan.id+'"]') || $(collectionList).querySelector('.weekly-selected-account, .finance-item');
-      if(receiptCard)receiptCard.scrollIntoView({behavior:'smooth',block:'center'});
-      const toast=document.createElement('div');
-      toast.className='finance-save-notice';
-      toast.innerHTML='<b>✓ பணம் பெற்றது பதிவு செய்யப்பட்டது / AMOUNT CREDITED</b><br>வாடிக்கையாளர்: '+esc(customer(loan.customerId)?.name||'-')+
-        '<br>பெற்ற தொகை: <b>'+money(amount)+'</b><br>தேதி: '+dateText(paymentRecord.date)+' | நேரம்: '+paymentRecord.time+
-        '<br>Receipt ID: '+esc(paymentRecord.id)+'<br>இப்போது நிலுவை: <b>'+money(balance(loan))+'</b>';
-      const target=(loan.frequency==='weekly'||loan.frequency==='weekly_daily')?$ ('faWeeklyList'):$('faDailyList');
-      target.prepend(toast);
+      // Scroll directly to the persistent receipt/history panel immediately below the payment button.
+      const receiptLog=$(collectionList).querySelector('.loan-payment-log');
+      if(receiptLog){
+        receiptLog.classList.add('payment-just-recorded');
+        receiptLog.scrollIntoView({behavior:'smooth',block:'center'});
+      }
     }
   });
   // V107: bind Income & Expense ledger tabs directly for reliable mobile WebView taps.
