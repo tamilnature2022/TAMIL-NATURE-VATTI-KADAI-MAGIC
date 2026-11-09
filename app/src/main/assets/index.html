@@ -191,6 +191,12 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 .ledger-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
 .ledger-tabs button{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.3;padding:12px 8px}
 .ledger-panel{min-height:80px}
+
+/* V113: immediate saved-record confirmations and credited-payment receipt */
+#faCustomerSaveNotice,#faLoanSaveNotice{display:block;margin:14px 0 18px;padding:16px;border:2px solid #168b78;border-radius:14px;background:#eaf8f1;color:#174b3b;line-height:1.7}
+#faCustomerSaveNotice.finance-hidden,#faLoanSaveNotice.finance-hidden{display:none!important}
+#faCustomerList .customer-just-added,#faLoanList .customer-just-added{outline:3px solid #168b78;outline-offset:2px}
+#faWeeklyList>.finance-save-notice,#faDailyList>.finance-save-notice{display:block;margin:14px 0;padding:16px;border:2px solid #168b78;border-radius:14px;background:#eaf8f1;color:#174b3b;line-height:1.7;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -363,7 +369,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 112<br>
+Version 113<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -752,7 +758,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       if(chosen){
         const c=customer(chosen.customerId),due=Math.min(dueNow(chosen,'weekly'),balance(chosen));
         const loanPayments=db.payments.filter(p=>p.loanId===chosen.id).slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date));
-        const paymentRows=loanPayments.length?'<div class="loan-payment-log"><b>✓ இந்தக் கடனின் முழு வசூல் வரலாறு</b>'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>'+(i===0?'சமீபத்திய வசூல்':'வசூல்')+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'<div class="loan-payment-total"><span>இதுவரை மொத்த வசூல்</span><b>'+money(paid(chosen.id))+'</b></div></div>':'<div class="loan-payment-log muted">இந்தக் கடனுக்கு இதுவரை பணம் பெறப்படவில்லை.</div>';
+        const paymentRows=loanPayments.length?'<div class="loan-payment-log"><b>✓ பணம் பெற்றது / வரவு பதிவு – முழு வசூல் வரலாறு</b>'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>'+(i===0?'✓ இப்போது வரவு வைத்தது':'முந்தைய வசூல்')+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'<div class="loan-payment-total"><span>இதுவரை மொத்த வசூல்</span><b>'+money(paid(chosen.id))+'</b></div></div>':'<div class="loan-payment-log muted">இந்தக் கடனுக்கு இதுவரை பணம் பெறப்படவில்லை.</div>';
         selectedCard='<div class="finance-item weekly-selected-account"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill pending">நிலுவை '+money(balance(chosen))+'</span></div><div class="finance-account-details"><h4>வாடிக்கையாளர் விவரம்</h4><div>📱 மொபைல்: '+esc(c?.mobile||'-')+'</div><div>🪪 ID: '+(c?.aadhaar?'XXXX-XXXX-'+esc(c.aadhaar.slice(-4)):'-')+'</div><div>📍 முகவரி: '+esc(c?.address||'-')+'</div><h4>கடன் விவரம்</h4><div>கடன் வகை: '+(chosen.frequency==='weekly_daily'?'வார + தினசரி': 'வாரக் கடன்')+'</div><div>வழங்கிய தேதி: '+dateText(chosen.loanDate||chosen.start)+'</div><div>வழங்கிய தொகை: '+money(chosen.principal)+'</div><div>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(chosen.total)+'</div><div>தவணைத் தொகை: '+money(chosen.installment)+'</div><div>இதுவரை செலுத்தியது: '+money(paid(chosen.id))+'</div><div><b>மீதமுள்ள கடன்: '+money(balance(chosen))+'</b></div><div>முதல் தவணை தேதி: '+dateText(chosen.start)+'</div></div><div class="finance-payrow"><input type="number" min="0.01" step="0.01" max="'+balance(chosen)+'" id="faAmount_'+chosen.id+'" placeholder="பெற்ற தொகை ₹" aria-label="பெற்ற தொகை"><button type="button" data-fa-pay="'+chosen.id+'">பணம் பெற்றது பதிவு</button></div>'+paymentRows+'</div>';
       }
       list.innerHTML='<label class="weekly-customer-select"><b>'+weekdayNames[selectedWeekday]+' – வாடிக்கையாளர் பட்டியல்</b><select id="faWeeklyCustomerSelect">'+options+'</select></label>'+selectedCard;
@@ -760,7 +766,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       list.innerHTML=loans.length?loans.map(l=>{
         const c=customer(l.customerId),due=Math.min(dueNow(l,freq),balance(l));
         const loanPayments=db.payments.filter(p=>p.loanId===l.id).slice().reverse();
-        const paymentRows=loanPayments.length?'<div class="loan-payment-log"><b>இந்தக் கடனின் வசூல் வரலாறு</b>'+loanPayments.map(p=>'<div class="loan-payment-row"><span>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'</div>':'<div class="loan-payment-log muted">இந்தக் கடனுக்கு இதுவரை பணம் பெறப்படவில்லை.</div>';
+        const paymentRows=loanPayments.length?'<div class="loan-payment-log"><b>✓ பணம் பெற்றது / வரவு பதிவு – முழு வசூல் வரலாறு</b>'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>'+(i===0?'✓ இப்போது வரவு வைத்தது':'முந்தைய வசூல்')+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'</div>':'<div class="loan-payment-log muted">இந்தக் கடனுக்கு இதுவரை பணம் பெறப்படவில்லை.</div>';
         return '<div class="finance-item"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill pending">இன்று/நிலுவை '+money(due)+'</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>தவணை: '+money(l.installment)+' | மொத்த கடன் நிலுவை: '+money(balance(l))+'<br>முதல் வசூல் தேதி: '+dateText(l.start)+'</div><div class="finance-payrow"><input type="number" min="0.01" step="0.01" max="'+balance(l)+'" id="faAmount_'+l.id+'" placeholder="பெற்ற தொகை ₹" aria-label="பெற்ற தொகை"><button type="button" data-fa-pay="'+l.id+'">பணம் பெற்றது பதிவு</button></div>'+paymentRows+'</div>';
       }).join(''):'<div class="finance-empty">இன்று வசூல் செய்ய வேண்டிய நிலுவைக் கடன் இல்லை.</div>';
     }
@@ -816,17 +822,19 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     justAddedLoanId=loanRecord.id;
     render();
     const notice=$('faLoanSaveNotice');
-    notice.textContent='✓ '+(customer(loanRecord.customerId)?.name||'வாடிக்கையாளர்')+' — கடன் பட்டியலில் சேர்க்கப்பட்டு சேமிக்கப்பட்டது.';
+    const loanCustomer=customer(loanRecord.customerId);
+    notice.innerHTML='<div class="customer-added-title">✓ LOAN ADDED / கடன் விவரம் சேமிக்கப்பட்டது</div>'+
+      '<div class="customer-added-details"><b>'+esc(loanCustomer?.name||'வாடிக்கையாளர்')+'</b><br>📱 '+esc(loanCustomer?.mobile||'-')+
+      '<br>கடன் வகை: '+(loanRecord.frequency==='weekly'?'வாரக் கடன்':loanRecord.frequency==='daily'?'தினசரிக் கடன்':'வாரக் கடன் + தினசரி')+
+      ((loanRecord.frequency==='weekly'||loanRecord.frequency==='weekly_daily')?'<br>வசூல் கிழமை: '+esc(weekdayNames[loanWeekday(loanRecord)]):'')+
+      '<br>வழங்கிய தொகை: '+money(loanRecord.principal)+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(loanRecord.total)+
+      '<br>ஒவ்வொரு தவணை: '+money(loanRecord.installment)+'<br>கடன் வழங்கிய தேதி: '+dateText(loanRecord.loanDate)+
+      '<br>முதல் தவணை தேதி: '+dateText(loanRecord.start)+'<br><b>மீதமுள்ள கடன்: '+money(balance(loanRecord))+'</b></div>';
     notice.classList.remove('finance-hidden');
     if(loanNoticeTimer)clearTimeout(loanNoticeTimer);
     const addedLoan=$('faLoanList').querySelector('[data-loan-id="'+loanRecord.id+'"]');
     if(addedLoan)addedLoan.scrollIntoView({behavior:'smooth',block:'center'});
-    loanNoticeTimer=setTimeout(()=>{
-      notice.classList.add('finance-hidden');
-      justAddedLoanId=null;
-      const card=$('faLoanList').querySelector('[data-loan-id="'+loanRecord.id+'"]');
-      if(card)card.classList.remove('customer-just-added');
-    },5000);
+    // Keep the saved-loan confirmation visible until the next loan is saved.
   });
   document.addEventListener('change',e=>{
     if(e.target && e.target.id==='faWeeklyCustomerSelect'){
@@ -860,10 +868,11 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       }
       const toast=document.createElement('div');
       toast.className='finance-save-notice';
-      toast.textContent='✓ '+money(amount)+' வசூல் பதிவு செய்யப்பட்டது — தேதி: '+dateText(paymentRecord.date)+' | நேரம்: '+paymentRecord.time;
-      const target=loan.frequency==='weekly'||loan.frequency==='weekly_daily'?$ ('faWeeklyList'):$('faDailyList');
+      toast.innerHTML='<b>✓ பணம் பெற்றது பதிவு செய்யப்பட்டது / AMOUNT CREDITED</b><br>வாடிக்கையாளர்: '+esc(customer(loan.customerId)?.name||'-')+
+        '<br>பெற்ற தொகை: <b>'+money(amount)+'</b><br>தேதி: '+dateText(paymentRecord.date)+' | நேரம்: '+paymentRecord.time+
+        '<br>Receipt ID: '+esc(paymentRecord.id)+'<br>இப்போது நிலுவை: <b>'+money(balance(loan))+'</b>';
+      const target=(loan.frequency==='weekly'||loan.frequency==='weekly_daily')?$ ('faWeeklyList'):$('faDailyList');
       target.prepend(toast);
-      setTimeout(()=>toast.remove(),5000);
     }
   });
   // V107: bind Income & Expense ledger tabs directly for reliable mobile WebView taps.
