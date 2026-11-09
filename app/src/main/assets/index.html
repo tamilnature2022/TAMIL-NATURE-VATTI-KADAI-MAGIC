@@ -74,7 +74,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 74<br>
+Version 75<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -111,11 +111,12 @@ function businessBenefit(total){
 }
 async function shareFinanceReport(){
  const output=document.getElementById("output");
- const text="TAMIL NATURE VATTI KADAI MAGIC\n\n"+output.innerText.trim()+"\n\nContact: 9577228833";
  if(!output || output.hidden || !output.innerText.trim()){
    alert("முதலில் Check செய்து Report உருவாக்கவும்.");
    return;
  }
+ const text="TAMIL NATURE VATTI KADAI MAGIC\n\n"+output.innerText.trim()+"\n\nContact: 9577228833";
+ // Prefer Android's native share sheet when Web Share is supported.
  if(navigator.share){
    try{
      await navigator.share({title:"Tamil Nature Vatti Kadai Magic - Finance Report",text});
@@ -124,8 +125,30 @@ async function shareFinanceReport(){
      if(err && err.name==="AbortError") return;
    }
  }
- const whatsappUrl="https://wa.me/?text="+encodeURIComponent(text);
- window.location.href=whatsappUrl;
+ // WebView-safe fallback: copy the report instead of navigating to wa.me.
+ let copied=false;
+ try{
+   if(navigator.clipboard && navigator.clipboard.writeText){
+     await navigator.clipboard.writeText(text);
+     copied=true;
+   }
+ }catch(err){}
+ if(!copied){
+   const area=document.createElement("textarea");
+   area.value=text;
+   area.setAttribute("readonly","");
+   area.style.position="fixed";
+   area.style.left="-9999px";
+   document.body.appendChild(area);
+   area.select();
+   try{copied=document.execCommand("copy");}catch(err){}
+   area.remove();
+ }
+ if(copied){
+   alert("Report copy ஆகிவிட்டது. WhatsApp திறந்து தேவையான chat-ல் Paste செய்து அனுப்புங்கள்.");
+ }else{
+   prompt("இந்த Report-ஐ Copy செய்து WhatsApp-ல் Paste செய்யுங்கள்:",text);
+ }
 }
 function analyze(){
  const raw=document.getElementById("mobile").value.replace(/\D/g,"");
