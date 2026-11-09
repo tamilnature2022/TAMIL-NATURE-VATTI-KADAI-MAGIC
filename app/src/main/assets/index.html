@@ -30,6 +30,16 @@ h2{font-size:20px;margin:0 0 13px}.customer-highlight{border:3px solid #087e8b;b
 .dashboard-value{font-size:19px;font-weight:900;color:#102a43;margin-top:5px;overflow-wrap:anywhere}
 .dashboard-value.good{color:#176b45}.dashboard-value.alert{color:#b42318}
 .dashboard-note{font-size:12px;color:#62748a;margin-top:4px;line-height:1.5}
+@media print{
+ body{background:#fff!important;color:#000!important}
+ header,main>.panel:first-child,footer,.entry,button,.hint,.error{display:none!important}
+ #output{display:block!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
+ .finance-report-first,.result,.finance-row,.dashboard-card{break-inside:avoid;box-shadow:none!important}
+ .finance-report-first{border:1px solid #777!important;background:#fff!important}
+ .dashboard-card.primary{background:#fff!important}
+}
+.print-report-btn{width:100%;margin:0 0 14px;background:#102a43}
+.share-report-btn{width:100%;margin:0 0 10px;background:#16834a}
 .finance-report-first{background:#f2fbfa;border:2px solid #0b8790;border-radius:17px;padding:15px;margin:0 0 18px}.finance-report-first h2{line-height:1.35}.finance-row{border:1px solid #dce7ec;border-radius:13px;padding:13px;margin:10px 0;background:#f9fcfd}
 .finance-row h3{font-size:16px;margin:0 0 7px;color:var(--teal)}
 .finance-row p{font-size:14px;line-height:1.7;margin:0;white-space:pre-wrap}
@@ -64,7 +74,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 72<br>
+Version 74<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -98,6 +108,24 @@ function chaldeanBusinessTotal(name){
 function businessBenefit(total){
  const resultNumber = total % 100 === 0 ? 100 : total % 100;
  return `<div class="benefit"><b>பலன் பார்க்கும் எண்:</b> ${String(resultNumber).padStart(2,"0")}</div>${renderBenefit(resultNumber)}`;
+}
+async function shareFinanceReport(){
+ const output=document.getElementById("output");
+ const text="TAMIL NATURE VATTI KADAI MAGIC\n\n"+output.innerText.trim()+"\n\nContact: 9577228833";
+ if(!output || output.hidden || !output.innerText.trim()){
+   alert("முதலில் Check செய்து Report உருவாக்கவும்.");
+   return;
+ }
+ if(navigator.share){
+   try{
+     await navigator.share({title:"Tamil Nature Vatti Kadai Magic - Finance Report",text});
+     return;
+   }catch(err){
+     if(err && err.name==="AbortError") return;
+   }
+ }
+ const whatsappUrl="https://wa.me/?text="+encodeURIComponent(text);
+ window.location.href=whatsappUrl;
 }
 function analyze(){
  const raw=document.getElementById("mobile").value.replace(/\D/g,"");
@@ -166,7 +194,7 @@ function analyze(){
    <div class="dashboard-card"><div class="dashboard-label">Business Name பலன் எண்</div><div class="dashboard-value">${businessNumberText}</div><div class="dashboard-note">${escapeHtml(businessEntry?.title || (hasBusiness ? "பலன் கிடைக்கவில்லை" : "பெயர் தரப்படவில்லை"))}</div></div>
    <div class="dashboard-card"><div class="dashboard-label">மொத்த எழுத்து / எண் மதிப்பு</div><div class="dashboard-value">${hasBusiness ? business.total : "—"}</div><div class="dashboard-note">Business Name கணக்கீடு</div></div>
  </div>`;
- const financeReport=`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2>${financeDashboard}${financeRows.join("")}${warningHtml}</section>`;
+ const financeReport=`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2><button type="button" class="share-report-btn" onclick="shareFinanceReport()">WhatsApp Share 📲</button><button type="button" class="print-report-btn" onclick="window.print()">Print / Save PDF 🖨️</button>${financeDashboard}${financeRows.join("")}${warningHtml}</section>`;
  document.getElementById("results").innerHTML=financeReport+cards;
  out.hidden=false;
  out.scrollIntoView({behavior:"smooth",block:"start"});
