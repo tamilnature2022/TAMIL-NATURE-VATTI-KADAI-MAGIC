@@ -65,7 +65,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 84<br>
+Version 85<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -135,15 +135,16 @@ async function shareFinanceReport(){
    const warning=report.querySelector(".finance-warning");
    if(warning){lines.push(clean(warning.innerText));lines.push("────────────────────");}
  }
- // Include the remaining number-result cards in clearly separated sections.
+ // Copy each number result under its own meaningful customer/category heading.
  const results=document.getElementById("results");
- Array.from(results.children).forEach(section=>{
-   if(section===report) return;
-   const title=section.querySelector("h2,h3");
-   const body=clean(section.innerText);
+ results.querySelectorAll("article.result").forEach(section=>{
+   const title=section.querySelector(".resultname");
+   const benefit=section.querySelector(".benefit");
+   const body=benefit ? clean(benefit.innerText) : clean(section.innerText);
+   const heading=title ? clean(title.innerText).replace(/\\s*பலன்$/,"") : "எண் விவரம்";
    if(body){
      lines.push("");
-     lines.push(title?clean(title.innerText):"எண் பலன்கள்");
+     lines.push(heading);
      lines.push("────────────────────");
      lines.push(body);
      lines.push("────────────────────");
