@@ -65,7 +65,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 82<br>
+Version 83<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -217,24 +217,24 @@ function analyze(){
  const professionScore = entryIsNegative(profession) === null ? null : (entryIsNegative(profession) ? 0 : 100);
  const propertyScore = entryIsNegative(property) === null ? null : (entryIsNegative(property) ? 0 : 100);
  const businessScore = entryIsNegative(businessEntry) === null ? null : (entryIsNegative(businessEntry) ? 0 : 100);
- const scoreValues = [professionScore, propertyScore, businessScore];
- const threeNumberAverage = scoreValues.every(value => value !== null)
-   ? (scoreValues.reduce((sum,value)=>sum+value,0) / 3).toFixed(2) + "/100"
+ const scoreValues = hasMobile
+   ? (hasBusiness ? [professionScore, propertyScore, businessScore] : [professionScore, propertyScore])
+   : (hasBusiness ? [businessScore] : []);
+ const threeNumberAverage = scoreValues.length && scoreValues.every(value => value !== null)
+   ? Math.round(scoreValues.reduce((sum,value)=>sum+value,0) / scoreValues.length) + "/100"
    : "—";
- const statusCard = (label, entry, present, missingText) => {
+ const statusCard = (label, entry) => {
    const negative=entryIsNegative(entry);
    const mark=negative===null?"—":negative?"✖":"✔";
    const score=negative===null?"—":negative?"0/100":"100/100";
-   const status=negative===null?missingText:negative?"கவனம் தேவை":"சாதகமான பலன்";
    const cls=negative===null?"":negative?"alert":"good";
-   return `<div class="dashboard-card"><div class="dashboard-label">${label}</div><div class="dashboard-value ${cls}">${mark} ${score}</div><div class="dashboard-note">${status}</div></div>`;
+   return `<div class="dashboard-card"><div class="dashboard-label">${label}</div><div class="dashboard-value ${cls}">${mark} ${score}</div></div>`;
  };
  const financeDashboard = `<div class="finance-dashboard">
-   <div class="dashboard-card primary"><div class="dashboard-label">நிதிநிலை சுருக்கம்</div><div class="dashboard-value ${financeStatusClass}">${financeStatus}</div><div class="dashboard-note">${isNegative ? "கொடுக்கல் வாங்கலில் கூடுதல் கவனம் தேவை." : "கிடைத்துள்ள எண் பலன்களில் எதிர்மறை எச்சரிக்கை கண்டறியப்படவில்லை."}</div></div>
-   ${statusCard("தொழில் / வேலை",profession,hasMobile,"மொபைல் எண் தரப்படவில்லை")}
-   ${statusCard("சொத்து நிதிநிலை",property,hasMobile,"மொபைல் எண் தரப்படவில்லை")}
-   ${statusCard("Business Name பலன்",businessEntry,hasBusiness,"பெயர் தரப்படவில்லை")}
-   <div class="dashboard-card"><div class="dashboard-label">மொத்த மதிப்பு / Average</div><div class="dashboard-value">${threeNumberAverage}</div><div class="dashboard-note">தொழில் / வேலை மதிப்பெண் + சொத்து நிதிநிலை மதிப்பெண் + Business Name மதிப்பெண் ÷ 3</div></div>
+   ${hasMobile ? statusCard("தொழில் / வேலை",profession) : ""}
+   ${hasMobile ? statusCard("சொத்து நிதிநிலை",property) : ""}
+   ${hasBusiness ? statusCard("Business Name பலன்",businessEntry) : ""}
+   <div class="dashboard-card"><div class="dashboard-label">மொத்த மதிப்பு / Average</div><div class="dashboard-value">${threeNumberAverage}</div></div>
  </div>`;
  const financeReport=`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2><button type="button" class="share-report-btn" onclick="shareFinanceReport()">Copy Report 📋</button>${financeDashboard}${financeRows.join("")}${warningHtml}</section>`;
  document.getElementById("results").innerHTML=financeReport+cards;
