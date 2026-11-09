@@ -139,32 +139,13 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <section id="financeView" class="finance-hidden">
 
 <div class="finance-main-tabs" role="tablist" aria-label="Account main sections">
-  <button type="button" class="active" data-main-fin-tab="dashboard">Dashboard</button>
-  <button type="button" data-main-fin-tab="customers">Customer</button>
-  <button type="button" data-main-fin-tab="loans">Loan</button>
-  <button type="button" data-main-fin-tab="weekly">வார வசூல்</button>
-  <button type="button" data-main-fin-tab="daily">தினசரி வசூல்</button>
-  <button type="button" data-main-fin-tab="income">வரவு செலவு</button>
+  <button type="button" class="active" data-main-fin-tab="customers">1. Customer</button>
+  <button type="button" data-main-fin-tab="loans">2. Loan</button>
+  <button type="button" data-main-fin-tab="weekly">3. வார வசூல்</button>
+  <button type="button" data-main-fin-tab="daily">4. தினசரி வசூல்</button>
+  <button type="button" data-main-fin-tab="income">5. வரவு செலவு</button>
+  <button type="button" data-main-fin-tab="history">6. History</button>
 </div>
-<section id="financeDashboard" class="panel" data-fin-panel="dashboard">
-    <h2>💰 Finance Account Management</h2>
-    <p class="hint">வாடிக்கையாளர் பதிவு, கடன் விவரம், வார வசூல் மற்றும் தினசரி வசூல்</p>
-    <div class="finance-grid finance-shortcuts">
-      <div class="finance-stat"><small>வாடிக்கையாளர் கணக்கு</small><strong id="faCustomerQuick">0</strong></div>
-      <div class="finance-stat"><small>கடன் கணக்கு</small><strong id="faLoanQuick">0</strong></div>
-      <div class="finance-stat"><small>வார வசூல் கணக்கு</small><strong id="faWeeklyQuick">0</strong></div>
-      <div class="finance-stat"><small>தினசரி வசூல் கணக்கு</small><strong id="faDailyQuick">0</strong></div>
-      <div class="finance-stat"><small>பணம் செலுத்திய வரலாறு</small><strong id="faHistoryQuick">0</strong></div>
-    </div>
-    <div class="finance-grid">
-      <div class="finance-stat"><small>இன்றைய வசூல்</small><strong id="faTodayCollected">₹0</strong></div>
-      <div class="finance-stat"><small>மொத்த கடன் நிலுவை</small><strong id="faOutstanding">₹0</strong></div>
-      <div class="finance-stat"><small>மொத்த வாடிக்கையாளர்கள்</small><strong id="faCustomerCount">0</strong></div>
-      <div class="finance-stat"><small>செயலில் உள்ள கடன்கள்</small><strong id="faLoanCount">0</strong></div>
-    </div>
-  </section>
-
-
 <section class="panel finance-hidden" data-fin-panel="customers">
     <h2>👥 Customer Details / வாடிக்கையாளர் விவரம்</h2>
     <form id="faCustomerForm" class="finance-form">
@@ -239,6 +220,10 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <section class="panel finance-hidden" data-fin-panel="income">
   <h2>📊 வரவு செலவு / Income & Expense</h2>
   <div class="finance-grid">
+<div class="finance-stat"><small>இன்றைய வசூல்</small><strong id="faTodayCollected">₹0</strong>
+</div>
+
+  <div class="finance-grid">
     <div class="finance-stat"><small>இன்று வசூலான வரவு</small><strong id="faIncomeToday">₹0</strong></div>
     <div class="finance-stat"><small>மொத்தம் வசூலான வரவு</small><strong id="faIncomeTotal">₹0</strong></div>
     <div class="finance-stat"><small>மொத்த கடன் நிலுவை</small><strong id="faIncomeBalance">₹0</strong></div>
@@ -273,7 +258,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 96<br>
+Version 97<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -606,7 +591,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     const payBtn=e.target.closest('[data-fa-pay]');if(payBtn){const loan=db.loans.find(l=>l.id===payBtn.dataset.faPay),input=$('faAmount_'+payBtn.dataset.faPay),amount=Number(input.value);if(!amount||amount<=0)return alert('பெற்ற தொகையை உள்ளிடவும்.');if(amount>balance(loan))return alert('மீதமுள்ள கடன் தொகையைவிட அதிகமாகப் பதிவு செய்ய முடியாது.');const note=prompt('குறிப்பு / Receipt note (விருப்பம்):')||'';db.payments.push({id:'R'+Date.now(),loanId:loan.id,amount,date:today(),note});save();render();alert('வசூல் பதிவு செய்யப்பட்டது.');}
   });
   $('showCalculator').addEventListener('click',()=>{$('calculatorView').classList.remove('finance-hidden');$('financeView').classList.add('finance-hidden');$('showCalculator').classList.add('active');$('showCalculator').classList.remove('secondary');$('showFinance').classList.remove('active');$('showFinance').classList.add('secondary');});
-  $('showFinance').addEventListener('click',()=>{$('calculatorView').classList.add('finance-hidden');$('financeView').classList.remove('finance-hidden');$('showFinance').classList.add('active');$('showFinance').classList.remove('secondary');$('showCalculator').classList.remove('active');$('showCalculator').classList.add('secondary');showMainFinanceTab('dashboard');render();});
+  $('showFinance').addEventListener('click',()=>{$('calculatorView').classList.add('finance-hidden');$('financeView').classList.remove('finance-hidden');$('showFinance').classList.add('active');$('showFinance').classList.remove('secondary');$('showCalculator').classList.remove('active');$('showCalculator').classList.add('secondary');showMainFinanceTab('customers');render();});
   $('faFrequency').addEventListener('change',()=>{$('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value!=='weekly');updateFirstDueDate();});
   $('faWeekday').addEventListener('change',updateFirstDueDate);
   $('faLoanDate').addEventListener('change',updateFirstDueDate);
