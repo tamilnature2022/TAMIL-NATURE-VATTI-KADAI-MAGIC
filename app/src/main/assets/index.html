@@ -104,6 +104,13 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 .weekday-picker button{min-width:0;white-space:normal;overflow-wrap:anywhere;padding:11px 5px;font-size:clamp(11px,3vw,14px);line-height:1.25;background:#e4edf0;color:#17324d}
 .weekday-picker button.active{background:#087e8b;color:#fff}
 @media(min-width:600px){.weekday-picker{grid-template-columns:repeat(7,minmax(0,1fr))}}
+
+
+.finance-main-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0 14px}
+.finance-main-tabs button,.ledger-tabs button{min-width:0;width:100%;white-space:normal;overflow-wrap:anywhere;text-align:center;line-height:1.25;padding:10px 5px;font-size:clamp(11px,3vw,14px);background:#e4edf0;color:#17324d}
+.finance-main-tabs button.active,.ledger-tabs button.active{background:#087e8b;color:#fff}
+.ledger-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:14px 0}
+@media(min-width:650px){.finance-main-tabs{grid-template-columns:repeat(6,minmax(0,1fr))}.ledger-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -114,7 +121,32 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
   <button type="button" id="showCalculator" class="active">🔢 Calculator</button>
   <button type="button" id="showFinance" class="secondary">💰 Account</button>
 </div>
-<section id="financeDashboard" class="panel finance-hidden">
+<div id="calculatorView">
+<section class="panel">
+<label for="mobile">மொபைல் எண் / Mobile Number</label>
+<div class="entry"><input id="mobile" inputmode="numeric" maxlength="16" placeholder=""></div>
+<p class="hint">+91 உள்ளிட்டாலும் பரவாயில்லை. கடைசி 10 இலக்கங்கள் மட்டும் கணக்கில் எடுத்துக்கொள்ளப்படும்.</p>
+<label for="businessName" style="margin-top:18px">Business Name / தொழில் பெயர்</label>
+<input id="businessName" type="text" maxlength="80" placeholder="" autocomplete="organization">
+<p class="hint">English A–Z, 0–9 மற்றும் &amp; மட்டும். கணக்கில் &amp; என்பது AND என எடுத்துக்கொள்ளப்படும்.</p>
+<button id="analyze" type="button" style="width:100%;margin-top:16px">Check ✅</button>
+<div id="error" class="error" role="alert"></div>
+</section>
+<section class="panel" id="output" hidden><div id="results"></div></section>
+</div><!-- calculatorView -->
+
+
+<section id="financeView" class="finance-hidden">
+
+<div class="finance-main-tabs" role="tablist" aria-label="Account main sections">
+  <button type="button" class="active" data-main-fin-tab="dashboard">Dashboard</button>
+  <button type="button" data-main-fin-tab="customers">Customer</button>
+  <button type="button" data-main-fin-tab="loans">Loan</button>
+  <button type="button" data-main-fin-tab="weekly">வார வசூல்</button>
+  <button type="button" data-main-fin-tab="daily">தினசரி வசூல்</button>
+  <button type="button" data-main-fin-tab="income">வரவு செலவு</button>
+</div>
+<section id="financeDashboard" class="panel" data-fin-panel="dashboard">
     <h2>💰 Finance Account Management</h2>
     <p class="hint">வாடிக்கையாளர் பதிவு, கடன் விவரம், வார வசூல் மற்றும் தினசரி வசூல்</p>
     <div class="finance-grid finance-shortcuts">
@@ -132,31 +164,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
     </div>
   </section>
 
-<div id="calculatorView">
-<section class="panel">
-<label for="mobile">மொபைல் எண் / Mobile Number</label>
-<div class="entry"><input id="mobile" inputmode="numeric" maxlength="16" placeholder=""></div>
-<p class="hint">+91 உள்ளிட்டாலும் பரவாயில்லை. கடைசி 10 இலக்கங்கள் மட்டும் கணக்கில் எடுத்துக்கொள்ளப்படும்.</p>
-<label for="businessName" style="margin-top:18px">Business Name / தொழில் பெயர்</label>
-<input id="businessName" type="text" maxlength="80" placeholder="" autocomplete="organization">
-<p class="hint">English A–Z, 0–9 மற்றும் &amp; மட்டும். கணக்கில் &amp; என்பது AND என எடுத்துக்கொள்ளப்படும்.</p>
-<button id="analyze" type="button" style="width:100%;margin-top:16px">Check ✅</button>
-<div id="error" class="error" role="alert"></div>
-</section>
-<section class="panel" id="output" hidden><div id="results"></div></section>
-</div><!-- calculatorView -->
 
-
-<section id="financeView" class="finance-hidden">
-<div class="finance-tabs" role="tablist" aria-label="Finance sections">
-    <button type="button" class="active" data-fin-tab="customers">1. Customer</button>
-    <button type="button" data-fin-tab="loans">2. Loan</button>
-    <button type="button" data-fin-tab="weekly">3. வார வசூல்</button>
-    <button type="button" data-fin-tab="daily">4. தினசரி வசூல்</button>
-    <button type="button" data-fin-tab="history">5. History</button>
-  </div>
-
-<section class="panel" data-fin-panel="customers">
+<section class="panel finance-hidden" data-fin-panel="customers">
     <h2>👥 Customer Details / வாடிக்கையாளர் விவரம்</h2>
     <form id="faCustomerForm" class="finance-form">
       <label>வாடிக்கையாளர் பெயர்<input id="faName" required maxlength="80" placeholder="பெயர்"></label>
@@ -225,6 +234,30 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
     <h2>🧾 Payment History / வசூல் வரலாறு</h2>
     <div id="faPaymentHistory" class="finance-list"></div>
   </section>
+
+
+<section class="panel finance-hidden" data-fin-panel="income">
+  <h2>📊 வரவு செலவு / Income & Expense</h2>
+  <div class="finance-grid">
+    <div class="finance-stat"><small>இன்று வசூலான வரவு</small><strong id="faIncomeToday">₹0</strong></div>
+    <div class="finance-stat"><small>மொத்தம் வசூலான வரவு</small><strong id="faIncomeTotal">₹0</strong></div>
+    <div class="finance-stat"><small>மொத்த கடன் நிலுவை</small><strong id="faIncomeBalance">₹0</strong></div>
+    <div class="finance-stat"><small>வாடிக்கையாளர்கள்</small><strong id="faIncomeCustomers">0</strong></div>
+  </div>
+  <div class="ledger-tabs" role="tablist" aria-label="Income expense ledgers">
+    <button type="button" class="active" data-ledger-tab="customerLedger">வாடிக்கையாளர் கணக்கு</button>
+    <button type="button" data-ledger-tab="loanLedger">கடன் கணக்கு</button>
+    <button type="button" data-ledger-tab="weeklyLedger">வார வசூல்</button>
+    <button type="button" data-ledger-tab="dailyLedger">தினசரி வசூல்</button>
+    <button type="button" data-ledger-tab="paymentLedger">Payment History</button>
+  </div>
+  <div class="ledger-panel" data-ledger-panel="customerLedger"><h3>வாடிக்கையாளர் கணக்கு</h3><div id="faLedgerCustomers" class="finance-list"></div></div>
+  <div class="ledger-panel finance-hidden" data-ledger-panel="loanLedger"><h3>கடன் கணக்கு</h3><div id="faLedgerLoans" class="finance-list"></div></div>
+  <div class="ledger-panel finance-hidden" data-ledger-panel="weeklyLedger"><h3>வார வசூல் கணக்கு</h3><div id="faLedgerWeekly" class="finance-list"></div></div>
+  <div class="ledger-panel finance-hidden" data-ledger-panel="dailyLedger"><h3>தினசரி வசூல் கணக்கு</h3><div id="faLedgerDaily" class="finance-list"></div></div>
+  <div class="ledger-panel finance-hidden" data-ledger-panel="paymentLedger"><h3>பணம் பெற்ற வரலாறு</h3><div id="faLedgerPayments" class="finance-list"></div></div>
+</section>
+
   <p class="finance-note">தரவு சேமிப்பு குறிப்பு: இந்த ஆரம்ப பதிப்பில் விவரங்கள் இந்தச் சாதனத்தின் WebView Local Storage-ல் சேமிக்கப்படும். வேறு மொபைலுக்கு தானாக Sync ஆகாது. App data அழிக்கப்பட்டால் இழக்கப்படலாம். Cloud backup, பணியாளர் Login மற்றும் Server Sync அடுத்த கட்டத்தில் தேவை. உண்மையான வாடிக்கையாளர் நிதித் தரவைப் பயன்படுத்துவதற்கு முன் பாதுகாப்பான Backup அமைக்கவும்.</p>
 </section>
 
@@ -240,7 +273,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 95<br>
+Version 96<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -519,6 +552,10 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     return Math.min(Number(l.total),installments*Number(l.installment));
   }
   function dueNow(l){return Math.max(0,dueThroughToday(l)-paid(l.id));}
+  function showMainFinanceTab(name){
+    document.querySelectorAll('[data-main-fin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.mainFinTab===name));
+    document.querySelectorAll('[data-fin-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.finPanel!==name));
+  }
   function render(){
     $('faCustomerCount').textContent=db.customers.length;
     $('faLoanCount').textContent=db.loans.filter(l=>balance(l)>0).length;
@@ -530,6 +567,16 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     $('faCustomerList').innerHTML=db.customers.length?db.customers.map(c=>'<div class="finance-item"><div class="finance-row"><h3>'+esc(c.name)+'</h3><span class="finance-pill">Customer</span></div><div class="finance-meta">📱 '+esc(c.mobile)+'<br>📍 '+esc(c.address||'-')+'</div></div>').join(''):'<div class="finance-empty">இன்னும் வாடிக்கையாளர்கள் பதிவு செய்யப்படவில்லை.</div>';
     $('faLoanList').innerHTML=db.loans.length?db.loans.map(l=>{const c=customer(l.customerId);return '<div class="finance-item"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">'+(l.frequency==='weekly'?'வாரக் கடன்':'தினசரிக் கடன்')+'</span></div><div class="finance-meta">Loan ID: '+esc(l.id)+'<br>வழங்கிய தொகை: '+money(l.principal)+' | மொத்தம்: '+money(l.total)+'<br>'+(l.frequency==='weekly'?('வசூல் நாள்: '+weekdayNames[loanWeekday(l)]+' | '):'')+'தவணை: '+money(l.installment)+' | செலுத்தியது: '+money(paid(l.id))+'<br><b>மீதமுள்ள கடன்: '+money(balance(l))+'</b><br>முதல் வசூல் தேதி: '+dateText(l.start)+'</div></div>';}).join(''):'<div class="finance-empty">கடன் விவரங்கள் இல்லை.</div>';
     renderCollection('weekly');renderCollection('daily');renderHistory();
+    $('faIncomeToday').textContent=$('faTodayCollected').textContent;
+    $('faIncomeTotal').textContent=money(db.payments.reduce((a,p)=>a+Number(p.amount),0));
+    $('faIncomeBalance').textContent=$('faOutstanding').textContent;
+    $('faIncomeCustomers').textContent=db.customers.length;
+    $('faLedgerCustomers').innerHTML=$('faCustomerList').innerHTML;
+    $('faLedgerLoans').innerHTML=$('faLoanList').innerHTML;
+    $('faLedgerWeekly').innerHTML=$('faWeeklyList').innerHTML;
+    $('faLedgerDaily').innerHTML=$('faDailyList').innerHTML;
+    $('faLedgerPayments').innerHTML=$('faPaymentHistory').innerHTML;
+
   
     $('faCustomerQuick').textContent=db.customers.length;
     $('faLoanQuick').textContent=db.loans.length;
@@ -554,11 +601,12 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
   $('faCustomerForm').addEventListener('submit',e=>{e.preventDefault();const name=$('faName').value.trim(),mobile=$('faMobile').value.trim();if(!name||!mobile)return alert('பெயர் மற்றும் மொபைல் எண் அவசியம்.');db.customers.push({id:'C'+Date.now(),name,mobile,address:$('faAddress').value.trim(),created:today()});save();e.target.reset();render();alert('வாடிக்கையாளர் சேமிக்கப்பட்டார்.');});
   $('faLoanForm').addEventListener('submit',e=>{e.preventDefault();const principal=Number($('faPrincipal').value),total=Number($('faTotal').value),installment=Number($('faInstallment').value),loanDate=$('faLoanDate').value,frequency=$('faFrequency').value,weekday=Number($('faWeekday').value),start=firstDueDate(loanDate,frequency,weekday);if(!db.customers.some(c=>c.id===$('faLoanCustomer').value))return alert('முதலில் வாடிக்கையாளரைத் தேர்வு செய்யவும்.');if(!principal||!total||!installment||!loanDate||!start)return alert('அனைத்து கடன் விவரங்களையும் சரிபார்க்கவும்.');if(total<principal&&!confirm('மொத்த திருப்பிச் செலுத்த வேண்டிய தொகை, கடன் தொகையைவிடக் குறைவாக உள்ளது. தொடரவா?'))return;db.loans.push({id:'L'+Date.now(),customerId:$('faLoanCustomer').value,frequency,weekday:frequency==='weekly'?weekday:null,loanDate,principal,total,installment,start,note:$('faLoanNote').value.trim()});save();e.target.reset();$('faLoanDate').value=today();updateFirstDueDate();$('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value!=='weekly');render();alert('கடன் விவரம் சேமிக்கப்பட்டது.');});
   document.addEventListener('click',e=>{
-    const tab=e.target.closest('[data-fin-tab]');if(tab){document.querySelectorAll('[data-fin-tab]').forEach(b=>b.classList.toggle('active',b===tab));document.querySelectorAll('[data-fin-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.finPanel!==tab.dataset.finTab));}
+    const mainTab=e.target.closest('[data-main-fin-tab]');if(mainTab){showMainFinanceTab(mainTab.dataset.mainFinTab);}
+    const ledgerTab=e.target.closest('[data-ledger-tab]');if(ledgerTab){document.querySelectorAll('[data-ledger-tab]').forEach(b=>b.classList.toggle('active',b===ledgerTab));document.querySelectorAll('[data-ledger-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.ledgerPanel!==ledgerTab.dataset.ledgerTab));}
     const payBtn=e.target.closest('[data-fa-pay]');if(payBtn){const loan=db.loans.find(l=>l.id===payBtn.dataset.faPay),input=$('faAmount_'+payBtn.dataset.faPay),amount=Number(input.value);if(!amount||amount<=0)return alert('பெற்ற தொகையை உள்ளிடவும்.');if(amount>balance(loan))return alert('மீதமுள்ள கடன் தொகையைவிட அதிகமாகப் பதிவு செய்ய முடியாது.');const note=prompt('குறிப்பு / Receipt note (விருப்பம்):')||'';db.payments.push({id:'R'+Date.now(),loanId:loan.id,amount,date:today(),note});save();render();alert('வசூல் பதிவு செய்யப்பட்டது.');}
   });
-  $('showCalculator').addEventListener('click',()=>{$('calculatorView').classList.remove('finance-hidden');$('financeView').classList.add('finance-hidden');$('financeDashboard').classList.add('finance-hidden');$('showCalculator').classList.add('active');$('showCalculator').classList.remove('secondary');$('showFinance').classList.remove('active');$('showFinance').classList.add('secondary');});
-  $('showFinance').addEventListener('click',()=>{$('calculatorView').classList.add('finance-hidden');$('financeView').classList.remove('finance-hidden');$('financeDashboard').classList.remove('finance-hidden');$('showFinance').classList.add('active');$('showFinance').classList.remove('secondary');$('showCalculator').classList.remove('active');$('showCalculator').classList.add('secondary');render();});
+  $('showCalculator').addEventListener('click',()=>{$('calculatorView').classList.remove('finance-hidden');$('financeView').classList.add('finance-hidden');$('showCalculator').classList.add('active');$('showCalculator').classList.remove('secondary');$('showFinance').classList.remove('active');$('showFinance').classList.add('secondary');});
+  $('showFinance').addEventListener('click',()=>{$('calculatorView').classList.add('finance-hidden');$('financeView').classList.remove('finance-hidden');$('showFinance').classList.add('active');$('showFinance').classList.remove('secondary');$('showCalculator').classList.remove('active');$('showCalculator').classList.add('secondary');showMainFinanceTab('dashboard');render();});
   $('faFrequency').addEventListener('change',()=>{$('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value!=='weekly');updateFirstDueDate();});
   $('faWeekday').addEventListener('change',updateFirstDueDate);
   $('faLoanDate').addEventListener('change',updateFirstDueDate);
