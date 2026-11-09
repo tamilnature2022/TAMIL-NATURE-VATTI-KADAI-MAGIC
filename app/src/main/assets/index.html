@@ -298,6 +298,8 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 
 
 <section id="financeView" class="finance-hidden">
+<div id="financeCompatStats" class="finance-hidden" aria-hidden="true"><span id="faCustomerCount"></span><span id="faLoanCount"></span><span id="faOutstanding"></span><span id="faCustomerQuick"></span><span id="faLoanQuick"></span><span id="faWeeklyQuick"></span><span id="faDailyQuick"></span><span id="faHistoryQuick"></span></div>
+
 
 <div class="finance-main-tabs" role="tablist" aria-label="Account main sections">
   <button type="button" class="active" data-main-fin-tab="customers">1. Customer</button>
@@ -311,7 +313,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
     <h2>👥 Customer Details / வாடிக்கையாளர் விவரம்</h2>
     <form id="faCustomerForm" class="finance-form">
       <label>வாடிக்கையாளர் பெயர்<input id="faName" required maxlength="80" placeholder="பெயர்"></label>
-      <label>மொபைல் எண்<input id="faMobile" type="tel" required inputmode="numeric" maxlength="10" minlength="10" pattern="[0-9]{10}" autocomplete="tel-national" placeholder="10 இலக்க மொபைல் எண்" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)></label>
+      <label>மொபைல் எண்<input id="faMobile" type="tel" required inputmode="numeric" maxlength="10" minlength="10" pattern="[0-9]{10}" autocomplete="tel-national" placeholder="10 இலக்க மொபைல் எண்" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"></label>
       <label>கடன் வசூல் வகை / Customer Loan Collection Type
         <select id="faCustomerFrequency" required>
           <option value="">கடன் வசூல் வகையைத் தேர்வு செய்யவும்</option>
@@ -388,7 +390,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
         <select id="faGuarantorCustomerList" aria-label="ஜாமீன் வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--text)"><option value="">ஜாமீன் வாடிக்கையாளரைத் தேர்வு செய்யவும்</option></select>
         <small class="finance-note">பட்டியலில் பெயரைத் தேர்வு செய்யலாம் அல்லது மேலே type செய்து தேடலாம். புதிய ஜாமீன் என்றால் பெயரை நேரடியாக உள்ளிடலாம்.</small>
       </label>
-      <label>ஜாமீன் தொலைபேசி எண் / Guarantor Phone (Optional)<input id="faGuarantorPhone" type="tel" inputmode="numeric" maxlength="10" minlength="10" pattern="[0-9]{10}" placeholder="10 இலக்க எண் (விருப்பம்)" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)></label>
+      <label>ஜாமீன் தொலைபேசி எண் / Guarantor Phone (Optional)<input id="faGuarantorPhone" type="tel" inputmode="numeric" maxlength="10" minlength="10" pattern="[0-9]{10}" placeholder="10 இலக்க எண் (விருப்பம்)" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"></label>
       <label>குறிப்பு<input id="faLoanNote" maxlength="160" placeholder="விருப்பக் குறிப்பு"></label>
       <button type="submit">➕ கடன் விவரத்தை சேமிக்கவும்</button>
     </form>
