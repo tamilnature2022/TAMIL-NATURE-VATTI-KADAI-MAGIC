@@ -244,21 +244,21 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 #faLatestCustomer .latest-customer-card{border:2px solid #168b78;background:#eaf8f1;padding:16px;box-shadow:0 4px 14px rgba(8,126,139,.12);overflow-wrap:anywhere}
 #faLatestCustomer .customer-added-title{display:block;margin-bottom:10px;padding:8px 10px;border-radius:9px;background:#d5f1e5;color:#087e63;font-weight:800}
 
-/* V126: show only the five most recently saved loans in Loan List */
+/* V127: show only the five most recently saved loans in Loan List */
 .latest-loans-heading{margin:8px 0 12px;padding:10px 12px;border-radius:10px;background:#eaf8f1;color:#087e63;font-weight:850;line-height:1.45}
 
-/* V126: make the actual Loan Details list show the latest five saved loans */
+/* V127: make the actual Loan Details list show the latest five saved loans */
 #faLoanList{display:flex;flex-direction:column;gap:12px;min-width:0}
 #faLoanList .finance-item{width:100%;box-sizing:border-box;overflow-wrap:anywhere}
 #faLoanList .finance-item.customer-just-added{border:2px solid #087e8b;background:#eaf8f1;padding:16px;box-shadow:0 4px 14px rgba(8,126,139,.12)}
 #faLoanList .latest-loans-heading{display:block;margin:8px 0 4px;padding:10px 12px;border-radius:10px;background:#eaf8f1;color:#087e63;font-weight:850}
 
-/* V126: force immediate customer-added confirmation visibility after successful save */
+/* V127: force immediate customer-added confirmation visibility after successful save */
 #faCustomerSaveNotice{display:block!important;min-height:48px;position:relative;z-index:2}
 #faCustomerSaveNotice.finance-hidden{display:none!important}
 #faCustomerList .customer-just-added{display:block!important;visibility:visible!important;opacity:1!important;border:2px solid #087e8b!important;background:#eaf8f1!important;padding:16px!important;order:-1}
 
-/* V126: immediate, persistent loan-added confirmation and latest loan card */
+/* V127: immediate, persistent loan-added confirmation and latest loan card */
 #faLoanSaveNotice{display:block!important;min-height:48px;position:relative;z-index:2}
 #faLoanSaveNotice.finance-hidden{display:none!important}
 #faLoanList{display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -381,7 +381,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
     </div>
     <p class="finance-note" id="faWeekdayCaption">ஞாயிற்றுக்கிழமை வசூல் வாடிக்கையாளர்கள்</p>
     <div class="finance-grid">
-      <div class="finance-stat"><small>இந்த வாரம் பெற்ற தொகை</small><strong id="faWeeklyReceived">₹0</strong></div>
+      <div class="finance-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வரவு</small><strong id="faWeeklyReceived">₹0</strong></div>
       <div class="finance-stat"><small>வார தவணை நிலுவை</small><strong id="faWeeklyDue">₹0</strong></div>
     </div>
     <div id="faWeeklyList" class="finance-list"></div>
@@ -439,7 +439,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 126<br>
+Version 127<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -883,6 +883,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     $(isWeekly?'faWeeklyReceived':'faDailyReceived').textContent=money(isWeekly?db.payments.filter(p=>{const d=dateObj(p.date),now=dateObj(today()),start=new Date(now);start.setDate(now.getDate()-((now.getDay()+6)%7));const end=new Date(start);end.setDate(start.getDate()+6);return d>=start&&d<=end&&db.loans.some(l=>l.id===p.loanId&&(l.frequency==='weekly'||l.frequency==='weekly_daily')&&loanWeekday(l)===selectedWeekday);}).reduce((a,p)=>a+Number(p.amount),0):collected);
     $(isWeekly?'faWeeklyDue':'faDailyDue').textContent=money(dueTotal);
     if(isWeekly && $('faWeekdayCaption'))$('faWeekdayCaption').textContent=weekdayNames[selectedWeekday]+' வசூல் வாடிக்கையாளர்கள் மட்டும்';
+    if(isWeekly && $('faWeeklyReceivedLabel'))$('faWeeklyReceivedLabel').textContent=(selectedWeekday===0?'ஞாயிற்றுக்கிழமை':weekdayNames[selectedWeekday]+'க்கிழமை')+' மொத்த வரவு';
 
     if(isWeekly){
       if(!loans.some(l=>l.id===selectedWeeklyLoanId))selectedWeeklyLoanId='';
