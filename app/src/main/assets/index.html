@@ -279,8 +279,8 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 <main class="wrap">
 
 <div class="account-nav" aria-label="App navigation">
-  <button type="button" id="showCalculator" class="active">🔢 Calculator</button>
-  <button type="button" id="showFinance" class="secondary">💰 Account</button>
+  <button type="button" id="showCalculator" class="active" onclick="document.getElementById(&quot;calculatorView&quot;).classList.remove(&quot;finance-hidden&quot;);document.getElementById(&quot;financeView&quot;).classList.add(&quot;finance-hidden&quot;);document.getElementById(&quot;showCalculator&quot;).classList.add(&quot;active&quot;);document.getElementById(&quot;showCalculator&quot;).classList.remove(&quot;secondary&quot;);document.getElementById(&quot;showFinance&quot;).classList.remove(&quot;active&quot;);document.getElementById(&quot;showFinance&quot;).classList.add(&quot;secondary&quot;)">🔢 Calculator</button>
+  <button type="button" id="showFinance" class="secondary" onclick="document.getElementById(&quot;calculatorView&quot;).classList.add(&quot;finance-hidden&quot;);document.getElementById(&quot;financeView&quot;).classList.remove(&quot;finance-hidden&quot;);document.getElementById(&quot;showFinance&quot;).classList.add(&quot;active&quot;);document.getElementById(&quot;showFinance&quot;).classList.remove(&quot;secondary&quot;);document.getElementById(&quot;showCalculator&quot;).classList.remove(&quot;active&quot;);document.getElementById(&quot;showCalculator&quot;).classList.add(&quot;secondary&quot;);try{showMainFinanceTab(&quot;customers&quot;);render()}catch(e){console.error(&quot;Account display error&quot;,e)}">💰 Account</button>
 </div>
 <div id="calculatorView">
 <section class="panel">
