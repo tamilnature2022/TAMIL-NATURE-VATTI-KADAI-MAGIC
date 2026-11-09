@@ -65,7 +65,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 0 25px}
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 83<br>
+Version 84<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -106,17 +106,52 @@ async function shareFinanceReport(){
    alert("முதலில் Check செய்து Report உருவாக்கவும்.");
    return;
  }
- const text="TAMIL NATURE VATTI KADAI MAGIC\n\n"+output.innerText.trim()+"\n\nContact: 9577228833";
- // Prefer Android's native share sheet when Web Share is supported.
- if(navigator.share){
-   try{
-     await navigator.share({title:"Tamil Nature Vatti Kadai Magic - Finance Report",text});
-     return;
-   }catch(err){
-     if(err && err.name==="AbortError") return;
-   }
+ const clean = value => (value || "").replace(/\s+/g," ").trim();
+ const lines = [];
+ lines.push("TAMIL NATURE VATTI KADAI MAGIC");
+ lines.push("வரவு செலவு ரிப்போர்ட்");
+ lines.push("━━━━━━━━━━━━━━━━━━━━");
+ const report = output.querySelector(".finance-report-first");
+ if(report){
+   const heading=report.querySelector("h2");
+   if(heading) lines.push(clean(heading.innerText));
+   lines.push("");
+   report.querySelectorAll(".dashboard-card").forEach(card=>{
+     const label=card.querySelector(".dashboard-label");
+     const value=card.querySelector(".dashboard-value");
+     const note=card.querySelector(".dashboard-note");
+     if(label) lines.push(clean(label.innerText));
+     if(value) lines.push(clean(value.innerText));
+     if(note && clean(note.innerText)) lines.push(clean(note.innerText));
+     lines.push("────────────────────");
+   });
+   report.querySelectorAll(".finance-row").forEach(section=>{
+     const title=section.querySelector("h3");
+     const body=section.querySelector("p");
+     if(title) lines.push(clean(title.innerText));
+     if(body) lines.push(clean(body.innerText));
+     lines.push("────────────────────");
+   });
+   const warning=report.querySelector(".finance-warning");
+   if(warning){lines.push(clean(warning.innerText));lines.push("────────────────────");}
  }
- // WebView-safe fallback: copy the report instead of navigating to wa.me.
+ // Include the remaining number-result cards in clearly separated sections.
+ const results=document.getElementById("results");
+ Array.from(results.children).forEach(section=>{
+   if(section===report) return;
+   const title=section.querySelector("h2,h3");
+   const body=clean(section.innerText);
+   if(body){
+     lines.push("");
+     lines.push(title?clean(title.innerText):"எண் பலன்கள்");
+     lines.push("────────────────────");
+     lines.push(body);
+     lines.push("────────────────────");
+   }
+ });
+ lines.push("");
+ lines.push("Contact: 9577228833");
+ const text=lines.filter((line,index)=>!(line==="" && lines[index-1]==="")).join("\n");
  let copied=false;
  try{
    if(navigator.clipboard && navigator.clipboard.writeText){
@@ -136,7 +171,7 @@ async function shareFinanceReport(){
    area.remove();
  }
  if(copied){
-   alert("Report copy ஆகிவிட்டது. WhatsApp திறந்து தேவையான chat-ல் Paste செய்து அனுப்புங்கள்.");
+   alert("அழகாக வரிசைப்படுத்திய Report copy ஆகிவிட்டது. WhatsApp-ல் Paste செய்யுங்கள்.");
  }else{
    prompt("இந்த Report-ஐ Copy செய்து WhatsApp-ல் Paste செய்யுங்கள்:",text);
  }
