@@ -486,7 +486,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 150<br>
+Version 151<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -704,8 +704,13 @@ function analyze(){
    <div class="dashboard-card"><div class="dashboard-label">மொத்த மதிப்பு / Average</div><div class="dashboard-value">${threeNumberAverage}</div><div class="dashboard-note">புத்தக விளக்கச் சொற்களின் அடிப்படையிலான 0–100 குறியீடு; நிதி வெற்றி வாய்ப்பு சதவீதம் அல்ல.</div></div>
  </div>`;
  const customerDetails = `<div class="customer-report-details"><b>வாடிக்கையாளர் விவரம்</b><br>${hasMobile ? `<b>மொபைல் எண்:</b> ${escapeHtml(m)}<br>` : ""}${hasBusiness ? `<b>Business Name:</b> ${escapeHtml(businessRaw)}<br>` : ""}</div>`;
- const financeReport=`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2>${customerDetails}<button type="button" class="share-report-btn" onclick="shareFinanceReport()">Copy Report 📋</button>${financeDashboard}${financeRows.join("")}${warningHtml}</section>`;
- document.getElementById("results").innerHTML=financeReport+cards;
+ // V151: Build report only from values that are defined in this calculator.
+ const pyramidCards = [
+   hasMobile ? pyramidResultHtml("Mobile Number", mobilePyramidValue) : "",
+   hasBusiness ? pyramidResultHtml("Business Name", businessPyramidValue) : ""
+ ].join("");
+ const financeReport=`<section class="finance-report-first"><h2>வரவு செலவு ரிப்போர்ட் : பணம் கொடுக்கல் வாங்கல் வரவு செலவு செய்யலாமா?? வேண்டாமா?? 💸💰</h2>${customerDetails}<button type="button" class="share-report-btn" onclick="shareFinanceReport()">Copy Report 📋</button>${financeDashboard}</section>`;
+ document.getElementById("results").innerHTML=financeReport+pyramidCards+cards;
  out.hidden=false;
  out.scrollIntoView({behavior:"smooth",block:"start"});
 }
