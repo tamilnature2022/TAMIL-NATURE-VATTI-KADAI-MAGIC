@@ -351,7 +351,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 #faCustomerSearch{padding-right:18px!important}
 
 
-/* V164: scrollable in-app customer dropdown */
+/* V165: scrollable in-app customer dropdown */
 .customer-picker-label{position:relative;z-index:30}
 .customer-dropdown-scroll{
  position:absolute;left:0;right:0;top:100%;margin-top:7px;z-index:1000;
@@ -372,7 +372,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 #faCustomerSearch{position:relative;z-index:31}
 
 
-/* V164: visible single dropdown arrow on every custom searchable dropdown */
+/* V165: visible single dropdown arrow on every custom searchable dropdown */
 .app-scroll-picker{position:relative}
 .app-scroll-picker::after{
  content:"";position:absolute;right:17px;top:50%;transform:translateY(-50%);
@@ -1587,7 +1587,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
 
 
 <script>
-/* V164: consistent scrollable searchable dropdowns on every page */
+/* V165: consistent scrollable searchable dropdowns on every page */
 (function(){
   const activeMenus=new Set();
   function closeMenus(except){
@@ -1660,7 +1660,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
 })();
 </script>
 <style>
-/* V164: scrollable dropdown presentation shared by loan, guarantor and collection pages */
+/* V165: scrollable dropdown presentation shared by loan, guarantor and collection pages */
 .app-scroll-picker{position:relative;display:block;width:100%;min-width:0}
 .app-scroll-picker>input{width:100%;box-sizing:border-box}
 .app-scroll-dropdown{
@@ -1681,7 +1681,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
 </style>
 
 <style>
-/* V164: match Customer Name search field to the Collection Day dropdown */
+/* V165: match Customer Name search field to the Collection Day dropdown */
 .app-scroll-picker{position:relative!important;display:block!important;width:100%!important}
 .app-scroll-picker::after{
  content:""!important;display:block!important;position:absolute!important;
@@ -1709,5 +1709,20 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
  .app-scroll-picker::after{right:15px!important;width:22px!important;height:22px!important}
  .app-scroll-picker>input{min-height:64px!important;font-size:1.05rem!important}
 }
+</style>
+
+<style>
+/* V165: Customer page arrow was suppressed by an older CSS rule; force it visible */
+.customer-picker-label{position:relative!important;display:block!important}
+.customer-picker-label::after{
+ content:""!important;display:block!important;position:absolute!important;
+ right:17px!important;bottom:18px!important;top:auto!important;
+ width:22px!important;height:22px!important;z-index:40!important;
+ pointer-events:none!important;background-repeat:no-repeat!important;
+ background-position:center!important;background-size:contain!important;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23075f67' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;
+}
+#faCustomerSearch{padding-right:52px!important}
+@media(max-width:600px){.customer-picker-label::after{right:16px!important;bottom:21px!important}}
 </style>
 </body></html>
