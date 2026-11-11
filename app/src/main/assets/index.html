@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V153">
+<meta name="app-version" content="V156">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -285,6 +285,22 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 /* V134: simple collection type selector inside Income & Expense */
 .income-collection-picker{display:block;margin:18px 0 12px;font-weight:700;color:var(--ink,#17324d)}
 .income-collection-picker select{display:block;width:100%;box-sizing:border-box;margin-top:8px;min-height:54px;padding:12px 14px;border:1.5px solid #cbd5dc;border-radius:14px;background:#fff;color:#172f46;font:inherit;font-weight:500}
+
+
+/* V156: prevent customer action button labels from clipping on mobile */
+.customer-actions{display:flex;align-items:stretch;gap:10px;width:100%;min-width:0}
+.customer-actions button{
+  box-sizing:border-box;min-width:0;max-width:100%;flex:1 1 0;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;white-space:normal;overflow-wrap:anywhere;word-break:normal;
+  line-height:1.25;font-size:clamp(14px,3.8vw,18px);
+  padding:12px 10px;height:auto;min-height:56px;
+}
+@media(max-width:520px){
+  .customer-actions{flex-direction:column;gap:9px}
+  .customer-actions button{width:100%;flex:1 1 auto;font-size:17px;padding:13px 12px;min-height:54px}
+}
+
 </style>
 </head>
 <body>
@@ -382,7 +398,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
       <label>வாடிக்கையாளர் பெயர் / Customer Name
         <input id="faLoanCustomerSearch" type="text" list="faLoanCustomerOptions" autocomplete="off" placeholder="வாடிக்கையாளர் பெயரை type செய்யவும்" required>
         <datalist id="faLoanCustomerOptions"></datalist>
-        <select id="faLoanCustomerList" aria-label="வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--text)"><option value="">வாடிக்கையாளரைத் தேர்வு செய்யவும்</option></select>
+        <select id="faLoanCustomerList" class="finance-hidden" aria-label="வாடிக்கையாளர் பட்டியல்" tabindex="-1"><option value="">வாடிக்கையாளரைத் தேர்வு செய்யவும்</option></select>
         <select id="faLoanCustomer" required class="finance-hidden" aria-hidden="true" tabindex="-1"><option value="">வாடிக்கையாளரைத் தேர்வு செய்யவும்</option></select>
         <small class="finance-note" id="faLoanCustomerHint">வாடிக்கையாளர் பதிவில் தேர்வு செய்த கடன் வகை மற்றும் வசூல் கிழமைக்கு ஏற்ப பெயர்கள் இங்கே வரும்.</small>
         <div id="faLoanCustomerPreview" class="finance-item finance-hidden" aria-live="polite"></div>
@@ -1016,12 +1032,12 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       const selectedWeeklyLoan=loans.find(l=>l.id===selectedWeeklyLoanId);
       const selectedWeeklyCustomer=selectedWeeklyLoan?customer(selectedWeeklyLoan.customerId):null;
       const selectedWeeklyText=selectedWeeklyLoan?(selectedWeeklyCustomer?.name||'Customer')+' – '+(selectedWeeklyCustomer?.mobile||'')+' – நிலுவை '+money(balance(selectedWeeklyLoan)):'';
-      list.innerHTML='<label class="weekly-customer-select"><b>'+weekdayNames[selectedWeekday]+' – வாடிக்கையாளர் பட்டியல்</b><input id="faWeeklyCustomerSearch" type="text" list="faWeeklyCustomerOptions" autocomplete="off" placeholder="வாடிக்கையாளர் பெயரை type செய்து தேடவும்" value="'+esc(selectedWeeklyText)+'"><datalist id="faWeeklyCustomerOptions">'+weeklySearchOptions+'</datalist><select id="faWeeklyCustomerSelect" aria-label="வார வசூல் வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--text)">'+options+'</select></label>'+selectedCard;
+      list.innerHTML='<label class="weekly-customer-select"><b>'+weekdayNames[selectedWeekday]+' – வாடிக்கையாளர் பட்டியல்</b><input id="faWeeklyCustomerSearch" type="text" list="faWeeklyCustomerOptions" autocomplete="off" placeholder="வாடிக்கையாளர் பெயரை type செய்து தேடவும்" value="'+esc(selectedWeeklyText)+'"><datalist id="faWeeklyCustomerOptions">'+weeklySearchOptions+'</datalist><select id="faWeeklyCustomerSelect" aria-label="வார வசூல் வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--text)" class="finance-hidden" tabindex="-1">'+options+'</select></label>'+selectedCard;
     }else{
       if(!loans.some(l=>l.id===selectedPaymentLoanId))selectedPaymentLoanId='';
       const dailyOptions='<option value="">வாடிக்கையாளர் பெயரைத் தேர்வு செய்யவும்</option>'+loans.map(l=>{const c=customer(l.customerId);return '<option value="'+esc(l.id)+'" '+(l.id===selectedPaymentLoanId?'selected':'')+'>'+esc(c?.name||'Customer')+' – '+esc(c?.mobile||'')+' – நிலுவை '+money(balance(l))+'</option>';}).join('');
       const dailySearchOptions=loans.map(l=>{const c=customer(l.customerId);return '<option value="'+esc((c?.name||'Customer')+' – '+(c?.mobile||'')+' – நிலுவை '+money(balance(l)))+'"></option>';}).join('');
-      const dailySelector='<label class="weekly-customer-select"><b>தினசரி வசூல் – வாடிக்கையாளர் பட்டியல்</b><input id="faDailyCustomerSearch" type="text" list="faDailyCustomerOptions" autocomplete="off" placeholder="வாடிக்கையாளர் பெயரை type செய்து தேடவும்"><datalist id="faDailyCustomerOptions">'+dailySearchOptions+'</datalist><select id="faDailyCustomerSelect" aria-label="தினசரி வசூல் வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--text)">'+dailyOptions+'</select></label>';
+      const dailySelector='<label class="weekly-customer-select"><b>தினசரி வசூல் – வாடிக்கையாளர் பட்டியல்</b><input id="faDailyCustomerSearch" type="text" list="faDailyCustomerOptions" autocomplete="off" placeholder="வாடிக்கையாளர் பெயரை type செய்து தேடவும்"><datalist id="faDailyCustomerOptions">'+dailySearchOptions+'</datalist><select id="faDailyCustomerSelect" aria-label="தினசரி வசூல் வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--text)" class="finance-hidden" tabindex="-1">'+dailyOptions+'</select></label>';
       list.innerHTML=dailySelector+(loans.length?loans.map(l=>{
         const c=customer(l.customerId),due=Math.min(dueNow(l,freq),balance(l));
         const loanPayments=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date));
