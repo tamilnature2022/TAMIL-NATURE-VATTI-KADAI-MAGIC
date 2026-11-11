@@ -507,6 +507,23 @@ function chaldeanBusinessTotal(name){
  }
  return {normalized,total};
 }
+function pyramidFinalValue(digits){
+ let row=String(digits||"").replace(/\D/g,"");
+ if(row.length<2) return null;
+ while(row.length>2){
+   let next="";
+   for(let i=0;i<row.length-1;i++){
+     const sum=Number(row[i])+Number(row[i+1]);
+     next+=String(sum%9===0?9:sum%9);
+   }
+   row=next;
+ }
+ return Number(row);
+}
+function pyramidResultHtml(label,value){
+ const entry=bookData[String(value).padStart(2,"0")];
+ return `<div class="finance-row"><h3>${label} – Pyramid Result</h3><p><b>Final Pyramid Value:</b> <span style="font-size:1.5em;font-weight:800;color:#087e8b">${String(value).padStart(2,"0")}</span><br>${entry?`<b>${escapeHtml(entry.title)}</b><br>${escapeHtml(entry.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை."}</p></div>`;
+}
 function businessBenefit(total){
  const resultNumber = total % 100 === 0 ? 100 : total % 100;
  return `<div class="benefit"><b>பலன் பார்க்கும் எண்:</b> ${String(resultNumber).padStart(2,"0")}</div>${renderBenefit(resultNumber)}`;
@@ -611,6 +628,8 @@ function analyze(){
  err.textContent="";
  let cards="";
  let profession=null,property=null,business=null,businessResultNumber=null,businessEntry=null;
+ const mobilePyramidValue=hasMobile?pyramidFinalValue(m):null;
+ let businessPyramidValue=null;
  if(hasMobile){
    const pairs=Array.from({length:5},(_,i)=>m.slice(i*2,i*2+2));
    const total=[...m].reduce((sum,d)=>sum+Number(d),0);
@@ -627,6 +646,8 @@ function analyze(){
    business=chaldeanBusinessTotal(businessRaw);
    businessResultNumber=business.total % 100 === 0 ? 100 : business.total % 100;
    businessEntry=bookData[String(businessResultNumber).padStart(2,"0")];
+   const businessDigits=[...business.normalized].filter(ch=>/[A-Z0-9]/.test(ch)).map(ch=>business.normalized && (/[A-Z]/.test(ch) ? ({A:1,I:1,J:1,Q:1,Y:1,B:2,K:2,R:2,C:3,G:3,L:3,S:3,D:4,M:4,T:4,E:5,H:5,N:5,X:5,U:6,V:6,W:6,O:7,Z:7,F:8,P:8})[ch] : Number(ch))).join("");
+   businessPyramidValue=pyramidFinalValue(businessDigits);
    cards+=`<article class="result"><div class="resulthead"><span class="resultname">Business Name / தொழில் பெயர் பலன்</span></div><div class="benefit"><b>BUSINESS NAME:</b> ${escapeHtml(business.normalized.toUpperCase())}<br><b>மொத்த எண்:</b> ${business.total}</div>${businessBenefit(business.total)}</article>`;
  }
  const negativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","சிரமம்","தடைகள்"];
@@ -648,10 +669,12 @@ function analyze(){
    const propertyText=property?`<b>${escapeHtml(property.title)}</b><br>${escapeHtml(property.prediction)}`:"இந்த எண்ணுக்கான பலன் இன்னும் சேர்க்கப்படவில்லை.";
    financeRows.push(`<div class="finance-row"><h3>தொழில் / வேலை</h3><p>${professionText}</p></div>`);
    financeRows.push(`<div class="finance-row"><h3>சொத்து நிதிநிலை 💸💰</h3><p>${propertyText}</p></div>`);
+   financeRows.push(pyramidResultHtml("Mobile Number",mobilePyramidValue));
  }
  if(hasBusiness){
    const businessText=`<b>பெயர்:</b> ${escapeHtml(business.normalized)}<br><b>மொத்த எண்:</b> ${business.total}<br><b>பலன் பார்க்கும் எண்:</b> ${String(businessResultNumber).padStart(2,"0")}<br>${businessEntry?`<b>${escapeHtml(businessEntry.title)}</b><br>${escapeHtml(businessEntry.prediction)}`:"இந்த எண்ணுக்கான புத்தகப் பலன் சேர்க்கப்படவில்லை."}`;
    financeRows.push(`<div class="finance-row"><h3>Business Name / தொழில் பெயர்</h3><p>${businessText}</p></div>`);
+   financeRows.push(pyramidResultHtml("Business Name",businessPyramidValue));
  }
  const warningHtml=isNegative?'<div class="finance-warning">⚠️ நிதிநிலை பலன் சாதகமாக இல்லை. நீங்கள் கொடுத்த பணத்தைத் திரும்பப் பெறுவதில் சிக்கல் ஏற்படலாம். கடன் கொடுப்பதிலும் பணப் பரிவர்த்தனைகளிலும் கவனமாக இருக்கவும்.</div>':"";
  const financeStatus = isNegative ? "கவனம் தேவை" : "சாதகமான அறிகுறி";
