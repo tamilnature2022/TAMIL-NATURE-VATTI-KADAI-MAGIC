@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
+<meta name="app-version" content="V152">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -244,6 +245,13 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 #faLatestCustomer .latest-customer-card{border:2px solid #168b78;background:#eaf8f1;padding:16px;box-shadow:0 4px 14px rgba(8,126,139,.12);overflow-wrap:anywhere}
 #faLatestCustomer .customer-added-title{display:block;margin-bottom:10px;padding:8px 10px;border-radius:9px;background:#d5f1e5;color:#087e63;font-weight:800}
 
+/* Customer tab: searchable single-customer selector and separate latest-added panel */
+.customer-picker-label{display:block;margin:12px 0;color:var(--text);font-weight:700}
+#faCustomerSearch{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--text);font-size:1rem}
+#faCustomerList{display:block;min-width:0;margin-top:10px}
+#faCustomerList .finance-item{width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+#faLatestCustomer{display:flex;flex-direction:column;gap:10px;margin:10px 0 16px;min-width:0}
+
 /* V134: show only the five most recently saved loans in Loan List */
 .latest-loans-heading{margin:8px 0 12px;padding:10px 12px;border-radius:10px;background:#eaf8f1;color:#087e63;font-weight:850;line-height:1.45}
 
@@ -339,8 +347,13 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
       <button type="submit">➕ வாடிக்கையாளரை சேமிக்கவும்</button>
     </form>
     <p class="finance-note">தனியுரிமை: ஆதார் எண்ணை வாடிக்கையாளர் சம்மதத்துடன் மட்டுமே பெறவும். இந்தப் பதிப்பில் தரவு சாதனத்தின் Local Storage-ல் சேமிக்கப்படுகிறது; அது குறியாக்கம் செய்யப்பட்ட பாதுகாப்பான சேமிப்பு அல்ல. பாதுகாப்பான சேமிப்பு அமைக்கும் வரை முழு ஆதார் எண்ணை உண்மையான வாடிக்கையாளர் பதிவில் சேமிப்பதைத் தவிர்க்கவும்.</p>
-    <h3 style="margin-top:18px">வாடிக்கையாளர் பட்டியல்</h3>
-    <div id="faCustomerList" class="finance-list"></div>
+    <h3 style="margin-top:18px">Customer Details / வாடிக்கையாளர் விவரம்</h3>
+    <label class="customer-picker-label">வாடிக்கையாளரைத் தேடித் தேர்வு செய்யவும் / Search Customer
+      <input id="faCustomerSearch" type="search" list="faCustomerOptions" autocomplete="off" placeholder="பெயர் அல்லது மொபைல் எண்ணை உள்ளிடவும்...">
+      <datalist id="faCustomerOptions"></datalist>
+    </label>
+    <div id="faCustomerList" class="finance-list" aria-live="polite"><div class="finance-empty">வாடிக்கையாளரைத் தேடித் தேர்வு செய்யவும்.</div></div>
+    <h3 style="margin-top:20px">🆕 New Customer Added / புதிதாக சேர்க்கப்பட்ட வாடிக்கையாளர்</h3>
     <div id="faLatestCustomer" class="finance-list" aria-live="polite"></div>
     <div id="faCustomerSaveNotice" class="finance-save-notice finance-hidden" role="status" aria-live="polite"></div>
   </section>
@@ -476,7 +489,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 <strong>💰 💰 TAMIL NATURE VATTI KADAI MAGIC</strong><br>
 Salem, Tamilnadu, INDIA<br>
 Contact: 9577228833<br>
-Version 134<br>
+Version 152<br>
 <div style="line-height:1.6;margin:12px auto 0;max-width:760px;text-align:justify"><strong>Disclaimer:</strong> Users are advised that the predictions and guidance provided by this application are for informational purposes only. The management shall not be held responsible for any loss, damage, or consequences arising from actions taken based on the app's guidance or predictions.</div>
 </footer>
 <script>
@@ -892,22 +905,30 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     });
     const latestCustomer=orderedCustomers[0]||null;
     $('faLatestCustomer').innerHTML=latestCustomer?
-      '<div class="finance-item latest-customer-card"><div class="customer-added-title">✓ கடைசியாக சேமிக்கப்பட்ட வாடிக்கையாளர் / LAST ADDED CUSTOMER</div>'+
-      '<div class="finance-row"><h3>'+esc(latestCustomer.name)+'</h3><span class="finance-pill">சேமிக்கப்பட்டது</span></div>'+
+      '<div class="finance-item latest-customer-card"><div class="customer-added-title">✓ NEW CUSTOMER ADDED / புதிய வாடிக்கையாளர்</div>'+ 
+      '<div class="finance-row"><h3>'+esc(latestCustomer.name)+'</h3><span class="finance-pill">சேமிக்கப்பட்டது</span></div>'+ 
       '<div class="finance-meta">📱 மொபைல்: '+esc(latestCustomer.mobile)+
       (latestCustomer.aadhaar?'<br>ஆதார் / ID: XXXX-XXXX-'+esc(latestCustomer.aadhaar.slice(-4)):'')+
       '<br>கடன் வகை: '+esc(latestCustomer.collectionType==='weekly'?'வார வசூல்':latestCustomer.collectionType==='daily'?'தின வசூல்':latestCustomer.collectionType==='weekly_daily'?'வார வசூல் + தினசரி':'பழைய பதிவு')+
       '<br>வசூல் கிழமை: '+esc(weekdayNames[Number(latestCustomer.collectionDay)]||'பதிவு இல்லை')+
       '<br>📍 முகவரி: '+esc(latestCustomer.address||'பதிவு செய்யப்படவில்லை')+
       '<br>சேர்த்த தேதி: '+dateText(latestCustomer.created||today())+'</div></div>':
-      '<div class="finance-empty">இன்னும் வாடிக்கையாளர்கள் பதிவு செய்யப்படவில்லை.</div>';
-    $('faCustomerList').innerHTML=orderedCustomers.length?orderedCustomers.map((c,index)=>'<div class="finance-item '+(c.id===justAddedCustomerId?'customer-just-added':'')+'" data-customer-id="'+esc(c.id)+'">'+
-      '<div class="finance-row"><h3>'+esc(c.name)+'</h3><span class="finance-pill">'+(c.id===justAddedCustomerId?'புதிய பதிவு':'Customer')+'</span></div>'+
-      '<div class="finance-meta">📱 மொபைல்: '+esc(c.mobile)+(c.aadhaar?'<br>ஆதார் / ID: XXXX-XXXX-'+esc(c.aadhaar.slice(-4)):'')+
-      '<br>கடன் வகை: '+esc(c.collectionType==='weekly'?'வார வசூல்':c.collectionType==='daily'?'தின வசூல்':c.collectionType==='weekly_daily'?'வார வசூல் + தினசரி':'பழைய பதிவு')+
-      '<br>வசூல் கிழமை: '+esc(weekdayNames[Number(c.collectionDay)]||'பதிவு இல்லை')+
-      '<br>📍 முகவரி: '+esc(c.address||'பதிவு செய்யப்படவில்லை')+
-      '<br>சேர்த்த தேதி: '+dateText(c.created||today())+'</div></div>').join(''):'<div class="finance-empty">இன்னும் வாடிக்கையாளர்கள் பதிவு செய்யப்படவில்லை.</div>';
+      '<div class="finance-empty">இன்னும் புதிய வாடிக்கையாளர் சேர்க்கப்படவில்லை.</div>';
+    const customerSearch=$('faCustomerSearch');
+    const searchValue=String(customerSearch?.value||'').trim().toLocaleLowerCase();
+    $('faCustomerOptions').innerHTML=orderedCustomers.map(c=>'<option value="'+esc(c.name+' – '+c.mobile)+'"></option>').join('');
+    let selectedCustomer=null;
+    if(searchValue){
+      selectedCustomer=orderedCustomers.find(c=>(String(c.name||'')+' – '+String(c.mobile||'')).toLocaleLowerCase()===searchValue || String(c.name||'').toLocaleLowerCase()===searchValue || String(c.mobile||'').replace(/\D/g,'')===searchValue.replace(/\D/g,''));
+    }
+    $('faCustomerList').innerHTML=selectedCustomer?
+      '<div class="finance-item"><div class="finance-row"><h3>'+esc(selectedCustomer.name)+'</h3><span class="finance-pill">Customer Details</span></div>'+ 
+      '<div class="finance-meta">📱 மொபைல்: '+esc(selectedCustomer.mobile)+(selectedCustomer.aadhaar?'<br>ஆதார் / ID: XXXX-XXXX-'+esc(selectedCustomer.aadhaar.slice(-4)):'')+
+      '<br>கடன் வகை: '+esc(selectedCustomer.collectionType==='weekly'?'வார வசூல்':selectedCustomer.collectionType==='daily'?'தின வசூல்':selectedCustomer.collectionType==='weekly_daily'?'வார வசூல் + தினசரி':'பழைய பதிவு')+
+      '<br>வசூல் கிழமை: '+esc(weekdayNames[Number(selectedCustomer.collectionDay)]||'பதிவு இல்லை')+
+      '<br>📍 முகவரி: '+esc(selectedCustomer.address||'பதிவு செய்யப்படவில்லை')+
+      '<br>சேர்த்த தேதி: '+dateText(selectedCustomer.created||today())+'</div></div>':
+      '<div class="finance-empty">'+(searchValue?'பொருந்தும் வாடிக்கையாளர் கிடைக்கவில்லை.':'வாடிக்கையாளரைத் தேடித் தேர்வு செய்யவும்.')+'</div>';
     const newestLoans=db.loans.slice().sort((a,b)=>String(b.id||'').localeCompare(String(a.id||''))).slice(0,5);
     $('faLoanList').innerHTML=newestLoans.length?'<div class="latest-loans-heading">✓ கடைசியாக சேமிக்கப்பட்ட 5 கடன்கள் / LAST 5 SAVED LOANS</div>'+newestLoans.map(l=>{const c=customer(l.customerId);return '<div class="finance-item '+(l.id===justAddedLoanId?'customer-just-added':'')+'" data-loan-id="'+esc(l.id)+'">'+'<div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">'+(l.frequency==='weekly'?'வார வசூல்':l.frequency==='daily'?'தின வசூல்':'வார வசூல் + தினசரி')+'</span></div><div class="finance-meta">📱 மொபைல்: '+esc(c?.mobile||'-')+'<br>கடன் ID: '+esc(l.id)+'<br>வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய தொகை: '+money(l.principal)+(l.documentCharges?'<br>மகிமை / Document Charges: '+money(l.documentCharges):'')+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(l.total)+'<br>தவணைத் தொகை: '+money(l.installment)+(l.installmentCount?'<br>மொத்த தவணைகள்: '+l.installmentCount:'')+'<br>இதுவரை வசூலித்தது: '+money(paid(l.id))+'<br><b>மீதமுள்ள கடன்: '+money(balance(l))+'</b><br>முதல் வசூல் தேதி: '+dateText(l.start)+(l.guarantorName?'<br>ஜாமீன்: '+esc(l.guarantorName):'')+(l.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(l.guarantorPhone):'')+'<br>குறிப்பு: '+esc(l.note||'-')+'</div></div>';}).join(''):'<div class="finance-empty">கடன் விவரங்கள் இல்லை. முதலில் Loan Details-ல் கடனைச் சேமிக்கவும்.</div>';
     renderCollection('weekly');renderCollection('daily');renderHistory();
@@ -1013,6 +1034,8 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
   $('faCustomerFrequency').addEventListener('change',syncCustomerWeekdayField);
   syncCustomerWeekdayField();
 
+  $('faCustomerSearch').addEventListener('input',()=>{try{render();}catch(e){console.error(e);}});
+
   $('faCustomerForm').addEventListener('submit',e=>{
     e.preventDefault();
     const name=$('faName').value.trim(),mobile=$('faMobile').value.trim();
@@ -1034,21 +1057,19 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     justAddedCustomerId=customerRecord.id;
     // Show the confirmation FIRST, so a later list-rendering issue cannot hide the successful save.
     const notice=$('faCustomerSaveNotice');
-    notice.innerHTML='<div class="customer-added-title">✓ CUSTOMER ADDED / வாடிக்கையாளர் சேர்க்கப்பட்டார்</div>'+
+    notice.innerHTML='';
       '<div class="customer-added-details"><b>'+esc(customerRecord.name)+'</b><br>📱 '+esc(customerRecord.mobile)+
       '<br>கடன் வகை: '+esc(customerRecord.collectionType==='weekly'?'வார வசூல்':customerRecord.collectionType==='daily'?'தின வசூல்':'வார வசூல் + தினசரி')+
       (customerRecord.collectionDay!==null?'<br>வசூல் கிழமை: '+esc(weekdayNames[Number(customerRecord.collectionDay)]):'')+
       (customerRecord.aadhaar?'<br>ID: XXXX-XXXX-'+esc(customerRecord.aadhaar.slice(-4)):'')+
       '<br>📍 '+esc(customerRecord.address||'முகவரி பதிவு செய்யப்படவில்லை')+
       '<br>✓ சேமிக்கப்பட்டது</div>';
-    notice.classList.remove('finance-hidden');
-    notice.style.display='block';
-    notice.setAttribute('aria-live','assertive');
+    notice.classList.add('finance-hidden');
     if(customerNoticeTimer)clearTimeout(customerNoticeTimer);
     // Re-render the customer list, but do not let a display error undo the visible save confirmation.
     try{render();}catch(renderError){console.error('Customer list refresh failed after successful save:',renderError);}
     // The normal customer list renderer already displays this saved customer; avoid a second card.
-    notice.scrollIntoView({behavior:'smooth',block:'center'});
+    $('faLatestCustomer').scrollIntoView({behavior:'smooth',block:'center'});
   });
   function syncLoanInstallmentCount(){
     // Installment count is required for both weekly and daily collection loans.
@@ -1134,14 +1155,12 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       '<br>வழங்கிய தொகை: '+money(loanRecord.principal)+(loanRecord.documentCharges?'<br>மகிமை / Document Charges: '+money(loanRecord.documentCharges):'')+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(loanRecord.total)+
       '<br>ஒவ்வொரு தவணை: '+money(loanRecord.installment)+(loanRecord.installmentCount?'<br>மொத்த தவணைகள்: '+loanRecord.installmentCount:'')+'<br>கடன் வழங்கிய தேதி: '+dateText(loanRecord.loanDate)+
       '<br>முதல் தவணை தேதி: '+dateText(loanRecord.start)+(loanRecord.guarantorName?'<br>ஜாமீன்: '+esc(loanRecord.guarantorName):'')+(loanRecord.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(loanRecord.guarantorPhone):'')+'<br><b>மீதமுள்ள கடன்: '+money(balance(loanRecord))+'</b><br>✓ சேமிக்கப்பட்டது</div>';
-    notice.classList.remove('finance-hidden');
-    notice.style.display='block';
-    notice.setAttribute('aria-live','assertive');
+    notice.classList.add('finance-hidden');
     if(loanNoticeTimer)clearTimeout(loanNoticeTimer);
     // Refresh list/dashboard, but keep the saved confirmation if another render step fails.
     try{render();}catch(renderError){console.error('Loan list refresh failed after successful save:',renderError);}
     // The normal loan list renderer already displays this saved loan; avoid a second card.
-    notice.scrollIntoView({behavior:'smooth',block:'center'});
+    $('faLatestCustomer').scrollIntoView({behavior:'smooth',block:'center'});
     // Keep the saved-loan confirmation visible until the next loan is saved.
   });
   document.addEventListener('change',e=>{
