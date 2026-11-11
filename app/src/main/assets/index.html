@@ -301,6 +301,50 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
   .customer-actions button{width:100%;flex:1 1 auto;font-size:17px;padding:13px 12px;min-height:54px}
 }
 
+
+/* V159: make Customer Search selector clearly visible and highlighted on mobile */
+.customer-picker-label{position:relative;display:block;width:100%;box-sizing:border-box;margin:12px 0;color:var(--text);font-weight:800}
+.customer-picker-label::after{content:"▾";position:absolute;right:18px;bottom:17px;font-size:25px;line-height:1;color:#075f67;pointer-events:none;font-weight:900}
+#faCustomerSearch{display:block!important;width:100%!important;min-height:62px!important;box-sizing:border-box!important;margin-top:10px!important;padding:14px 52px 14px 16px!important;border:3px solid #087f83!important;border-radius:18px!important;background:#e8f7f5!important;color:#123047!important;font-size:1.08rem!important;font-weight:700!important;box-shadow:0 0 0 4px rgba(8,127,131,.13),0 5px 14px rgba(8,127,131,.10)!important;outline:none!important;appearance:none;-webkit-appearance:none}
+#faCustomerSearch::placeholder{color:#526b78!important;opacity:1;font-weight:600}
+#faCustomerSearch:focus{border-color:#d18b00!important;background:#fff8e6!important;box-shadow:0 0 0 5px rgba(209,139,0,.18)!important}
+@media(max-width:600px){#faCustomerSearch{min-height:66px!important;font-size:1.05rem!important;border-radius:17px!important}.customer-picker-label::after{bottom:19px;right:17px}}
+
+
+/* V159: consistent, high-visibility dropdowns and searchable selectors throughout the app */
+select:not(.finance-hidden){
+  display:block;width:100%;max-width:100%;min-width:0;min-height:58px;
+  box-sizing:border-box;padding:13px 48px 13px 16px!important;
+  border:2px solid #16858a!important;border-radius:15px!important;
+  background-color:#f0fbfa!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23075f67' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;background-position:right 15px center!important;background-size:20px!important;
+  color:#17324d!important;font-size:1.02rem!important;font-weight:650!important;
+  box-shadow:0 3px 10px rgba(8,127,131,.09)!important;
+  appearance:none!important;-webkit-appearance:none!important;outline:none;
+}
+select:not(.finance-hidden):focus{
+  border-color:#d18b00!important;background-color:#fff8e6!important;
+  box-shadow:0 0 0 4px rgba(209,139,0,.17)!important;
+}
+select:not(.finance-hidden):disabled{opacity:.6;cursor:not-allowed}
+select:not(.finance-hidden) option{background:#fff;color:#17324d;font-size:1rem}
+input[list],input[list]:not(.finance-hidden){
+  display:block;width:100%;max-width:100%;min-width:0;min-height:58px;
+  box-sizing:border-box;padding:13px 48px 13px 16px!important;
+  border:2px solid #16858a!important;border-radius:15px!important;
+  background-color:#f0fbfa!important;color:#17324d!important;
+  font-size:1.02rem!important;font-weight:650!important;
+  box-shadow:0 3px 10px rgba(8,127,131,.09)!important;
+  outline:none!important;
+}
+input[list]::placeholder{color:#657985!important;opacity:1}
+input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!important;box-shadow:0 0 0 4px rgba(209,139,0,.17)!important}
+.weekly-customer-select input[list]{margin-top:8px}
+@media(max-width:600px){
+ select:not(.finance-hidden),input[list]{min-height:62px;font-size:1.04rem!important;border-radius:16px!important}
+}
+
 </style>
 </head>
 <body>
@@ -374,7 +418,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
       <input id="faCustomerSearch" type="search" list="faCustomerOptions" autocomplete="off" placeholder="பெயர் அல்லது மொபைல் எண்ணை உள்ளிடவும்...">
       <datalist id="faCustomerOptions"></datalist>
     </label>
-    <div id="faCustomerList" class="finance-list" aria-live="polite"><div class="finance-empty">வாடிக்கையாளரைத் தேடித் தேர்வு செய்யவும்.</div></div>
+    <div id="faCustomerList" class="finance-list" aria-live="polite"></div>
     <h3 style="margin-top:20px">🆕 New Customer Added / புதிதாக சேர்க்கப்பட்ட வாடிக்கையாளர்</h3>
     <div id="faLatestCustomer" class="finance-list" aria-live="polite"></div>
     <div id="faCustomerSaveNotice" class="finance-save-notice finance-hidden" role="status" aria-live="polite"></div>
@@ -954,7 +998,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       '<div class="customer-actions"><button type="button" data-customer-action="edit" data-id="'+esc(selectedCustomer.id)+'">✏️ Edit / திருத்து</button>'+
       (selectedCustomer.active===false?'<button type="button" data-customer-action="activate" data-id="'+esc(selectedCustomer.id)+'">♻️ Activate / மீண்டும் செயல்படுத்து</button>':'<button type="button" class="secondary" data-customer-action="deactivate" data-id="'+esc(selectedCustomer.id)+'">⏸ Deactivate / செயலிழக்க</button>')+
       '</div></div>':
-      '<div class="finance-empty">'+(searchValue?'பொருந்தும் வாடிக்கையாளர் கிடைக்கவில்லை.':'வாடிக்கையாளரைத் தேடித் தேர்வு செய்யவும்.')+'</div>';
+      (searchValue?'<div class="finance-empty">பொருந்தும் வாடிக்கையாளர் கிடைக்கவில்லை.</div>':'');
     const newestLoans=db.loans.slice().sort((a,b)=>String(b.id||'').localeCompare(String(a.id||''))).slice(0,5);
     $('faLoanList').innerHTML=newestLoans.length?'<div class="latest-loans-heading">✓ கடைசியாக சேமிக்கப்பட்ட 5 கடன்கள் / LAST 5 SAVED LOANS</div>'+newestLoans.map(l=>{const c=customer(l.customerId);return '<div class="finance-item '+(l.id===justAddedLoanId?'customer-just-added':'')+'" data-loan-id="'+esc(l.id)+'">'+'<div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">'+(l.frequency==='weekly'?'வார வசூல்':l.frequency==='daily'?'தின வசூல்':'வார வசூல் + தினசரி')+'</span></div><div class="finance-meta">📱 மொபைல்: '+esc(c?.mobile||'-')+'<br>கடன் ID: '+esc(l.id)+'<br>வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய தொகை: '+money(l.principal)+(l.documentCharges?'<br>மகிமை / Document Charges: '+money(l.documentCharges):'')+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(l.total)+'<br>தவணைத் தொகை: '+money(l.installment)+(l.installmentCount?'<br>மொத்த தவணைகள்: '+l.installmentCount:'')+'<br>இதுவரை வசூலித்தது: '+money(paid(l.id))+'<br><b>மீதமுள்ள கடன்: '+money(balance(l))+'</b><br>முதல் வசூல் தேதி: '+dateText(l.start)+(l.guarantorName?'<br>ஜாமீன்: '+esc(l.guarantorName):'')+(l.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(l.guarantorPhone):'')+'<br>குறிப்பு: '+esc(l.note||'-')+'</div></div>';}).join(''):'<div class="finance-empty">கடன் விவரங்கள் இல்லை. முதலில் Loan Details-ல் கடனைச் சேமிக்கவும்.</div>';
     renderCollection('weekly');renderCollection('daily');renderHistory();
