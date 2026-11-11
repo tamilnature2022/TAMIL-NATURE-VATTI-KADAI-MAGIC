@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V152">
+<meta name="app-version" content="V153">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -245,6 +245,11 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 #faLatestCustomer .latest-customer-card{border:2px solid #168b78;background:#eaf8f1;padding:16px;box-shadow:0 4px 14px rgba(8,126,139,.12);overflow-wrap:anywhere}
 #faLatestCustomer .customer-added-title{display:block;margin-bottom:10px;padding:8px 10px;border-radius:9px;background:#d5f1e5;color:#087e63;font-weight:800}
 
+/* V153: customer edit/deactivate controls */
+.customer-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.customer-actions button{flex:1;min-width:110px}
+.customer-inactive{opacity:.72;border:2px dashed #a66!important}
+.customer-status-inactive{background:#fff0e8!important;color:#9b3b16!important}
 /* Customer tab: searchable single-customer selector and separate latest-added panel */
 .customer-picker-label{display:block;margin:12px 0;color:var(--text);font-weight:700}
 #faCustomerSearch{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:14px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--text);font-size:1rem}
@@ -344,7 +349,8 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
         <small class="finance-note">எண்கள் மட்டும் — அதிகபட்சம் 12 இலக்கங்கள்</small>
       </label>
       <label>முகவரி<textarea id="faAddress" rows="2" maxlength="250" placeholder="முகவரி"></textarea></label>
-      <button type="submit">➕ வாடிக்கையாளரை சேமிக்கவும்</button>
+      <button type="submit" id="faCustomerSubmitBtn">➕ வாடிக்கையாளரை சேமிக்கவும்</button>
+      <button type="button" id="faCustomerCancelEdit" class="secondary finance-hidden">✖ திருத்தத்தை ரத்து செய்</button>
     </form>
     <p class="finance-note">தனியுரிமை: ஆதார் எண்ணை வாடிக்கையாளர் சம்மதத்துடன் மட்டுமே பெறவும். இந்தப் பதிப்பில் தரவு சாதனத்தின் Local Storage-ல் சேமிக்கப்படுகிறது; அது குறியாக்கம் செய்யப்பட்ட பாதுகாப்பான சேமிப்பு அல்ல. பாதுகாப்பான சேமிப்பு அமைக்கும் வரை முழு ஆதார் எண்ணை உண்மையான வாடிக்கையாளர் பதிவில் சேமிப்பதைத் தவிர்க்கவும்.</p>
     <h3 style="margin-top:18px">Customer Details / வாடிக்கையாளர் விவரம்</h3>
@@ -846,7 +852,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     const day=normalizeCustomerWeekday($('faWeekday').value);
     const previous=$('faLoanCustomer').value;
     const weekdayRequired=freq==='weekly'||freq==='weekly_daily';
-    const eligible=db.customers.filter(c=>{
+    const eligible=db.customers.filter(c=>c.active!==false).filter(c=>{
       const customerType=normalizeCustomerLoanType(c.collectionType);
       const typeMatches=!customerType || customerType===freq || customerType==='weekly_daily';
       if(!typeMatches)return false;
@@ -888,6 +894,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       (c.address?'<br>முகவரி: '+esc(c.address):'')+'</div>';
   }
 
+  let editingCustomerId=null;
   let justAddedCustomerId=null;
   let customerNoticeTimer=null;
   let justAddedLoanId=null;
@@ -922,12 +929,15 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       selectedCustomer=orderedCustomers.find(c=>(String(c.name||'')+' – '+String(c.mobile||'')).toLocaleLowerCase()===searchValue || String(c.name||'').toLocaleLowerCase()===searchValue || String(c.mobile||'').replace(/\D/g,'')===searchValue.replace(/\D/g,''));
     }
     $('faCustomerList').innerHTML=selectedCustomer?
-      '<div class="finance-item"><div class="finance-row"><h3>'+esc(selectedCustomer.name)+'</h3><span class="finance-pill">Customer Details</span></div>'+ 
+      '<div class="finance-item '+(selectedCustomer.active===false?'customer-inactive':'')+'" data-customer-id="'+esc(selectedCustomer.id)+'"><div class="finance-row"><h3>'+esc(selectedCustomer.name)+'</h3><span class="finance-pill '+(selectedCustomer.active===false?'customer-status-inactive':'')+'">'+(selectedCustomer.active===false?'செயலற்றவர் / INACTIVE':'Customer Details')+'</span></div>'+
       '<div class="finance-meta">📱 மொபைல்: '+esc(selectedCustomer.mobile)+(selectedCustomer.aadhaar?'<br>ஆதார் / ID: XXXX-XXXX-'+esc(selectedCustomer.aadhaar.slice(-4)):'')+
       '<br>கடன் வகை: '+esc(selectedCustomer.collectionType==='weekly'?'வார வசூல்':selectedCustomer.collectionType==='daily'?'தின வசூல்':selectedCustomer.collectionType==='weekly_daily'?'வார வசூல் + தினசரி':'பழைய பதிவு')+
       '<br>வசூல் கிழமை: '+esc(weekdayNames[Number(selectedCustomer.collectionDay)]||'பதிவு இல்லை')+
       '<br>📍 முகவரி: '+esc(selectedCustomer.address||'பதிவு செய்யப்படவில்லை')+
-      '<br>சேர்த்த தேதி: '+dateText(selectedCustomer.created||today())+'</div></div>':
+      '<br>சேர்த்த தேதி: '+dateText(selectedCustomer.created||today())+'</div>'+
+      '<div class="customer-actions"><button type="button" data-customer-action="edit" data-id="'+esc(selectedCustomer.id)+'">✏️ Edit / திருத்து</button>'+
+      (selectedCustomer.active===false?'<button type="button" data-customer-action="activate" data-id="'+esc(selectedCustomer.id)+'">♻️ Activate / மீண்டும் செயல்படுத்து</button>':'<button type="button" class="secondary" data-customer-action="deactivate" data-id="'+esc(selectedCustomer.id)+'">⏸ Deactivate / செயலிழக்க</button>')+
+      '</div></div>':
       '<div class="finance-empty">'+(searchValue?'பொருந்தும் வாடிக்கையாளர் கிடைக்கவில்லை.':'வாடிக்கையாளரைத் தேடித் தேர்வு செய்யவும்.')+'</div>';
     const newestLoans=db.loans.slice().sort((a,b)=>String(b.id||'').localeCompare(String(a.id||''))).slice(0,5);
     $('faLoanList').innerHTML=newestLoans.length?'<div class="latest-loans-heading">✓ கடைசியாக சேமிக்கப்பட்ட 5 கடன்கள் / LAST 5 SAVED LOANS</div>'+newestLoans.map(l=>{const c=customer(l.customerId);return '<div class="finance-item '+(l.id===justAddedLoanId?'customer-just-added':'')+'" data-loan-id="'+esc(l.id)+'">'+'<div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">'+(l.frequency==='weekly'?'வார வசூல்':l.frequency==='daily'?'தின வசூல்':'வார வசூல் + தினசரி')+'</span></div><div class="finance-meta">📱 மொபைல்: '+esc(c?.mobile||'-')+'<br>கடன் ID: '+esc(l.id)+'<br>வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய தொகை: '+money(l.principal)+(l.documentCharges?'<br>மகிமை / Document Charges: '+money(l.documentCharges):'')+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(l.total)+'<br>தவணைத் தொகை: '+money(l.installment)+(l.installmentCount?'<br>மொத்த தவணைகள்: '+l.installmentCount:'')+'<br>இதுவரை வசூலித்தது: '+money(paid(l.id))+'<br><b>மீதமுள்ள கடன்: '+money(balance(l))+'</b><br>முதல் வசூல் தேதி: '+dateText(l.start)+(l.guarantorName?'<br>ஜாமீன்: '+esc(l.guarantorName):'')+(l.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(l.guarantorPhone):'')+'<br>குறிப்பு: '+esc(l.note||'-')+'</div></div>';}).join(''):'<div class="finance-empty">கடன் விவரங்கள் இல்லை. முதலில் Loan Details-ல் கடனைச் சேமிக்கவும்.</div>';
@@ -1036,6 +1046,42 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
 
   $('faCustomerSearch').addEventListener('input',()=>{try{render();}catch(e){console.error(e);}});
 
+  function cancelCustomerEdit(){
+    editingCustomerId=null;
+    $('faCustomerForm').reset();
+    $('faCustomerSubmitBtn').textContent='➕ வாடிக்கையாளரை சேமிக்கவும்';
+    $('faCustomerCancelEdit').classList.add('finance-hidden');
+  }
+  $('faCustomerCancelEdit').addEventListener('click',cancelCustomerEdit);
+  $('faCustomerList').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-customer-action]');
+    if(!btn)return;
+    const c=db.customers.find(x=>x.id===btn.dataset.id);
+    if(!c)return;
+    const action=btn.dataset.customerAction;
+    if(action==='edit'){
+      editingCustomerId=c.id;
+      $('faName').value=c.name||'';
+      $('faMobile').value=c.mobile||'';
+      $('faAadhaar').value=c.aadhaar||'';
+      $('faAddress').value=c.address||'';
+      $('faCustomerFrequency').value=c.collectionType||'';
+      $('faCustomerWeekday').value=c.collectionDay===null||c.collectionDay===undefined?'':String(c.collectionDay);
+      $('faCustomerSubmitBtn').textContent='💾 மாற்றங்களை சேமிக்கவும் / Update Customer';
+      $('faCustomerCancelEdit').classList.remove('finance-hidden');
+      $('faCustomerForm').scrollIntoView({behavior:'smooth',block:'start'});
+    }else if(action==='deactivate'){
+      if(!confirm('இந்த வாடிக்கையாளரை Deactivate செய்யவா? பழைய கடன் மற்றும் வசூல் பதிவுகள் நீக்கப்படாது.'))return;
+      c.active=false;
+      if(!save()){c.active=true;return;}
+      if(editingCustomerId===c.id)cancelCustomerEdit();
+      render();
+    }else if(action==='activate'){
+      c.active=true;
+      if(!save()){c.active=false;return;}
+      render();
+    }
+  });
   $('faCustomerForm').addEventListener('submit',e=>{
     e.preventDefault();
     const name=$('faName').value.trim(),mobile=$('faMobile').value.trim();
@@ -1043,17 +1089,27 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     if(!name||!mobile){alert('பெயர் மற்றும் மொபைல் எண் அவசியம்.');return;}
     if(!/^\d{10}$/.test(mobile)){alert('மொபைல் எண் சரியாக 10 இலக்கங்களாக இருக்க வேண்டும்.');$('faMobile').focus();return;}
     if(aadhaar && !/^\d{12}$/.test(aadhaar)){alert('ஆதார் எண் 12 இலக்கங்களாக இருக்க வேண்டும்.');return;}
-    if(db.customers.some(c=>String(c.mobile).replace(/\D/g,'')===mobile.replace(/\D/g,''))){alert('இந்த மொபைல் எண் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.');return;}
+    if(db.customers.some(c=>c.id!==editingCustomerId && String(c.mobile).replace(/\D/g,'')===mobile.replace(/\D/g,''))){alert('இந்த மொபைல் எண் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.');return;}
     const customerFrequency=$('faCustomerFrequency').value;
     if(!customerFrequency){alert('கடன் வசூல் வகையைத் தேர்வு செய்யவும்.');return;}
     const customerWeekday=$('faCustomerWeekday').value;
     const needsWeekday=customerFrequency==='weekly'||customerFrequency==='weekly_daily';
     if(needsWeekday && customerWeekday===''){alert('வாரக் கடனுக்கு வசூல் கிழமையைத் தேர்வு செய்யவும்.');return;}
-    const customerRecord={id:'C'+Date.now(),name,mobile,aadhaar,address:$('faAddress').value.trim(),collectionType:customerFrequency,collectionDay:needsWeekday?Number(customerWeekday):null,created:today()};
-    db.customers.push(customerRecord);
+    const existingCustomer=editingCustomerId?db.customers.find(c=>c.id===editingCustomerId):null;
+    const oldCustomerSnapshot=existingCustomer?{...existingCustomer}:null;
+    const customerRecord={id:existingCustomer?existingCustomer.id:'C'+Date.now(),name,mobile,aadhaar,address:$('faAddress').value.trim(),collectionType:customerFrequency,collectionDay:needsWeekday?Number(customerWeekday):null,created:existingCustomer?existingCustomer.created:today(),active:existingCustomer?existingCustomer.active!==false:true};
+    if(existingCustomer){Object.assign(existingCustomer,customerRecord);}
+    else{db.customers.push(customerRecord);}
     refreshGuarantorCustomerOptions();
-    if(!save()){db.customers=db.customers.filter(c=>c.id!==customerRecord.id);return;}
+    if(!save()){
+      if(existingCustomer)Object.assign(existingCustomer,oldCustomerSnapshot);
+      else db.customers=db.customers.filter(c=>c.id!==customerRecord.id);
+      return;
+    }
+    editingCustomerId=null;
     e.target.reset();
+    $('faCustomerSubmitBtn').textContent='➕ வாடிக்கையாளரை சேமிக்கவும்';
+    $('faCustomerCancelEdit').classList.add('finance-hidden');
     justAddedCustomerId=customerRecord.id;
     // Show the confirmation FIRST, so a later list-rendering issue cannot hide the successful save.
     const notice=$('faCustomerSaveNotice');
@@ -1082,7 +1138,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
   function refreshGuarantorCustomerOptions(){
     const list=$('faGuarantorCustomerOptions');
     if(!list)return;
-    const sorted=db.customers.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ta'));
+    const sorted=db.customers.filter(c=>c.active!==false).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ta'));
     list.innerHTML=sorted.map(c=>'<option value="'+esc(c.name)+'"></option>').join('');
     const visible=$('faGuarantorCustomerList');
     if(visible){
