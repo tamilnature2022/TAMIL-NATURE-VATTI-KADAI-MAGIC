@@ -427,8 +427,9 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   <button type="button" data-main-fin-tab="loans">2. Loan</button>
   <button type="button" data-main-fin-tab="weekly">3. வார வசூல்</button>
   <button type="button" data-main-fin-tab="daily">4. தினசரி வசூல்</button>
-  <button type="button" data-main-fin-tab="income">5. வரவு செலவு</button>
-  <button type="button" data-main-fin-tab="history">6. History</button>
+  <button type="button" data-main-fin-tab="weeklyIncome">5. வார வசூல் வரவு செலவு திட்டம்</button>
+  <button type="button" data-main-fin-tab="dailyIncome">6. தினசரி வசூல் வரவு செலவு திட்டம்</button>
+  <button type="button" data-main-fin-tab="history">7. History</button>
 </div>
 <section class="panel finance-hidden" data-fin-panel="customers">
     <h2>👥 Customer Details / வாடிக்கையாளர் விவரம்</h2>
@@ -558,7 +559,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 
 
 <section class="panel finance-hidden" data-fin-panel="income">
-  <h2>📊 வரவு செலவு / Income & Expense</h2>
+  <h2 id="faIncomeHeading">📊 வார வசூல் வரவு செலவு திட்டம் / Weekly Collection Accounts</h2>
   <div class="finance-grid income-summary-grid">
     <div class="finance-stat"><small>இன்றைய வசூல்</small><strong id="faTodayCollected">₹0</strong></div>
     <div class="finance-stat"><small>இன்று வசூலான வரவு</small><strong id="faIncomeToday">₹0</strong></div>
@@ -567,13 +568,6 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     <div class="finance-stat"><small>வாடிக்கையாளர்கள்</small><strong id="faIncomeCustomers">0</strong></div>
     <div class="finance-stat"><small>செயலிலுள்ள கடன்கள்</small><strong id="faIncomeActiveLoans">0</strong></div>
   </div>
-  <label class="income-collection-picker">வசூல் வகையைத் தேர்வு செய்யவும்
-    <select id="faIncomeCollectionType">
-      <option value="">வசூல் வகையைத் தேர்வு செய்யவும்</option>
-      <option value="weeklyLedger">வார வசூல்</option>
-      <option value="dailyLedger">தினசரி வசூல்</option>
-    </select>
-  </label>
   <div class="ledger-tabs" role="tablist" aria-label="Income expense ledgers">
     <button type="button" class="active" data-ledger-tab="customerLedger">வாடிக்கையாளர் கணக்கு</button>
     <button type="button" data-ledger-tab="loanLedger">கடன் கணக்கு</button>
@@ -928,8 +922,15 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
   }
   function dueNow(l,collectionMode){return Math.max(0,dueThroughToday(l,collectionMode)-paid(l.id));}
   function showMainFinanceTab(name){
+    const incomeMode=name==='weeklyIncome'?'weekly':name==='dailyIncome'?'daily':'';
+    const panelName=incomeMode?'income':name;
     document.querySelectorAll('[data-main-fin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.mainFinTab===name));
-    document.querySelectorAll('[data-fin-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.finPanel!==name));
+    document.querySelectorAll('[data-fin-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.finPanel!==panelName));
+    if(incomeMode){
+      const heading=$('faIncomeHeading');
+      if(heading)heading.textContent=incomeMode==='weekly'?'📊 வார வசூல் வரவு செலவு திட்டம் / Weekly Collection Accounts':'📊 தினசரி வசூல் வரவு செலவு திட்டம் / Daily Collection Accounts';
+      if(typeof activateLedgerTab==='function')activateLedgerTab(incomeMode==='weekly'?'weeklyLedger':'dailyLedger');
+    }
   }
   function normalizeCustomerWeekday(value){
     if(value===null||value===undefined||value==='')return null;
@@ -1481,12 +1482,6 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       const active=panel.dataset.ledgerPanel===tabName;
       panel.classList.toggle('finance-hidden',!active);
       panel.hidden=!active;
-    });
-  }
-  const incomeCollectionPicker=$('faIncomeCollectionType');
-  if(incomeCollectionPicker){
-    incomeCollectionPicker.addEventListener('change',()=>{
-      if(incomeCollectionPicker.value) activateLedgerTab(incomeCollectionPicker.value);
     });
   }
   ledgerButtons.forEach(button=>{
