@@ -541,9 +541,9 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     </div>
     <p class="finance-note" id="faWeekdayCaption">ஞாயிற்றுக்கிழமை வசூல்</p>
     <div class="weekly-view-tabs" role="tablist" aria-label="வார வசூல் பிரிவுகள்">
-      <button type="button" class="active" data-weekly-view="collect" role="tab" aria-selected="true">Collect / வசூல்</button>
-      <button type="button" data-weekly-view="completed" role="tab" aria-selected="false">Completed / முடிந்தது</button>
-      <button type="button" data-weekly-view="newloan" role="tab" aria-selected="false">New Loan / புதிய கடன்</button>
+      <button type="button" class="active" data-weekly-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
+      <button type="button" data-weekly-view="completed" role="tab" aria-selected="false"><span>Completed</span><small>முடிந்தது</small></button>
+      <button type="button" data-weekly-view="newloan" role="tab" aria-selected="false"><span>New Loan</span><small>புதிய கடன்</small></button>
     </div>
     <div data-weekly-view-panel="collect">
       <div class="finance-grid">
@@ -553,7 +553,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <div id="faWeeklyList" class="finance-list"></div>
     </div>
     <div data-weekly-view-panel="completed" class="finance-hidden">
-      <h3>முழுமையாக வசூல் முடித்தவர்கள் / Completed Loans</h3>
+      <h3>Completed / முடிந்த கடன்கள் & வசூல் History</h3>
       <div id="faWeeklyCompletedList" class="finance-list"></div>
     </div>
     <div data-weekly-view-panel="newloan" class="finance-hidden">
@@ -1152,13 +1152,14 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     const collected=db.payments.filter(p=>p.date===today() && db.loans.some(l=>l.id===p.loanId&&(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily')))).reduce((a,p)=>a+Number(p.amount),0);
     const dueTotal=loans.reduce((a,l)=>a+Math.min(dueNow(l,freq),balance(l)),0);
     if(isWeekly){
-      const completedLoans=db.loans.filter(l=>(l.frequency==='weekly'||l.frequency==='weekly_daily')&&loanWeekday(l)===selectedWeekday&&balance(l)<=0.009);
+      const completedLoans=db.loans.filter(l=>(l.frequency==='weekly'||l.frequency==='weekly_daily')&&balance(l)<=0.009).slice().sort((a,b)=>String(b.loanDate||b.start||'').localeCompare(String(a.loanDate||a.start||'')));
       const completedBox=$('faWeeklyCompletedList');
       if(completedBox){
         completedBox.innerHTML=completedLoans.length?completedLoans.map(l=>{
           const c=customer(l.customerId);
           const last=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date))[0];
-          return '<div class="completed-loan-card"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">✓ COMPLETED</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>கடன் தொகை: '+money(l.principal)+'<br>மொத்தம் செலுத்தியது: '+money(paid(l.id))+'<br>கடன் முடிந்த நிலை: <b>₹0 நிலுவை</b>'+(last?'<br>கடைசி வசூல் தேதி: '+dateText(last.date):'')+'</div></div>';
+          const history=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(a.timestamp||a.date).localeCompare(b.timestamp||b.date));
+          return '<div class="completed-loan-card"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">✓ COMPLETED</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>Loan ID: '+esc(l.id)+'<br>கடன் வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய கடன் தொகை: '+money(l.principal)+'<br>மொத்தம் செலுத்தியது: '+money(paid(l.id))+'<br>கடன் முடிந்த நிலை: <b>₹0 நிலுவை</b>'+(last?'<br>கடைசி வசூல் தேதி: '+dateText(last.date):'')+'</div><div class="loan-payment-log"><b>வசூல் வரலாறு / Payment History ('+history.length+')</b>'+(history.length?history.map((p,i)=>'<div class="loan-payment-row"><span><b>Receipt '+(i+1)+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt ID: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join(''):'<div class="muted">வசூல் வரலாறு இல்லை.</div>')+'</div></div>';
         }).join(''):'<div class="finance-empty">இந்தக் கிழமையில் முழுமையாக முடிக்கப்பட்ட கடன்கள் இல்லை.</div>';
       }
     }
@@ -1186,20 +1187,16 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
 
     if(isWeekly){
       if(!loans.some(l=>l.id===selectedWeeklyLoanId))selectedWeeklyLoanId='';
-      const options='<option value="">வாடிக்கையாளர் பெயரைத் தேர்வு செய்யவும்</option>'+loans.map(l=>{const c=customer(l.customerId);return '<option value="'+esc(l.id)+'" '+(l.id===selectedWeeklyLoanId?'selected':'')+'>'+esc(c?.name||'Customer')+' – '+esc(c?.mobile||'')+' – நிலுவை '+money(balance(l))+'</option>';}).join('');
-      let selectedCard='<div class="finance-empty">மேலே உள்ள பட்டியலில் வாடிக்கையாளர் பெயரைத் தேர்வு செய்தால் பணம் பெறும் வசதி இங்கே தோன்றும்.</div>';
-      const chosen=loans.find(l=>l.id===selectedWeeklyLoanId);
-      if(chosen){
-        const c=customer(chosen.customerId),due=Math.min(dueNow(chosen,'weekly'),balance(chosen));
-        const loanPayments=db.payments.filter(p=>p.loanId===chosen.id).slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date));
-        const paymentRows=loanPayments.length?'<div class="loan-payment-log"><b>✓ பணம் பெற்றது / வரவு பதிவு – முழு வசூல் வரலாறு</b>'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>'+(i===0?'✓ இப்போது வரவு வைத்தது':'முந்தைய வசூல்')+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'<div class="loan-payment-total"><span>இதுவரை மொத்த வசூல்</span><b>'+money(paid(chosen.id))+'</b></div></div>':'<div class="loan-payment-log muted">இந்தக் கடனுக்கு இதுவரை பணம் பெறப்படவில்லை.</div>';
-        selectedCard='<div class="finance-item weekly-selected-account"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill pending">நிலுவை '+money(balance(chosen))+'</span></div><div class="finance-account-details"><h4>வாடிக்கையாளர் விவரம்</h4><div>📱 மொபைல்: '+esc(c?.mobile||'-')+'</div><div>🪪 ID: '+(c?.aadhaar?'XXXX-XXXX-'+esc(c.aadhaar.slice(-4)):'-')+'</div><div>📍 முகவரி: '+esc(c?.address||'-')+'</div><h4>கடன் விவரம்</h4><div>கடன் வகை: '+(chosen.frequency==='weekly_daily'?'வார + தினசரி': 'வார வசூல்')+'</div><div>வழங்கிய தேதி: '+dateText(chosen.loanDate||chosen.start)+'</div><div>வழங்கிய தொகை: '+money(chosen.principal)+'</div><div>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(chosen.total)+'</div><div>தவணைத் தொகை: '+money(chosen.installment)+'</div><div>இதுவரை பெற்ற தொகை / Total Received: <b>'+money(paid(chosen.id))+'</b></div>'+(loanPayments.length?'<div class="latest-received-line">✓ கடைசியாக பெற்றது: <b>'+money(loanPayments[0].amount)+'</b> | '+dateText(loanPayments[0].date)+' | '+esc(loanPayments[0].time||'-')+'</div>':'<div>இதுவரை பணம் பெறப்படவில்லை.</div>')+'<div><b>மீதமுள்ள கடன்: '+money(balance(chosen))+'</b></div><div>முதல் தவணை தேதி: '+dateText(chosen.start)+'</div></div><div class="finance-payrow"><input type="number" min="0.01" step="0.01" max="'+balance(chosen)+'" id="faAmount_'+chosen.id+'" placeholder="பெற்ற தொகை ₹" aria-label="பெற்ற தொகை"><button type="button" data-fa-pay="'+chosen.id+'">பணம் பெற்றது பதிவு</button></div>'+paymentRows+'</div>';
-      }
-      const weeklySearchOptions=loans.map(l=>{const c=customer(l.customerId);return '<option value="'+esc((c?.name||'Customer')+' – '+(c?.mobile||'')+' – நிலுவை '+money(balance(l)))+'"></option>';}).join('');
-      const selectedWeeklyLoan=loans.find(l=>l.id===selectedWeeklyLoanId);
-      const selectedWeeklyCustomer=selectedWeeklyLoan?customer(selectedWeeklyLoan.customerId):null;
-      const selectedWeeklyText=selectedWeeklyLoan?(selectedWeeklyCustomer?.name||'Customer')+' – '+(selectedWeeklyCustomer?.mobile||'')+' – நிலுவை '+money(balance(selectedWeeklyLoan)):'';
-      list.innerHTML='<label class="weekly-customer-select"><b>'+weekdayNames[selectedWeekday]+' – வாடிக்கையாளர் பட்டியல்</b><input id="faWeeklyCustomerSearch" type="text" list="faWeeklyCustomerOptions" autocomplete="off" placeholder="வாடிக்கையாளர் பெயரை type செய்து தேடவும்" value="'+esc(selectedWeeklyText)+'"><datalist id="faWeeklyCustomerOptions">'+weeklySearchOptions+'</datalist><select id="faWeeklyCustomerSelect" aria-label="வார வசூல் வாடிக்கையாளர் பட்டியல்" style="width:100%;margin-top:8px;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--text)" class="finance-hidden" tabindex="-1">'+options+'</select></label>'+selectedCard;
+      const weeklyCards=loans.length?loans.map((l,index)=>{
+        const c=customer(l.customerId);
+        const due=Math.min(dueNow(l,'weekly'),balance(l));
+        const loanPayments=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date));
+        const paymentRows=loanPayments.length
+          ?'<div class="loan-payment-log"><b>✓ வசூல் வரலாறு</b>'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>'+(i===0?'கடைசி வசூல்':'முந்தைய வசூல்')+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'<div class="loan-payment-total"><span>இதுவரை மொத்த வசூல்</span><b>'+money(paid(l.id))+'</b></div></div>'
+          :'<div class="loan-payment-log muted">இதுவரை வசூல் இல்லை.</div>';
+        return '<div class="finance-item weekly-collection-card" data-loan-id="'+esc(l.id)+'"><div class="finance-row"><h3>'+(index+1)+'. '+esc(c?.name||'Customer')+'</h3><span class="finance-pill pending">நிலுவை '+money(balance(l))+'</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>வழங்கிய கடன்: '+money(l.principal)+'<br>தவணைத் தொகை: <b>'+money(l.installment)+'</b><br>இந்த வாரம் செலுத்த வேண்டியது: <b>'+money(due)+'</b><br>இதுவரை செலுத்தியது: <b>'+money(paid(l.id))+'</b><br>மீதமுள்ள கடன்: <b>'+money(balance(l))+'</b></div><div class="finance-payrow"><input type="number" min="0.01" step="0.01" max="'+balance(l)+'" id="faAmount_'+esc(l.id)+'" placeholder="பெற்ற தொகை ₹" aria-label="'+esc(c?.name||'Customer')+' பெற்ற தொகை"><button type="button" data-fa-pay="'+esc(l.id)+'">பணம் பெற்றது பதிவு</button></div>'+paymentRows+'</div>';
+      }).join(''):'<div class="finance-empty">இந்தக் கிழமை வசூல் செய்ய வேண்டிய வாடிக்கையாளர்கள் இல்லை.</div>';
+      list.innerHTML='<div class="weekly-collection-summary"><b>'+weekdayNames[selectedWeekday]+' – இந்த வார வசூல் பட்டியல்</b><div class="finance-note">மொத்த வாடிக்கையாளர்கள்: '+loans.length+' பேர்</div></div>'+weeklyCards;
     }else{
       if(!loans.some(l=>l.id===selectedPaymentLoanId))selectedPaymentLoanId='';
       const dailyOptions='<option value="">வாடிக்கையாளர் பெயரைத் தேர்வு செய்யவும்</option>'+loans.map(l=>{const c=customer(l.customerId);return '<option value="'+esc(l.id)+'" '+(l.id===selectedPaymentLoanId?'selected':'')+'>'+esc(c?.name||'Customer')+' – '+esc(c?.mobile||'')+' – நிலுவை '+money(balance(l))+'</option>';}).join('');
@@ -1922,5 +1919,22 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 .weekly-view-tabs button.active{background:#087e8b;color:#fff;box-shadow:0 4px 12px rgba(8,126,139,.2)}
 #faWeeklyCompletedList .completed-loan-card{border:1px solid #b9ded0;background:#effaf4;border-radius:14px;padding:15px;margin:12px 0}
 #faWeeklyNewLoanMount .finance-form{margin-top:10px}
+</style>
+<style>
+.weekly-collection-summary{padding:12px 4px 4px;color:var(--ink,#17324d);font-weight:800}
+.weekly-collection-card{margin:14px 0;padding:16px;border:1px solid var(--line,#d6e0e5);border-radius:15px;background:#fff}
+.weekly-collection-card .finance-payrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;margin-top:14px}
+.weekly-collection-card .finance-payrow input{min-width:0;width:100%;box-sizing:border-box}
+.weekly-collection-card .finance-payrow button{white-space:normal;min-height:44px}
+</style>
+<style>
+/* V176: mobile-safe weekly tabs and completed-loan history */
+.weekly-view-tabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;width:100%;box-sizing:border-box;overflow:hidden}
+.weekly-view-tabs button{width:100%;min-width:0!important;max-width:100%;box-sizing:border-box;padding:9px 3px!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;white-space:normal!important;overflow:hidden;overflow-wrap:anywhere;word-break:normal;font-size:clamp(13px,3.5vw,17px)!important;line-height:1.2!important}
+.weekly-view-tabs button span{display:block;max-width:100%;white-space:nowrap}
+.weekly-view-tabs button small{display:block;max-width:100%;font-size:clamp(11px,2.9vw,14px);font-weight:700;line-height:1.15;white-space:normal}
+.completed-loan-card .loan-payment-log{margin-top:12px;padding-top:10px;border-top:1px solid #cfe4da}
+.completed-loan-card .loan-payment-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #e1eee8}
+.completed-loan-card .loan-payment-row strong{white-space:nowrap}
 </style>
 </body></html>
