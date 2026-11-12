@@ -427,8 +427,8 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   <button type="button" data-main-fin-tab="loans">2. Loan</button>
   <button type="button" data-main-fin-tab="weekly">3. வார வசூல்</button>
   <button type="button" data-main-fin-tab="daily">4. தினசரி வசூல்</button>
-  <button type="button" data-main-fin-tab="weeklyIncome">5. வார வசூல் வரவு செலவு திட்டம்</button>
-  <button type="button" data-main-fin-tab="dailyIncome">6. தினசரி வசூல் வரவு செலவு திட்டம்</button>
+  <button type="button" data-main-fin-tab="weeklyIncome">5. வார வசூல் வரவு செலவு</button>
+  <button type="button" data-main-fin-tab="dailyIncome">6. தினசரி வசூல் வரவு செலவு</button>
   <button type="button" data-main-fin-tab="history">7. History</button>
 </div>
 <section class="panel finance-hidden" data-fin-panel="customers">
@@ -558,28 +558,35 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   </section>
 
 
-<section class="panel finance-hidden" data-fin-panel="income">
-  <h2 id="faIncomeHeading">📊 வார வசூல் வரவு செலவு திட்டம் / Weekly Collection Accounts</h2>
+<div class="finance-hidden" aria-hidden="true">
+  <span id="faIncomeToday"></span><span id="faIncomeTotal"></span><span id="faIncomeBalance"></span>
+  <span id="faIncomeCustomers"></span><span id="faIncomeActiveLoans"></span>
+  <div id="faLedgerCustomers"></div><div id="faLedgerLoans"></div><div id="faLedgerPayments"></div>
+</div>
+<section class="panel finance-hidden" data-fin-panel="weeklyIncome">
+  <h2>📊 வார வசூல் வரவு செலவு / Weekly Collection Income & Expense</h2>
   <div class="finance-grid income-summary-grid">
-    <div class="finance-stat"><small>இன்றைய வசூல்</small><strong id="faTodayCollected">₹0</strong></div>
-    <div class="finance-stat"><small>இன்று வசூலான வரவு</small><strong id="faIncomeToday">₹0</strong></div>
-    <div class="finance-stat"><small>மொத்தம் வசூலான வரவு</small><strong id="faIncomeTotal">₹0</strong></div>
-    <div class="finance-stat"><small>மொத்த கடன் நிலுவை</small><strong id="faIncomeBalance">₹0</strong></div>
-    <div class="finance-stat"><small>வாடிக்கையாளர்கள்</small><strong id="faIncomeCustomers">0</strong></div>
-    <div class="finance-stat"><small>செயலிலுள்ள கடன்கள்</small><strong id="faIncomeActiveLoans">0</strong></div>
+    <div class="finance-stat"><small>வாரக் கடன்கள்</small><strong id="faWeeklyIncomeLoans">0</strong></div>
+    <div class="finance-stat"><small>வார வசூல் மொத்த வரவு</small><strong id="faWeeklyIncomeTotal">₹0</strong></div>
+    <div class="finance-stat"><small>வாரக் கடன் நிலுவை</small><strong id="faWeeklyIncomeBalance">₹0</strong></div>
   </div>
-  <div class="ledger-tabs" role="tablist" aria-label="Income expense ledgers">
-    <button type="button" class="active" data-ledger-tab="customerLedger">வாடிக்கையாளர் கணக்கு</button>
-    <button type="button" data-ledger-tab="loanLedger">கடன் கணக்கு</button>
-    <button type="button" data-ledger-tab="weeklyLedger">வார வசூல்</button>
-    <button type="button" data-ledger-tab="dailyLedger">தினசரி வசூல்</button>
-    <button type="button" data-ledger-tab="paymentLedger">Payment History</button>
+  <div class="ledger-panel">
+    <h3>வார வசூல் கணக்கு / Weekly Collection Ledger</h3>
+    <div id="faLedgerWeekly" class="finance-list"></div>
   </div>
-  <div class="ledger-panel" data-ledger-panel="customerLedger"><h3>வாடிக்கையாளர் கணக்கு</h3><div id="faLedgerCustomers" class="finance-list"></div></div>
-  <div class="ledger-panel finance-hidden" data-ledger-panel="loanLedger"><h3>கடன் கணக்கு</h3><div id="faLedgerLoans" class="finance-list"></div></div>
-  <div class="ledger-panel finance-hidden" data-ledger-panel="weeklyLedger"><h3>வார வசூல் கணக்கு</h3><div id="faLedgerWeekly" class="finance-list"></div></div>
-  <div class="ledger-panel finance-hidden" data-ledger-panel="dailyLedger"><h3>தினசரி வசூல் கணக்கு</h3><div id="faLedgerDaily" class="finance-list"></div></div>
-  <div class="ledger-panel finance-hidden" data-ledger-panel="paymentLedger"><h3>பணம் பெற்ற வரலாறு</h3><div id="faLedgerPayments" class="finance-list"></div></div>
+</section>
+
+<section class="panel finance-hidden" data-fin-panel="dailyIncome">
+  <h2>📊 தினசரி வசூல் வரவு செலவு / Daily Collection Income & Expense</h2>
+  <div class="finance-grid income-summary-grid">
+    <div class="finance-stat"><small>தினசரிக் கடன்கள்</small><strong id="faDailyIncomeLoans">0</strong></div>
+    <div class="finance-stat"><small>தினசரி வசூல் மொத்த வரவு</small><strong id="faDailyIncomeTotal">₹0</strong></div>
+    <div class="finance-stat"><small>தினசரிக் கடன் நிலுவை</small><strong id="faDailyIncomeBalance">₹0</strong></div>
+  </div>
+  <div class="ledger-panel">
+    <h3>தினசரி வசூல் கணக்கு / Daily Collection Ledger</h3>
+    <div id="faLedgerDaily" class="finance-list"></div>
+  </div>
 </section>
 
   <p class="finance-note">தரவு சேமிப்பு குறிப்பு: இந்த ஆரம்ப பதிப்பில் விவரங்கள் இந்தச் சாதனத்தின் WebView Local Storage-ல் சேமிக்கப்படும். வேறு மொபைலுக்கு தானாக Sync ஆகாது. App data அழிக்கப்பட்டால் இழக்கப்படலாம். Cloud backup, பணியாளர் Login மற்றும் Server Sync அடுத்த கட்டத்தில் தேவை. உண்மையான வாடிக்கையாளர் நிதித் தரவைப் பயன்படுத்துவதற்கு முன் பாதுகாப்பான Backup அமைக்கவும்.</p>
@@ -922,15 +929,8 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
   }
   function dueNow(l,collectionMode){return Math.max(0,dueThroughToday(l,collectionMode)-paid(l.id));}
   function showMainFinanceTab(name){
-    const incomeMode=name==='weeklyIncome'?'weekly':name==='dailyIncome'?'daily':'';
-    const panelName=incomeMode?'income':name;
     document.querySelectorAll('[data-main-fin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.mainFinTab===name));
-    document.querySelectorAll('[data-fin-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.finPanel!==panelName));
-    if(incomeMode){
-      const heading=$('faIncomeHeading');
-      if(heading)heading.textContent=incomeMode==='weekly'?'📊 வார வசூல் வரவு செலவு திட்டம் / Weekly Collection Accounts':'📊 தினசரி வசூல் வரவு செலவு திட்டம் / Daily Collection Accounts';
-      if(typeof activateLedgerTab==='function')activateLedgerTab(incomeMode==='weekly'?'weeklyLedger':'dailyLedger');
-    }
+    document.querySelectorAll('[data-fin-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.finPanel!==name));
   }
   function normalizeCustomerWeekday(value){
     if(value===null||value===undefined||value==='')return null;
@@ -1081,6 +1081,14 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     }).join('');
     $('faLedgerWeekly').innerHTML=ledgerLoanCards('weekly')||'<div class="finance-empty">வார வசூல் பதிவுகள் இல்லை.</div>';
     $('faLedgerDaily').innerHTML=ledgerLoanCards('daily')||'<div class="finance-empty">தின வசூல் பதிவுகள் இல்லை.</div>';
+    const weeklyLoansForIncome=db.loans.filter(l=>l.frequency==='weekly'||l.frequency==='weekly_daily');
+    const dailyLoansForIncome=db.loans.filter(l=>l.frequency==='daily'||l.frequency==='weekly_daily');
+    $('faWeeklyIncomeLoans').textContent=weeklyLoansForIncome.length;
+    $('faWeeklyIncomeTotal').textContent=money(weeklyLoansForIncome.reduce((sum,l)=>sum+paid(l.id),0));
+    $('faWeeklyIncomeBalance').textContent=money(weeklyLoansForIncome.reduce((sum,l)=>sum+balance(l),0));
+    $('faDailyIncomeLoans').textContent=dailyLoansForIncome.length;
+    $('faDailyIncomeTotal').textContent=money(dailyLoansForIncome.reduce((sum,l)=>sum+paid(l.id),0));
+    $('faDailyIncomeBalance').textContent=money(dailyLoansForIncome.reduce((sum,l)=>sum+balance(l),0));
     $('faLedgerPayments').innerHTML=db.payments.length?db.payments.slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date)).map(p=>{
       const l=db.loans.find(x=>x.id===p.loanId),c=l?customer(l.customerId):null;
       return '<div class="finance-item"><div class="finance-row"><h3>'+esc(c?.name||'வாடிக்கையாளர்')+'</h3><span class="finance-pill">பணம் பெற்றது</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>📅 '+dateText(p.date)+' | 🕒 '+esc(p.time||'-')+'<br>பெற்ற தொகை: <b>'+money(p.amount)+'</b><br>Receipt ID: '+esc(p.id)+'</div></div>';
@@ -1482,6 +1490,12 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       const active=panel.dataset.ledgerPanel===tabName;
       panel.classList.toggle('finance-hidden',!active);
       panel.hidden=!active;
+    });
+  }
+  const incomeCollectionPicker=$('faIncomeCollectionType');
+  if(incomeCollectionPicker){
+    incomeCollectionPicker.addEventListener('change',()=>{
+      if(incomeCollectionPicker.value) activateLedgerTab(incomeCollectionPicker.value);
     });
   }
   ledgerButtons.forEach(button=>{
