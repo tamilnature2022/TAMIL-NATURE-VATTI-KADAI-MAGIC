@@ -540,11 +540,26 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <button type="button" data-weekday="6">சனி</button>
     </div>
     <p class="finance-note" id="faWeekdayCaption">ஞாயிற்றுக்கிழமை வசூல்</p>
-    <div class="finance-grid">
-      <div class="finance-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வசூல்</small><strong id="faWeeklyReceived">₹0</strong></div><span id="faWeeklyCycleNote" class="finance-hidden" aria-hidden="true"></span>
-      <span id="faWeeklyDue" class="finance-hidden" aria-hidden="true">₹0</span>
+    <div class="weekly-view-tabs" role="tablist" aria-label="வார வசூல் பிரிவுகள்">
+      <button type="button" class="active" data-weekly-view="collect" role="tab" aria-selected="true">Collect / வசூல்</button>
+      <button type="button" data-weekly-view="completed" role="tab" aria-selected="false">Completed / முடிந்தது</button>
+      <button type="button" data-weekly-view="newloan" role="tab" aria-selected="false">New Loan / புதிய கடன்</button>
     </div>
-    <div id="faWeeklyList" class="finance-list"></div>
+    <div data-weekly-view-panel="collect">
+      <div class="finance-grid">
+        <div class="finance-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வசூல்</small><strong id="faWeeklyReceived">₹0</strong></div><span id="faWeeklyCycleNote" class="finance-hidden" aria-hidden="true"></span>
+        <span id="faWeeklyDue" class="finance-hidden" aria-hidden="true">₹0</span>
+      </div>
+      <div id="faWeeklyList" class="finance-list"></div>
+    </div>
+    <div data-weekly-view-panel="completed" class="finance-hidden">
+      <h3>முழுமையாக வசூல் முடித்தவர்கள் / Completed Loans</h3>
+      <div id="faWeeklyCompletedList" class="finance-list"></div>
+    </div>
+    <div data-weekly-view-panel="newloan" class="finance-hidden">
+      <h3>புதிய கடன் வழங்குதல் / New Loan</h3>
+      <div id="faWeeklyNewLoanMount"></div>
+    </div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="daily">
     <h2>📆 தினசரி வசூல் / Daily Collection</h2>
@@ -1136,6 +1151,17 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     const loans=db.loans.filter(l=>(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily'))&&(balance(l)>0||l.id===selectedPaymentLoanId||(freq==='weekly'&&l.id===selectedWeeklyLoanId))&&(freq!=='weekly'||loanWeekday(l)===selectedWeekday));
     const collected=db.payments.filter(p=>p.date===today() && db.loans.some(l=>l.id===p.loanId&&(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily')))).reduce((a,p)=>a+Number(p.amount),0);
     const dueTotal=loans.reduce((a,l)=>a+Math.min(dueNow(l,freq),balance(l)),0);
+    if(isWeekly){
+      const completedLoans=db.loans.filter(l=>(l.frequency==='weekly'||l.frequency==='weekly_daily')&&loanWeekday(l)===selectedWeekday&&balance(l)<=0.009);
+      const completedBox=$('faWeeklyCompletedList');
+      if(completedBox){
+        completedBox.innerHTML=completedLoans.length?completedLoans.map(l=>{
+          const c=customer(l.customerId);
+          const last=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date))[0];
+          return '<div class="completed-loan-card"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">✓ COMPLETED</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>கடன் தொகை: '+money(l.principal)+'<br>மொத்தம் செலுத்தியது: '+money(paid(l.id))+'<br>கடன் முடிந்த நிலை: <b>₹0 நிலுவை</b>'+(last?'<br>கடைசி வசூல் தேதி: '+dateText(last.date):'')+'</div></div>';
+        }).join(''):'<div class="finance-empty">இந்தக் கிழமையில் முழுமையாக முடிக்கப்பட்ட கடன்கள் இல்லை.</div>';
+      }
+    }
     let weeklyCycleEnd=null,weeklyCycleStart=null;
     if(isWeekly){
       const nowDate=dateObj(today());
@@ -1625,6 +1651,56 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     document.querySelectorAll('[data-weekday]').forEach(b=>b.classList.toggle('active',b===btn));
     renderCollection('weekly');refreshLoanCustomerOptions();
   }));
+  // Weekly Collection tabs: Collect, Completed, New Loan
+  const weeklyViewButtons=[...document.querySelectorAll('[data-weekly-view]')];
+  const weeklyViewPanels=[...document.querySelectorAll('[data-weekly-view-panel]')];
+  const loanPanel=document.querySelector('[data-fin-panel="loans"]');
+  const loanForm=$('faLoanForm');
+  const loanFormHome=loanForm?document.createComment('loan-form-home'):null;
+  const loanPanelNote=loanForm?.nextElementSibling;
+  const loanListHeading=loanPanelNote?.nextElementSibling;
+  const loanList=loanListHeading?.nextElementSibling;
+  const loanNotice=loanList?.nextElementSibling;
+  if(loanForm&&loanPanel&&loanFormHome)loanForm.parentNode.insertBefore(loanFormHome,loanForm);
+  function restoreLoanFormHome(){
+    if(!loanForm||!loanFormHome||!loanFormHome.parentNode)return;
+    const parent=loanFormHome.parentNode;
+    parent.insertBefore(loanForm,loanFormHome.nextSibling);
+    let cursor=loanForm;
+    [loanPanelNote,loanListHeading,loanList,loanNotice].forEach(node=>{
+      if(node){parent.insertBefore(node,cursor.nextSibling);cursor=node;}
+    });
+  }
+  function openWeeklyView(view){
+    weeklyViewButtons.forEach(b=>{
+      const active=b.dataset.weeklyView===view;
+      b.classList.toggle('active',active);
+      b.setAttribute('aria-selected',active?'true':'false');
+    });
+    weeklyViewPanels.forEach(p=>{
+      const active=p.dataset.weeklyViewPanel===view;
+      p.classList.toggle('finance-hidden',!active);
+    });
+    if(view==='newloan'){
+      const mount=$('faWeeklyNewLoanMount');
+      if(mount&&loanForm){
+        mount.appendChild(loanForm);
+        [loanPanelNote,loanListHeading,loanList,loanNotice].forEach(node=>{if(node)mount.appendChild(node);});
+      }
+      if($('faFrequency')){$('faFrequency').value='weekly';$('faFrequency').dispatchEvent(new Event('change',{bubbles:true}));}
+      if($('faWeekday')){$('faWeekday').value=String(selectedWeekday);$('faWeekday').dispatchEvent(new Event('change',{bubbles:true}));}
+      refreshLoanCustomerOptions();
+      renderLoanCustomerPreview();
+    }else{
+      restoreLoanFormHome();
+      if(view==='completed')renderCollection('weekly');
+    }
+  }
+  weeklyViewButtons.forEach(button=>button.addEventListener('click',()=>openWeeklyView(button.dataset.weeklyView)));
+  document.querySelectorAll('[data-main-fin-tab]').forEach(button=>button.addEventListener('click',()=>{
+    if(button.dataset.mainFinTab!=='weekly')restoreLoanFormHome();
+  }));
+  openWeeklyView('collect');
   $('faLoanDate').value=today();updateFirstDueDate();render();
 })();
 </script>
@@ -1839,5 +1915,12 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 .active-loan-detail strong{color:#b42318;font-size:1.1em}
 .new-loan-allowed{margin-top:10px;padding:10px;border-radius:10px;background:#e6f7ed;color:#176b45;font-weight:700}
 #faLoanForm button[type="submit"]:disabled{opacity:.55!important;filter:grayscale(.35);cursor:not-allowed!important}
+</style>
+<style>
+.weekly-view-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px 0 16px}
+.weekly-view-tabs button{min-width:0;min-height:58px;padding:10px 6px;border:0;border-radius:14px;background:#e6eff1;color:#17324d;font:inherit;font-weight:800;line-height:1.25;cursor:pointer;overflow-wrap:anywhere}
+.weekly-view-tabs button.active{background:#087e8b;color:#fff;box-shadow:0 4px 12px rgba(8,126,139,.2)}
+#faWeeklyCompletedList .completed-loan-card{border:1px solid #b9ded0;background:#effaf4;border-radius:14px;padding:15px;margin:12px 0}
+#faWeeklyNewLoanMount .finance-form{margin-top:10px}
 </style>
 </body></html>
