@@ -1192,9 +1192,9 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
         const due=Math.min(dueNow(l,'weekly'),balance(l));
         const loanPayments=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date));
         const paymentRows=loanPayments.length
-          ?'<div class="loan-payment-log"><b>✓ வசூல் வரலாறு</b>'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>'+(i===0?'கடைசி வசூல்':'முந்தைய வசூல்')+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'<div class="loan-payment-total"><span>இதுவரை மொத்த வசூல்</span><b>'+money(paid(l.id))+'</b></div></div>'
-          :'<div class="loan-payment-log muted">இதுவரை வசூல் இல்லை.</div>';
-        return '<div class="finance-item weekly-collection-card" data-loan-id="'+esc(l.id)+'"><div class="finance-row"><h3>'+(index+1)+'. '+esc(c?.name||'Customer')+'</h3><span class="finance-pill pending">நிலுவை '+money(balance(l))+'</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>வழங்கிய கடன்: '+money(l.principal)+'<br>தவணைத் தொகை: <b>'+money(l.installment)+'</b><br>இந்த வாரம் செலுத்த வேண்டியது: <b>'+money(due)+'</b><br>இதுவரை செலுத்தியது: <b>'+money(paid(l.id))+'</b><br>மீதமுள்ள கடன்: <b>'+money(balance(l))+'</b></div><div class="finance-payrow"><input type="number" min="0.01" step="0.01" max="'+balance(l)+'" id="faAmount_'+esc(l.id)+'" placeholder="பெற்ற தொகை ₹" aria-label="'+esc(c?.name||'Customer')+' பெற்ற தொகை"><button type="button" data-fa-pay="'+esc(l.id)+'">பணம் பெற்றது பதிவு</button></div>'+paymentRows+'</div>';
+          ?'<details class="weekly-history"><summary>வசூல் History ('+loanPayments.length+')</summary><div class="loan-payment-log">'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>Receipt '+(i+1)+'</b><br>📅 '+dateText(p.date)+' | '+esc(p.time||'-')+'<br>'+esc(p.mode||'வசூல்')+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'</div></details>'
+          :'<div class="weekly-no-history">இதுவரை வசூல் இல்லை</div>';
+        return '<article class="weekly-smart-row" data-loan-id="'+esc(l.id)+'"><div class="weekly-smart-top"><div class="weekly-smart-person"><b>'+(index+1)+'. '+esc(c?.name||'Customer')+'</b><small>📱 '+esc(c?.mobile||'-')+'</small><small>📅 '+dateText(l.loanDate||l.start)+'</small><small>தவணை: '+money(l.installment)+' ('+(l.installmentCount||'-')+' தவணைகள்)</small></div><div class="weekly-smart-numbers"><div><small>Balance</small><b class="weekly-red">'+money(balance(l))+'</b></div><div><small>Paid</small><b class="weekly-green">'+money(paid(l.id))+'</b></div><div><small>Total</small><b>'+money(l.total||l.principal)+'</b></div></div></div><div class="weekly-due-line">இந்த வாரம் செலுத்த வேண்டியது <b>'+money(due)+'</b></div><div class="weekly-smart-pay"><label>Online<input type="number" min="0" step="0.01" inputmode="decimal" id="faOnline_'+esc(l.id)+'" placeholder="₹ 0"></label><label>Cash<input type="number" min="0" step="0.01" inputmode="decimal" id="faCash_'+esc(l.id)+'" placeholder="₹ 0"></label><button type="button" class="weekly-save-btn" data-fa-pay="'+esc(l.id)+'" aria-label="வசூலை சேமிக்க">💾</button></div>'+paymentRows+'</article>';
       }).join(''):'<div class="finance-empty">இந்தக் கிழமை வசூல் செய்ய வேண்டிய வாடிக்கையாளர்கள் இல்லை.</div>';
       list.innerHTML='<div class="weekly-collection-summary"><b>'+weekdayNames[selectedWeekday]+' – இந்த வார வசூல் பட்டியல்</b><div class="finance-note">மொத்த வாடிக்கையாளர்கள்: '+loans.length+' பேர்</div></div>'+weeklyCards;
     }else{
@@ -1453,9 +1453,12 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
       const loanId=payBtn.dataset.faPay;
       const loan=db.loans.find(l=>String(l.id)===String(loanId));
       const input=$('faAmount_'+loanId);
-      const amount=Number(input?.value);
+      const onlineInput=$('faOnline_'+loanId),cashInput=$('faCash_'+loanId);
+      const onlineAmount=onlineInput?Number(onlineInput.value||0):0;
+      const cashAmount=cashInput?Number(cashInput.value||0):0;
+      const amount=onlineInput||cashInput?onlineAmount+cashAmount:Number(input?.value);
       if(!loan){payBtn.dataset.processing='0';alert('கடன் விவரம் கிடைக்கவில்லை.');return;}
-      if(!Number.isFinite(amount)||amount<=0){payBtn.dataset.processing='0';alert('பெற்ற தொகையை உள்ளிடவும்.');input?.focus();return;}
+      if(!Number.isFinite(amount)||amount<=0||onlineAmount<0||cashAmount<0){payBtn.dataset.processing='0';alert('Cash அல்லது Online பெற்ற தொகையை உள்ளிடவும்.');(cashInput||onlineInput||input)?.focus();return;}
       const oldBalance=balance(loan);
       if(amount>oldBalance){payBtn.dataset.processing='0';alert('மீதமுள்ள கடன் தொகையைவிட அதிகமாகப் பதிவு செய்ய முடியாது.');return;}
 
@@ -1464,6 +1467,9 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
         id:'R'+Date.now(),
         loanId:loan.id,
         amount,
+        cashAmount:cashInput?cashAmount:0,
+        onlineAmount:onlineInput?onlineAmount:0,
+        mode:onlineInput||cashInput?(onlineAmount>0&&cashAmount>0?'Cash + Online':onlineAmount>0?'Online':'Cash'):'வசூல்',
         date:today(),
         time:paidAt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}),
         timestamp:paidAt.toISOString(),
@@ -1476,6 +1482,8 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
         return;
       }
 
+      if(onlineInput)onlineInput.value='';
+      if(cashInput)cashInput.value='';
       // Keep this exact account open after saving, even when the balance becomes zero.
       selectedPaymentLoanId=loan.id;
       const isWeekly=loan.frequency==='weekly'||loan.frequency==='weekly_daily';
@@ -1936,5 +1944,31 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 .completed-loan-card .loan-payment-log{margin-top:12px;padding-top:10px;border-top:1px solid #cfe4da}
 .completed-loan-card .loan-payment-row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #e1eee8}
 .completed-loan-card .loan-payment-row strong{white-space:nowrap}
+</style>
+<style>
+/* V177 smart collection ledger layout inspired by compact finance collection screens */
+.weekly-collection-summary{padding:8px 2px 12px}
+.weekly-smart-row{background:#fff;border-bottom:1px solid #d7dde2;padding:16px 2px 14px;margin:0;display:block}
+.weekly-smart-top{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(125px,.88fr);gap:10px;align-items:start}
+.weekly-smart-person{min-width:0;display:flex;flex-direction:column;gap:5px;color:#152b43}
+.weekly-smart-person>b{font-size:19px;line-height:1.25;overflow-wrap:anywhere}
+.weekly-smart-person>small{font-size:13px;color:#68798a;line-height:1.35}
+.weekly-smart-numbers{display:grid;gap:5px;text-align:right;min-width:0}
+.weekly-smart-numbers>div{display:flex;justify-content:space-between;align-items:baseline;gap:5px;border-bottom:1px solid #e5e9ed;padding-bottom:4px}
+.weekly-smart-numbers small{font-size:12px;color:#667085}
+.weekly-smart-numbers b{font-size:17px;color:#172033;white-space:nowrap}
+.weekly-smart-numbers .weekly-red{color:#bd2439}
+.weekly-smart-numbers .weekly-green{color:#187344}
+.weekly-due-line{margin:10px 0 8px;padding:8px 10px;border-radius:8px;background:#f1f6f8;color:#5c6d7d;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.weekly-due-line b{color:#087e8b;white-space:nowrap}
+.weekly-smart-pay{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 48px;gap:8px;align-items:end}
+.weekly-smart-pay label{display:flex;flex-direction:column;gap:3px;color:#68798a;font-size:12px}
+.weekly-smart-pay input{width:100%;min-width:0;box-sizing:border-box;border:0;border-bottom:1px solid #8b969e;border-radius:0;background:transparent;padding:8px 4px;font-size:15px}
+.weekly-smart-pay .weekly-save-btn{height:44px;width:48px;border:0;border-radius:10px;background:transparent;color:#0786b5;font-size:25px;cursor:pointer}
+.weekly-history{margin-top:9px;font-size:13px;color:#617286}
+.weekly-history summary{cursor:pointer;font-weight:700;padding:5px 0}
+.weekly-history .loan-payment-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #edf0f2}
+.weekly-no-history{font-size:12px;color:#8a949e;padding-top:8px}
+@media(max-width:380px){.weekly-smart-top{grid-template-columns:minmax(0,1fr) minmax(112px,.9fr);gap:6px}.weekly-smart-person>b{font-size:17px}.weekly-smart-numbers b{font-size:15px}.weekly-smart-pay{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px}.weekly-smart-pay .weekly-save-btn{width:42px}}
 </style>
 </body></html>
