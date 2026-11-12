@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V172">
+<meta name="app-version" content="V173">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -539,10 +539,10 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <button type="button" data-weekday="5">வெள்ளி</button>
       <button type="button" data-weekday="6">சனி</button>
     </div>
-    <p class="finance-note" id="faWeekdayCaption">ஞாயிற்றுக்கிழமை வசூல் வாடிக்கையாளர்கள்</p>
+    <p class="finance-note" id="faWeekdayCaption">ஞாயிற்றுக்கிழமை வசூல்</p>
     <div class="finance-grid">
-      <div class="finance-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வரவு</small><strong id="faWeeklyReceived">₹0</strong></div><p class="finance-note" id="faWeeklyCycleNote">தேர்வு செய்த வசூல் கிழமை முதல் அடுத்த 7 நாட்கள் வரை உள்ள மொத்த வரவு</p>
-      <div class="finance-stat"><small>வார தவணை நிலுவை</small><strong id="faWeeklyDue">₹0</strong></div>
+      <div class="finance-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வசூல்</small><strong id="faWeeklyReceived">₹0</strong></div><span id="faWeeklyCycleNote" class="finance-hidden" aria-hidden="true"></span>
+      <span id="faWeeklyDue" class="finance-hidden" aria-hidden="true">₹0</span>
     </div>
     <div id="faWeeklyList" class="finance-list"></div>
   </section>
@@ -1150,12 +1150,12 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     }).reduce((a,p)=>a+Number(p.amount),0):0;
     $(isWeekly?'faWeeklyReceived':'faDailyReceived').textContent=money(isWeekly?weeklyCycleTotal:collected);
     $(isWeekly?'faWeeklyDue':'faDailyDue').textContent=money(dueTotal);
-    if(isWeekly && $('faWeekdayCaption'))$('faWeekdayCaption').textContent=weekdayNames[selectedWeekday]+' வசூல் வாடிக்கையாளர்கள் மட்டும்';
+    if(isWeekly && $('faWeekdayCaption'))$('faWeekdayCaption').textContent=weekdayNames[selectedWeekday]+' வசூல்';
     if(isWeekly && $('faWeeklyReceivedLabel')){
       const weekdayTamil=selectedWeekday===0?'ஞாயிற்றுக்கிழமை':weekdayNames[selectedWeekday]+'க்கிழமை';
       const cycleStartDate=weeklyCycleStart?dateText(weeklyCycleStart.toISOString().slice(0,10)):'';
       const cycleEndDate=weeklyCycleEnd?dateText(weeklyCycleEnd.toISOString().slice(0,10)):'';
-      $('faWeeklyReceivedLabel').textContent=weekdayTamil+' ('+cycleStartDate+' – '+cycleEndDate+') மொத்த வரவு';
+      $('faWeeklyReceivedLabel').textContent=weekdayTamil+' ('+cycleStartDate+' – '+cycleEndDate+') மொத்த வசூல்';
     }
 
     if(isWeekly){
