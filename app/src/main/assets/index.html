@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V173">
+<meta name="app-version" content="V180">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -550,10 +550,12 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
         <div class="finance-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வசூல்</small><strong id="faWeeklyReceived">₹0</strong></div><span id="faWeeklyCycleNote" class="finance-hidden" aria-hidden="true"></span>
         <span id="faWeeklyDue" class="finance-hidden" aria-hidden="true">₹0</span>
       </div>
+      <input id="faWeeklyCollectSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக" aria-label="Collect வாடிக்கையாளர்களைத் தேடுக">
       <div id="faWeeklyList" class="finance-list"></div>
     </div>
     <div data-weekly-view-panel="completed" class="finance-hidden">
       <h3>Completed / முடிந்த கடன்கள் & வசூல் History</h3>
+      <input id="faWeeklyCompletedSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக" aria-label="Completed வாடிக்கையாளர்களைத் தேடுக">
       <div id="faWeeklyCompletedList" class="finance-list"></div>
     </div>
     <div data-weekly-view-panel="newloan" class="finance-hidden">
@@ -947,6 +949,20 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     return Math.min(Number(l.total),installments*Number(l.installment));
   }
   function dueNow(l,collectionMode){return Math.max(0,dueThroughToday(l,collectionMode)-paid(l.id));}
+  function weeklyCycleBounds(weekday){
+    const now=dateObj(today()),start=new Date(now);
+    start.setDate(now.getDate()-((now.getDay()-weekday+7)%7));
+    const end=new Date(start);end.setDate(start.getDate()+6);
+    return {start,end};
+  }
+  function weeklyPaidThisCycle(loan){
+    const range=weeklyCycleBounds(selectedWeekday);
+    return db.payments.filter(p=>{
+      if(String(p.loanId)!==String(loan.id))return false;
+      const d=dateObj(p.date);
+      return d>=range.start&&d<=range.end;
+    }).reduce((sum,p)=>sum+Number(p.amount||0),0);
+  }
   function showMainFinanceTab(name){
     document.querySelectorAll('[data-main-fin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.mainFinTab===name));
     document.querySelectorAll('[data-fin-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.finPanel!==name));
@@ -1148,18 +1164,20 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
 }
   function renderCollection(freq){
     const isWeekly=freq==='weekly',list=$(isWeekly?'faWeeklyList':'faDailyList');
-    const loans=db.loans.filter(l=>(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily'))&&(balance(l)>0||l.id===selectedPaymentLoanId||(freq==='weekly'&&l.id===selectedWeeklyLoanId))&&(freq!=='weekly'||loanWeekday(l)===selectedWeekday));
+    const loans=db.loans.filter(l=>(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily'))&&(balance(l)>0||l.id===selectedPaymentLoanId||(freq==='weekly'&&l.id===selectedWeeklyLoanId))&&(freq!=='weekly'||(loanWeekday(l)===selectedWeekday&&weeklyPaidThisCycle(l)<=0.009)));
     const collected=db.payments.filter(p=>p.date===today() && db.loans.some(l=>l.id===p.loanId&&(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily')))).reduce((a,p)=>a+Number(p.amount),0);
     const dueTotal=loans.reduce((a,l)=>a+Math.min(dueNow(l,freq),balance(l)),0);
     if(isWeekly){
-      const completedLoans=db.loans.filter(l=>(l.frequency==='weekly'||l.frequency==='weekly_daily')&&balance(l)<=0.009).slice().sort((a,b)=>String(b.loanDate||b.start||'').localeCompare(String(a.loanDate||a.start||'')));
+      const completedLoans=db.loans.filter(l=>(l.frequency==='weekly'||l.frequency==='weekly_daily')&&loanWeekday(l)===selectedWeekday&&weeklyPaidThisCycle(l)>0.009).slice().sort((a,b)=>String(b.loanDate||b.start||'').localeCompare(String(a.loanDate||a.start||'')));
       const completedBox=$('faWeeklyCompletedList');
       if(completedBox){
         completedBox.innerHTML=completedLoans.length?completedLoans.map(l=>{
           const c=customer(l.customerId);
           const last=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date))[0];
           const history=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(a.timestamp||a.date).localeCompare(b.timestamp||b.date));
-          return '<div class="completed-loan-card"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">✓ COMPLETED</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>Loan ID: '+esc(l.id)+'<br>கடன் வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய கடன் தொகை: '+money(l.principal)+'<br>மொத்தம் செலுத்தியது: '+money(paid(l.id))+'<br>கடன் முடிந்த நிலை: <b>₹0 நிலுவை</b>'+(last?'<br>கடைசி வசூல் தேதி: '+dateText(last.date):'')+'</div><div class="loan-payment-log"><b>வசூல் வரலாறு / Payment History ('+history.length+')</b>'+(history.length?history.map((p,i)=>'<div class="loan-payment-row"><span><b>Receipt '+(i+1)+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt ID: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join(''):'<div class="muted">வசூல் வரலாறு இல்லை.</div>')+'</div></div>';
+          const thisWeekPaid=weeklyPaidThisCycle(l);
+          const partial=thisWeekPaid+0.009<Number(l.installment||0);
+          return '<div class="completed-loan-card weekly-completed-card" data-search="'+esc(((c?.name||'')+' '+(c?.mobile||'')).toLowerCase())+'"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">'+(partial?'◐ PARTIAL PAID':'✓ PAID')+'</span></div><div class="finance-meta">📱 <a href="tel:'+esc(String(c?.mobile||'').replace(/[^0-9+]/g,''))+'">'+esc(c?.mobile||'-')+'</a><br>Loan ID: '+esc(l.id)+'<br>கடன் வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய கடன் தொகை: '+money(l.principal)+'<br>இந்த வாரம் செலுத்தியது: <b>'+money(thisWeekPaid)+'</b><br>இந்த வார தவணைத் தொகை: '+money(l.installment)+'<br>மொத்தம் இதுவரை செலுத்தியது: '+money(paid(l.id))+'<br>மீதமுள்ள கடன்: <b>'+money(balance(l))+'</b>'+(last?'<br>கடைசி வசூல் தேதி: '+dateText(last.date):'')+'</div><div class="loan-payment-log"><b>வசூல் வரலாறு / Payment History ('+history.length+')</b>'+(history.length?history.map((p,i)=>'<div class="loan-payment-row"><span><b>Receipt '+(i+1)+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt ID: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join(''):'<div class="muted">வசூல் வரலாறு இல்லை.</div>')+'</div></div>';
         }).join(''):'<div class="finance-empty">இந்தக் கிழமையில் முழுமையாக முடிக்கப்பட்ட கடன்கள் இல்லை.</div>';
       }
     }
@@ -1196,7 +1214,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
         const paymentRows=loanPayments.length
           ?'<details class="weekly-history"><summary>வசூல் History ('+loanPayments.length+')</summary><div class="loan-payment-log">'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>Receipt '+(i+1)+'</b><br>📅 '+dateText(p.date)+' | '+esc(p.time||'-')+'<br>'+esc(p.mode||'வசூல்')+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'</div></details>'
           :'<div class="weekly-no-history">இதுவரை வசூல் இல்லை</div>';
-        return '<article class="weekly-smart-row" data-loan-id="'+esc(l.id)+'"><div class="weekly-smart-top"><div class="weekly-smart-person"><b>'+(index+1)+'. '+esc(c?.name||'Customer')+'</b><small class="weekly-phone">📱 <a href="tel:'+esc(phoneDigits)+'">'+esc(phoneDisplay)+'</a></small><small>📅 '+dateText(l.loanDate||l.start)+'</small><small>தவணை: '+money(l.installment)+' ('+Math.min(Number(l.installmentCount)||0,Math.floor((paid(l.id)+0.000001)/Math.max(Number(l.installment)||1,1)))+'/'+(l.installmentCount||'-')+')</small></div><div class="weekly-smart-numbers"><div><small>Balance</small><b class="weekly-red">'+money(balance(l))+'</b></div><div><small>Paid</small><b class="weekly-green">'+money(paid(l.id))+'</b></div><div><small>Total</small><b>'+money(l.total||l.principal)+'</b></div></div></div><div class="weekly-smart-pay"><label>Online<input type="number" min="0" step="0.01" inputmode="decimal" id="faOnline_'+esc(l.id)+'" placeholder="₹ 0"></label><label>Cash<input type="number" min="0" step="0.01" inputmode="decimal" id="faCash_'+esc(l.id)+'" placeholder="₹ 0"></label><button type="button" class="weekly-save-btn" data-fa-pay="'+esc(l.id)+'" aria-label="வசூலை சேமிக்க">💾</button></div>'+paymentRows+'</article>';
+        return '<article class="weekly-smart-row" data-loan-id="'+esc(l.id)+'" data-search="'+esc(((c?.name||'')+' '+(c?.mobile||'')).toLowerCase())+'"><div class="weekly-smart-top"><div class="weekly-smart-person"><b>'+(index+1)+'. '+esc(c?.name||'Customer')+'</b><small class="weekly-phone">📱 <a href="tel:'+esc(phoneDigits)+'">'+esc(phoneDisplay)+'</a></small><small>📅 '+dateText(l.loanDate||l.start)+'</small><small>தவணை: '+money(l.installment)+' ('+Math.min(Number(l.installmentCount)||0,Math.floor((paid(l.id)+0.000001)/Math.max(Number(l.installment)||1,1)))+'/'+(l.installmentCount||'-')+')</small></div><div class="weekly-smart-numbers"><div><small>Balance</small><b class="weekly-red">'+money(balance(l))+'</b></div><div><small>Paid</small><b class="weekly-green">'+money(paid(l.id))+'</b></div><div><small>Total</small><b>'+money(l.total||l.principal)+'</b></div></div></div><div class="weekly-smart-pay"><label>Online<input type="number" min="0" step="0.01" inputmode="decimal" id="faOnline_'+esc(l.id)+'" placeholder="₹ 0"></label><label>Cash<input type="number" min="0" step="0.01" inputmode="decimal" id="faCash_'+esc(l.id)+'" placeholder="₹ 0"></label><button type="button" class="weekly-save-btn" data-fa-pay="'+esc(l.id)+'" aria-label="வசூலை சேமிக்க">💾</button></div>'+paymentRows+'</article>';
       }).join(''):'<div class="finance-empty">இந்தக் கிழமை வசூல் செய்ய வேண்டிய வாடிக்கையாளர்கள் இல்லை.</div>';
       list.innerHTML='<div class="weekly-collection-summary"><b>'+weekdayNames[selectedWeekday]+' – இந்த வார வசூல் பட்டியல்</b><div class="finance-note">மொத்த வாடிக்கையாளர்கள்: '+loans.length+' பேர்</div></div>'+weeklyCards;
     }else{
@@ -1704,6 +1722,19 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     }
   }
   weeklyViewButtons.forEach(button=>button.addEventListener('click',()=>openWeeklyView(button.dataset.weeklyView)));
+  function wireWeeklySearch(inputId,listId,selector){
+    const input=$(inputId),list=$(listId);
+    if(!input||!list)return;
+    input.addEventListener('input',()=>{
+      const q=input.value.trim().toLocaleLowerCase();
+      list.querySelectorAll(selector).forEach(card=>{
+        const text=(card.dataset.search||card.textContent||'').toLocaleLowerCase();
+        card.classList.toggle('finance-hidden',!!q&&!text.includes(q));
+      });
+    });
+  }
+  wireWeeklySearch('faWeeklyCollectSearch','faWeeklyList','.weekly-smart-row');
+  wireWeeklySearch('faWeeklyCompletedSearch','faWeeklyCompletedList','.weekly-completed-card');
   document.querySelectorAll('[data-main-fin-tab]').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.mainFinTab!=='weekly')restoreLoanFormHome();
   }));
@@ -1948,7 +1979,7 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 .completed-loan-card .loan-payment-row strong{white-space:nowrap}
 </style>
 <style>
-/* V179 smart collection ledger layout inspired by compact finance collection screens */
+/* V180 smart collection ledger layout inspired by compact finance collection screens */
 .weekly-collection-summary{padding:8px 2px 12px}
 .weekly-smart-row{background:#fff;border-bottom:1px solid #d7dde2;padding:16px 2px 14px;margin:0;display:block}
 .weekly-smart-top{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(125px,.88fr);gap:10px;align-items:start}
@@ -1974,9 +2005,14 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 @media(max-width:380px){.weekly-smart-top{grid-template-columns:minmax(0,1fr) minmax(112px,.9fr);gap:6px}.weekly-smart-person>b{font-size:17px}.weekly-smart-numbers b{font-size:15px}.weekly-smart-pay{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px}.weekly-smart-pay .weekly-save-btn{width:42px}}
 </style>
 <style>
-/* V179: tap-to-call customer number; remove weekly due callout */
+/* V180: tap-to-call customer number; remove weekly due callout */
 .weekly-phone a{color:inherit;text-decoration:underline;text-decoration-color:#0b8790;text-decoration-thickness:1.5px;text-underline-offset:3px;font-weight:700}
 .weekly-phone a:active{color:#087e8b}
 .weekly-due-line{display:none!important}
 </style>
-</body></html>
+<style>
+.weekly-tab-search{display:block;width:100%;box-sizing:border-box;margin:12px 0 16px;padding:13px 15px;border:2px solid #cbd9df;border-radius:13px;background:#fff;color:#17324d;font:inherit;font-size:16px}
+.weekly-tab-search:focus{outline:3px solid rgba(8,126,139,.18);border-color:#087e8b}
+.weekly-completed-card .finance-pill{white-space:nowrap}
+.weekly-completed-card .finance-meta a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+</style></body></html>
