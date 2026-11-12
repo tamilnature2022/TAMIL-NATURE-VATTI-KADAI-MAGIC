@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V171">
+<meta name="app-version" content="V172">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -396,6 +396,8 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 </style>
 </head>
 <body>
+<span id="faTodayCollected" class="finance-hidden" aria-hidden="true">₹0</span>
+
 <header><div class="wrap"><h1>💰 💰 TAMIL NATURE<br>VATTI KADAI MAGIC</h1><p>9577228833</p></div></header>
 <main class="wrap">
 
@@ -1285,7 +1287,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
     justAddedCustomerId=customerRecord.id;
     // Show the confirmation FIRST, so a later list-rendering issue cannot hide the successful save.
     const notice=$('faCustomerSaveNotice');
-    notice.innerHTML='';
+    notice.innerHTML=
       '<div class="customer-added-details"><b>'+esc(customerRecord.name)+'</b><br>📱 '+esc(customerRecord.mobile)+
       '<br>கடன் வகை: '+esc(customerRecord.collectionType==='weekly'?'வார வசூல்':customerRecord.collectionType==='daily'?'தின வசூல்':'வார வசூல் + தினசரி')+
       (customerRecord.collectionDay!==null?'<br>வசூல் கிழமை: '+esc(weekdayNames[Number(customerRecord.collectionDay)]):'')+
