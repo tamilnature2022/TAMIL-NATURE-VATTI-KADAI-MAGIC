@@ -1177,7 +1177,26 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
           const history=db.payments.filter(p=>p.loanId===l.id).slice().sort((a,b)=>(a.timestamp||a.date).localeCompare(b.timestamp||b.date));
           const thisWeekPaid=weeklyPaidThisCycle(l);
           const partial=thisWeekPaid+0.009<Number(l.installment||0);
-          return '<div class="completed-loan-card weekly-completed-card" data-search="'+esc(((c?.name||'')+' '+(c?.mobile||'')).toLowerCase())+'"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">'+(partial?'◐ PARTIAL PAID':'✓ PAID')+'</span></div><div class="finance-meta">📱 <a href="tel:'+esc(String(c?.mobile||'').replace(/[^0-9+]/g,''))+'">'+esc(c?.mobile||'-')+'</a><br>Loan ID: '+esc(l.id)+'<br>கடன் வழங்கிய தேதி: '+dateText(l.loanDate||l.start)+'<br>வழங்கிய கடன் தொகை: '+money(l.principal)+'<br>இந்த வாரம் செலுத்தியது: <b>'+money(thisWeekPaid)+'</b><br>இந்த வார தவணைத் தொகை: '+money(l.installment)+'<br>மொத்தம் இதுவரை செலுத்தியது: '+money(paid(l.id))+'<br>மீதமுள்ள கடன்: <b>'+money(balance(l))+'</b>'+(last?'<br>கடைசி வசூல் தேதி: '+dateText(last.date):'')+'</div><div class="loan-payment-log"><b>வசூல் வரலாறு / Payment History ('+history.length+')</b>'+(history.length?history.map((p,i)=>'<div class="loan-payment-row"><span><b>Receipt '+(i+1)+'</b><br>📅 '+dateText(p.date)+'<br>🕒 '+esc(p.time||'-')+'<br>Receipt ID: '+esc(p.id)+'</span><strong>'+money(p.amount)+'</strong></div>').join(''):'<div class="muted">வசூல் வரலாறு இல்லை.</div>')+'</div></div>';
+          return '<div class="completed-loan-card weekly-completed-card smart-completed-card" data-search="'+esc(((c?.name||'')+' '+(c?.mobile||'')).toLowerCase())+'">'+
+            '<div class="smart-completed-main">'+
+              '<div class="smart-completed-left">'+
+                '<h3>'+(esc(c?.name||'Customer'))+'</h3>'+
+                '<div class="smart-completed-meta"><a class="weekly-call-link" href="intent://'+esc(String(c?.mobile||'').replace(/[^0-9+]/g,''))+'#Intent;scheme=tel;action=android.intent.action.DIAL;end" aria-label="Call '+esc(c?.name||'customer')+'">📞 '+esc(c?.mobile||'-')+' · Call</a>'+
+                '<div>📅 '+dateText(l.loanDate||l.start)+'</div>'+
+                '<div>தவணை: '+money(l.installment)+' ('+Math.min(Number(l.installmentCount)||0,Math.floor((paid(l.id)+0.000001)/Math.max(Number(l.installment)||1,1)))+'/'+(l.installmentCount||'-')+')</div>'+
+                '</div>'+
+              '</div>'+
+              '<div class="smart-completed-totals">'+
+                '<div><span>Balance</span><b class="balance-value">'+money(balance(l))+'</b></div>'+
+                '<div><span>Paid</span><b class="paid-value">'+money(paid(l.id))+'</b></div>'+
+                '<div><span>Total</span><b>'+money(Number(l.principal||0)+Number(l.documentCharges||0))+'</b></div>'+
+              '</div>'+
+            '</div>'+
+            '<div class="smart-weekly-paid">இந்த வாரம் செலுத்தியது <b>'+money(thisWeekPaid)+'</b></div>'+
+            '<div class="smart-weekly-status"><span class="finance-pill">'+(partial?'◐ PARTIAL PAID':'✓ PAID')+'</span><span>இந்த வார தவணை: '+money(l.installment)+'</span></div>'+
+            '<details class="smart-payment-history"><summary>▶ வசூல் History ('+history.length+')</summary>'+
+              (history.length?history.map((p,i)=>'<div class="smart-history-row"><div><b>Receipt '+(i+1)+'</b><small>📅 '+dateText(p.date)+' · 🕒 '+esc(p.time||'-')+'</small><small>ID: '+esc(p.id)+'</small></div><strong>'+money(p.amount)+'</strong></div>').join(''):'<div class="muted">வசூல் வரலாறு இல்லை.</div>')+
+            '</details></div>';
         }).join(''):'<div class="finance-empty">இந்தக் கிழமையில் முழுமையாக முடிக்கப்பட்ட கடன்கள் இல்லை.</div>';
       }
     }
@@ -1214,7 +1233,7 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
         const paymentRows=loanPayments.length
           ?'<details class="weekly-history"><summary>வசூல் History ('+loanPayments.length+')</summary><div class="loan-payment-log">'+loanPayments.map((p,i)=>'<div class="loan-payment-row"><span><b>Receipt '+(i+1)+'</b><br>📅 '+dateText(p.date)+' | '+esc(p.time||'-')+'<br>'+esc(p.mode||'வசூல்')+'</span><strong>'+money(p.amount)+'</strong></div>').join('')+'</div></details>'
           :'<div class="weekly-no-history">இதுவரை வசூல் இல்லை</div>';
-        return '<article class="weekly-smart-row" data-loan-id="'+esc(l.id)+'" data-search="'+esc(((c?.name||'')+' '+(c?.mobile||'')).toLowerCase())+'"><div class="weekly-smart-top"><div class="weekly-smart-person"><b>'+(index+1)+'. '+esc(c?.name||'Customer')+'</b><small class="weekly-phone">📱 <a href="tel:'+esc(phoneDigits)+'">'+esc(phoneDisplay)+'</a></small><small>📅 '+dateText(l.loanDate||l.start)+'</small><small>தவணை: '+money(l.installment)+' ('+Math.min(Number(l.installmentCount)||0,Math.floor((paid(l.id)+0.000001)/Math.max(Number(l.installment)||1,1)))+'/'+(l.installmentCount||'-')+')</small></div><div class="weekly-smart-numbers"><div><small>Balance</small><b class="weekly-red">'+money(balance(l))+'</b></div><div><small>Paid</small><b class="weekly-green">'+money(paid(l.id))+'</b></div><div><small>Total</small><b>'+money(l.total||l.principal)+'</b></div></div></div><div class="weekly-smart-pay"><label>Online<input type="number" min="0" step="0.01" inputmode="decimal" id="faOnline_'+esc(l.id)+'" placeholder="₹ 0"></label><label>Cash<input type="number" min="0" step="0.01" inputmode="decimal" id="faCash_'+esc(l.id)+'" placeholder="₹ 0"></label><button type="button" class="weekly-save-btn" data-fa-pay="'+esc(l.id)+'" aria-label="வசூலை சேமிக்க">💾</button></div>'+paymentRows+'</article>';
+        return '<article class="weekly-smart-row" data-loan-id="'+esc(l.id)+'" data-search="'+esc(((c?.name||'')+' '+(c?.mobile||'')).toLowerCase())+'"><div class="weekly-smart-top"><div class="weekly-smart-person"><b>'+(index+1)+'. '+esc(c?.name||'Customer')+'</b><small class="weekly-phone">📱 '+esc(phoneDisplay)+' <a class="weekly-call-link" href="intent://'+esc(phoneDigits)+'#Intent;scheme=tel;action=android.intent.action.DIAL;end" aria-label="Call '+esc(c?.name||'customer')+'">📞 Call</a></small><small>📅 '+dateText(l.loanDate||l.start)+'</small><small>தவணை: '+money(l.installment)+' ('+Math.min(Number(l.installmentCount)||0,Math.floor((paid(l.id)+0.000001)/Math.max(Number(l.installment)||1,1)))+'/'+(l.installmentCount||'-')+')</small></div><div class="weekly-smart-numbers"><div><small>Balance</small><b class="weekly-red">'+money(balance(l))+'</b></div><div><small>Paid</small><b class="weekly-green">'+money(paid(l.id))+'</b></div><div><small>Total</small><b>'+money(l.total||l.principal)+'</b></div></div></div><div class="weekly-smart-pay"><label>Online<input type="number" min="0" step="0.01" inputmode="decimal" id="faOnline_'+esc(l.id)+'" placeholder="₹ 0"></label><label>Cash<input type="number" min="0" step="0.01" inputmode="decimal" id="faCash_'+esc(l.id)+'" placeholder="₹ 0"></label><button type="button" class="weekly-save-btn" data-fa-pay="'+esc(l.id)+'" aria-label="வசூலை சேமிக்க">💾</button></div>'+paymentRows+'</article>';
       }).join(''):'<div class="finance-empty">இந்தக் கிழமை வசூல் செய்ய வேண்டிய வாடிக்கையாளர்கள் இல்லை.</div>';
       list.innerHTML='<div class="weekly-collection-summary"><b>'+weekdayNames[selectedWeekday]+' – இந்த வார வசூல் பட்டியல்</b><div class="finance-note">மொத்த வாடிக்கையாளர்கள்: '+loans.length+' பேர்</div></div>'+weeklyCards;
     }else{
@@ -2015,4 +2034,29 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 .weekly-tab-search:focus{outline:3px solid rgba(8,126,139,.18);border-color:#087e8b}
 .weekly-completed-card .finance-pill{white-space:nowrap}
 .weekly-completed-card .finance-meta a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+</style><style>
+.weekly-call-link{display:inline-flex;align-items:center;justify-content:center;gap:5px;margin-left:7px;padding:5px 11px;border-radius:9px;background:#087e8b;color:#fff!important;text-decoration:none!important;font-weight:800;font-size:.9em;white-space:nowrap}
+.weekly-call-link:active{transform:scale(.97);background:#066b75}
+</style><style>
+.smart-completed-card{padding:18px!important;margin:14px 0;border:1px solid #d9e2e6;border-radius:22px;background:#fff;box-shadow:0 5px 18px rgba(25,55,75,.06)}
+.smart-completed-main{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(125px,.95fr);gap:14px;align-items:start}
+.smart-completed-left h3{font-size:1.2rem;margin:0 0 10px;color:#18324b}
+.smart-completed-meta{display:grid;gap:7px;color:#71808e;font-size:.98rem;overflow-wrap:anywhere}
+.smart-completed-totals{display:grid;gap:0}
+.smart-completed-totals>div{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e0e5e8}
+.smart-completed-totals span{color:#75818c}
+.smart-completed-totals b{font-size:1.08rem;color:#182b43;text-align:right}
+.smart-completed-totals .balance-value{color:#b3263e}
+.smart-completed-totals .paid-value{color:#187447}
+.smart-weekly-paid{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:12px 14px;border-radius:13px;background:#eef5f7;color:#647582;font-size:1.02rem}
+.smart-weekly-paid b{color:#087e8b;font-size:1.15rem;white-space:nowrap}
+.smart-weekly-status{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;color:#6c7a88}
+.smart-payment-history{margin-top:14px;padding-top:12px;border-top:1px solid #d9e0e4;color:#687786}
+.smart-payment-history summary{cursor:pointer;font-weight:800;list-style:none}
+.smart-payment-history summary::-webkit-details-marker{display:none}
+.smart-history-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid #edf0f2}
+.smart-history-row>div{display:grid;gap:3px}
+.smart-history-row small{color:#71808e}
+.smart-history-row strong{color:#087e8b;white-space:nowrap}
+@media(max-width:420px){.smart-completed-main{grid-template-columns:minmax(0,1fr) minmax(112px,.9fr);gap:9px}.smart-completed-card{padding:14px!important}.smart-completed-totals b{font-size:1rem}.smart-completed-left h3{font-size:1.08rem}}
 </style></body></html>
