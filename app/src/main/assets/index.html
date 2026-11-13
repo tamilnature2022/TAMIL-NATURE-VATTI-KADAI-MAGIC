@@ -149,6 +149,19 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 .loan-payment-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #e1e9ec;font-size:.94em}
 .loan-payment-row strong{white-space:nowrap;color:#087e8b}
 
+/* V210 weekly collection two-column cash summary */
+.weekly-cash-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px;align-items:stretch}
+.weekly-cash-left,.weekly-cash-right{border:1px solid #dbe5eb;border-radius:16px;padding:12px;background:#fff;min-width:0;box-shadow:0 2px 8px rgba(20,45,65,.05)}
+.weekly-cash-left{background:#edf7f6;border-color:#cfe5e2;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
+.weekly-cash-stat small,.weekly-cash-right span{display:block;color:#526575;font-size:12px;line-height:1.4;font-weight:650}
+.weekly-cash-stat strong{display:block;color:#087e83;font-size:clamp(19px,5vw,25px);font-weight:800;margin-top:5px;overflow-wrap:anywhere}
+.weekly-mahimai{border-top:1px solid #cfe2df;padding-top:10px}
+.weekly-cash-right{background:#f7f8fa;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.weekly-cash-right>div{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.weekly-cash-right strong{font-size:clamp(14px,3.8vw,18px);font-weight:800;color:#263746;text-align:right;overflow-wrap:anywhere}
+.weekly-cash-right .weekly-cash-balance{border-top:1px solid #dce3e8;padding-top:9px}
+.weekly-cash-balance strong{color:#087e83;font-size:clamp(17px,4.5vw,22px)}
+@media(max-width:360px){.weekly-cash-summary{gap:6px}.weekly-cash-left,.weekly-cash-right{padding:9px}}
 /* V105 weekly collection customer selector */
 .weekly-customer-select{display:block;margin:14px 0 18px;width:100%;color:#17324d}
 .weekly-customer-select b{display:block;margin-bottom:8px}
@@ -567,16 +580,25 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <button type="button" data-weekday="6">சனி</button>
     </div>
     <p class="finance-note" id="faWeekdayCaption">ஞாயிற்றுக்கிழமை வசூல்</p>
+    <div class="weekly-cash-summary weekly-total-above-tabs">
+      <div class="weekly-cash-left">
+        <div class="weekly-cash-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வசூல்</small><strong id="faWeeklyReceived">₹0</strong></div>
+        <div class="weekly-cash-stat weekly-mahimai"><small>மகிமை</small><strong id="faWeeklyMahimai">₹0</strong></div>
+      </div>
+      <div class="weekly-cash-right">
+        <div><span>லோன்</span><strong id="faWeeklyLoanOut">₹0</strong></div>
+        <div><span>செலவு</span><strong id="faWeeklyExpense">₹0</strong></div>
+        <div class="weekly-cash-balance"><span>இருப்பு</span><strong id="faWeeklyCashBalance">₹0</strong></div>
+      </div>
+      <span id="faWeeklyCycleNote" class="finance-hidden" aria-hidden="true"></span>
+      <span id="faWeeklyDue" class="finance-hidden" aria-hidden="true">₹0</span>
+    </div>
     <div class="weekly-view-tabs" role="tablist" aria-label="வார வசூல் பிரிவுகள்">
       <button type="button" class="active" data-weekly-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
       <button type="button" data-weekly-view="completed" role="tab" aria-selected="false"><span>Completed</span><small>முடிந்தது</small></button>
       <button type="button" data-weekly-view="newloan" role="tab" aria-selected="false"><span>New Loan</span><small>புதிய கடன்</small></button>
     </div>
     <div data-weekly-view-panel="collect">
-      <div class="finance-grid">
-        <div class="finance-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வசூல்</small><strong id="faWeeklyReceived">₹0</strong></div><span id="faWeeklyCycleNote" class="finance-hidden" aria-hidden="true"></span>
-        <span id="faWeeklyDue" class="finance-hidden" aria-hidden="true">₹0</span>
-      </div>
       <input id="faWeeklyCollectSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக" aria-label="Collect வாடிக்கையாளர்களைத் தேடுக">
       <div id="faWeeklyList" class="finance-list"></div>
     </div>
@@ -1338,6 +1360,24 @@ document.addEventListener("DOMContentLoaded",()=>{
       const d=dateObj(p.date);
       return d>=weeklyCycleStart&&d<=weeklyCycleEnd&&db.loans.some(l=>l.id===p.loanId&&(l.frequency==='weekly'||l.frequency==='weekly_daily')&&loanWeekday(l)===selectedWeekday);
     }).reduce((a,p)=>a+Number(p.amount),0):0;
+    if(isWeekly){
+      const loansInCycle=db.loans.filter(l=>{
+        if(!(l.frequency==='weekly'||l.frequency==='weekly_daily')||loanWeekday(l)!==selectedWeekday)return false;
+        const loanDate=l.loanDate||l.start;
+        if(!loanDate)return false;
+        const d=dateObj(loanDate);
+        return d>=weeklyCycleStart&&d<=weeklyCycleEnd;
+      });
+      const weeklyLoanAmount=loansInCycle.reduce((sum,l)=>sum+Number(l.principal||0),0);
+      const weeklyMahimaiAmount=loansInCycle.reduce((sum,l)=>sum+Number(l.documentCharges||0),0);
+      // Expense entries are not yet stored in this app version; keep the display at zero rather than inventing a value.
+      const weeklyExpenseAmount=0;
+      const weeklyCashBalance=weeklyCycleTotal+weeklyMahimaiAmount-weeklyLoanAmount-weeklyExpenseAmount;
+      $('faWeeklyMahimai').textContent=money(weeklyMahimaiAmount);
+      $('faWeeklyLoanOut').textContent=money(weeklyLoanAmount);
+      $('faWeeklyExpense').textContent=money(weeklyExpenseAmount);
+      $('faWeeklyCashBalance').textContent=money(weeklyCashBalance);
+    }
     $(isWeekly?'faWeeklyReceived':'faDailyReceived').textContent=money(isWeekly?weeklyCycleTotal:collected);
     $(isWeekly?'faWeeklyDue':'faDailyDue').textContent=money(dueTotal);
     if(isWeekly && $('faWeekdayCaption'))$('faWeekdayCaption').textContent=weekdayNames[selectedWeekday]+' வசூல்';
