@@ -441,6 +441,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   <p class="hint">நீங்கள் உள்ளிடும் 4 முதல் 10 இலக்கங்கள் அப்படியே மாறாமல் இருக்கும். மீதமுள்ள இலக்கங்கள் மட்டும் தேர்வு செய்யப்படும். 0 முதல் 9 வரை எந்த இலக்கத்திலும் தொடங்கலாம்.</p>
   <div id="neeSearchStatus" class="hint" aria-live="polite"></div>
   <div id="neeSearchResults" class="nee-results"></div>
+  <button id="neeNextBtn" type="button" style="display:none;width:100%;margin-top:14px">Next ➜ More Numbers</button>
 </section>
 <section class="panel" id="output" hidden><div id="results"></div></section>
 </div><!-- calculatorView -->
@@ -736,43 +737,49 @@ function neePyramidFinal(digits){
  }
  return Number(row);
 }
-function searchNeeNumbers(){
+let neeSearchState={prefix:"",cursor:0,total:0,page:0};
+function searchNeeNumbers(nextPage=false){
  const prefixInput=document.getElementById("neePrefix");
  const status=document.getElementById("neeSearchStatus");
  const results=document.getElementById("neeSearchResults");
+ const nextBtn=document.getElementById("neeNextBtn");
  const prefix=prefixInput.value.replace(/\D/g,"").slice(0,10);
  prefixInput.value=prefix;
- results.innerHTML="";
- if(prefix.length<4 || prefix.length>10){status.textContent="குறைந்தது 4 இலக்கங்கள்; அதிகபட்சம் 10 இலக்கங்கள் உள்ளிடவும்.";return;}
- status.textContent="20 நல்ல எண்களைத் தேடுகிறது...";
+ if(prefix.length<4 || prefix.length>10){status.textContent="குறைந்தது 4 இலக்கங்கள்; அதிகபட்சம் 10 இலக்கங்கள் உள்ளிடவும்.";results.innerHTML="";nextBtn.style.display="none";return;}
+ if(!nextPage || neeSearchState.prefix!==prefix){
+   neeSearchState={prefix,cursor:0,total:10**(10-prefix.length),page:0};
+   results.innerHTML="";
+ }
+ status.textContent=nextPage?"அடுத்த 20 எண்களைத் தேடுகிறது...":"முதல் 20 நல்ல எண்களைத் தேடுகிறது...";
  const found=[];
- // V189: ALL seven app categories must be positive before a number is shown.
- // 1 Customer, 2 Spouse, 3 Business, 4 Property, 5 Children,
- // 6 Family (sum of all 10 digits), 7 Pyramid final value.
  const positive=Array.from({length:100},(_,n)=>neeEntryIsPositive(bookData[String(n).padStart(2,"0")]));
- // 97 is specifically favourable only for Customer (category 0) and
- // Business/Profession (category 2), not for the other five categories.
- function neeCategoryIsPositive(number, categoryIndex){
+ function neeCategoryIsPositive(number,categoryIndex){
    if(number===97 && categoryIndex!==0 && categoryIndex!==2) return false;
    return !!positive[number];
  }
  const remainingDigits=10-prefix.length;
- const totalSuffixes=10**remainingDigits;
- for(let suffix=0;suffix<totalSuffixes && found.length<20;suffix++){
+ while(neeSearchState.cursor<neeSearchState.total && found.length<20){
+   const suffix=neeSearchState.cursor++;
    const tail=String(suffix).padStart(remainingDigits,"0");
    const mobile=prefix+tail;
    const pairs=Array.from({length:5},(_,i)=>Number(mobile.slice(i*2,i*2+2)));
    const familyTotal=[...mobile].reduce((sum,d)=>sum+Number(d),0);
    const pyramid=neePyramidFinal(mobile);
-   // Seven required checks: customer, spouse, business, property, children,
-   // family total and pyramid. Reject the number if even one is not positive.
    const sevenChecks=[...pairs,familyTotal,pyramid];
    if(sevenChecks.length!==7 || sevenChecks.some((n,index)=>n===null || n<0 || n>99 || !neeCategoryIsPositive(n,index))) continue;
-   found.push({mobile,pairs,familyTotal,pyramid});
+   found.push({mobile,familyTotal,pyramid});
  }
- if(!found.length){status.textContent="இந்த Series-ல் 7 பிரிவுகளும் Positive ஆக உள்ள எண்கள் கிடைக்கவில்லை. வேறு தொடக்க இலக்கங்களை முயற்சிக்கவும்.";return;}
- status.textContent=`${prefix} தொடக்கத்தில் அனைத்து 7 பிரிவுகளும் Positive ஆன ${found.length} எண்கள்:`;
- results.innerHTML=found.map((item,index)=>`<article class="nee-number-card"><div style="min-width:0"><div class="nee-number-main">${index+1}. ${item.mobile}</div><div style="font-size:17px;color:#718096;margin-top:8px">Total: ${item.familyTotal}</div></div><div class="nee-number-meta">Pyramid No: ${String(item.pyramid).padStart(2,"0")}<br><span style="color:#15803d;font-weight:800">✓ Positive</span></div></article>`).join("");
+ neeSearchState.page++;
+ if(!found.length){
+   status.textContent=neeSearchState.page===1?"இந்த Series-ல் 7 பிரிவுகளும் Positive ஆன எண்கள் கிடைக்கவில்லை.":"மேலும் Positive எண்கள் இல்லை. எல்லா முடிவுகளும் காட்டப்பட்டுவிட்டன.";
+   nextBtn.style.display="none";
+   return;
+ }
+ const offset=(neeSearchState.page-1)*20;
+ status.textContent=`${prefix} Series – ${offset+1} முதல் ${offset+found.length} வரை (${neeSearchState.page}ஆம் பக்கம்)`;
+ results.innerHTML+=found.map((item,index)=>`<article class="nee-number-card"><div style="min-width:0"><div class="nee-number-main">${offset+index+1}. ${item.mobile}</div><div style="font-size:17px;color:#718096;margin-top:8px">Total: ${item.familyTotal}</div></div><div class="nee-number-meta">Pyramid No: ${String(item.pyramid).padStart(2,"0")}<br><span style="color:#15803d;font-weight:800">✓ Positive</span></div></article>`).join("");
+ nextBtn.style.display=neeSearchState.cursor<neeSearchState.total?"block":"none";
+ if(neeSearchState.cursor>=neeSearchState.total) status.textContent+= " · இந்த Series முடிந்தது";
 }
 
 async function shareFinanceReport(){
@@ -981,7 +988,9 @@ document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key=
 document.addEventListener("DOMContentLoaded",()=>{
  const btn=document.getElementById("neeSearchBtn");
  const input=document.getElementById("neePrefix");
- if(btn) btn.addEventListener("click",searchNeeNumbers);
+ if(btn) btn.addEventListener("click",()=>searchNeeNumbers(false));
+ const nextBtn=document.getElementById("neeNextBtn");
+ if(nextBtn) nextBtn.addEventListener("click",()=>searchNeeNumbers(true));
  if(input){
    input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,10);});
    input.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();searchNeeNumbers();}});
