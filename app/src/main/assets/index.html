@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V180">
+<meta name="app-version" content="V186">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -393,6 +393,19 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
  .customer-picker-label::after{right:15px;bottom:20px}
 }
 
+
+/* V186 – Search New Numbers */
+.nee-search-panel{border:2px solid #087e8b;background:linear-gradient(145deg,#f0fbf9,#fff)}
+.nee-search-panel .nee-input-row{display:flex;gap:9px;align-items:stretch}
+.nee-search-panel input{font-size:23px;font-weight:800;letter-spacing:3px;text-align:center;border:2px solid #0b8790;background:#fff8e8}
+.nee-search-panel button{min-width:108px}
+.nee-results{display:grid;gap:9px;margin-top:14px}
+.nee-number-card{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid #cfe5df;border-radius:13px;background:#fff}
+.nee-number-main{font-size:20px;font-weight:900;letter-spacing:1px;color:#102a43;overflow-wrap:anywhere}
+.nee-number-meta{font-size:12px;color:#176b45;text-align:right;line-height:1.5;font-weight:750}
+.nee-empty{padding:14px;background:#fff1e8;border-radius:12px;color:#9a3412;line-height:1.6}
+@media(max-width:420px){.nee-search-panel .nee-input-row{flex-direction:column}.nee-search-panel button{width:100%}.nee-number-main{font-size:18px}}
+
 </style>
 </head>
 <body>
@@ -415,6 +428,17 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 <p class="hint">English A–Z, 0–9 மற்றும் &amp; மட்டும். கணக்கில் &amp; என்பது AND என எடுத்துக்கொள்ளப்படும்.</p>
 <button id="analyze" type="button" style="width:100%;margin-top:16px">Check ✅</button>
 <div id="error" class="error" role="alert"></div>
+</section>
+<section class="panel nee-search-panel" id="neeSearchPanel">
+  <h2>🔢 Search New Numbers / நல்ல மொபைல் எண்கள்</h2>
+  <label for="neePrefix">முதல் 4 முதல் 10 இலக்கங்கள் / Enter First 4–10 Digits</label>
+  <div class="nee-input-row">
+    <input id="neePrefix" type="text" inputmode="numeric" maxlength="10" pattern="[0-9]{4,10}" placeholder="உதா: 996474" autocomplete="off" aria-label="மொபைல் எண்ணின் தொடக்க இலக்கங்கள்">
+    <button id="neeSearchBtn" type="button">Search 🔍</button>
+  </div>
+  <p class="hint">நீங்கள் உள்ளிடும் 4 முதல் 10 இலக்கங்கள் அப்படியே மாறாமல் இருக்கும். மீதமுள்ள இலக்கங்கள் மட்டும் தேர்வு செய்யப்படும். 0 முதல் 9 வரை எந்த இலக்கத்திலும் தொடங்கலாம்.</p>
+  <div id="neeSearchStatus" class="hint" aria-live="polite"></div>
+  <div id="neeSearchResults" class="nee-results"></div>
 </section>
 <section class="panel" id="output" hidden><div id="results"></div></section>
 </div><!-- calculatorView -->
@@ -675,6 +699,70 @@ function businessBenefit(total){
  const resultNumber = total % 100 === 0 ? 100 : total % 100;
  return `<div class="benefit"><b>பலன் பார்க்கும் எண்:</b> ${String(resultNumber).padStart(2,"0")}</div>${renderBenefit(resultNumber)}`;
 }
+// V186: Search 10-digit mobile numbers by fixed 4-digit prefix.
+// Uses the same bookData meanings and negative-word checks as the existing calculator.
+const neeNegativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","தங்காது","சிரமம்","தடைகள்","கவலை","தாமதம்","மற்றவர்கள் அடையும்","பிரச்சினை","பாதகமான","மன உளைச்சல்","மகிழ்ச்சியின்மை","வெறுப்பார்கள்","அபாயம்","விபத்து"];
+const neeNeutralTerms=["பயன் இல்லை","நடுநிலை","மத்திமம்","சமநிலை","நன்மையும் தீமையும் கலந்த"];
+function neeEntryIsPositive(entry){
+ if(!entry) return false;
+ if([8,73,89].includes(Number(entry.number))) return true;
+ const text=String(entry.title||"")+" "+String(entry.prediction||"");
+ if(neeNeutralTerms.some(term=>text.includes(term))) return false;
+ const hasNegative=neeNegativeTerms.some(term=>{
+   let pos=text.indexOf(term);
+   while(pos!==-1){
+     const after=text.slice(pos+term.length,pos+term.length+24);
+     if(!/^(?:\s*)(?:இல்லை|இல்லாமல்|இல்லாத|நீங்கி|நீங்கும்|தவிர்த்து|தவிர)/.test(after)) return true;
+     pos=text.indexOf(term,pos+term.length);
+   }
+   return false;
+ });
+ return !hasNegative;
+}
+function neePyramidFinal(digits){
+ let row=String(digits).replace(/\D/g,"");
+ if(row.length<2) return null;
+ while(row.length>2){
+   let next="";
+   for(let i=0;i<row.length-1;i++){
+     const sum=Number(row[i])+Number(row[i+1]);
+     next+=String(sum%9===0?9:sum%9);
+   }
+   row=next;
+ }
+ return Number(row);
+}
+function searchNeeNumbers(){
+ const prefixInput=document.getElementById("neePrefix");
+ const status=document.getElementById("neeSearchStatus");
+ const results=document.getElementById("neeSearchResults");
+ const prefix=prefixInput.value.replace(/\D/g,"").slice(0,10);
+ prefixInput.value=prefix;
+ results.innerHTML="";
+ if(prefix.length<4 || prefix.length>10){status.textContent="குறைந்தது 4 இலக்கங்கள்; அதிகபட்சம் 10 இலக்கங்கள் உள்ளிடவும்.";return;}
+ status.textContent="20 நல்ல எண்களைத் தேடுகிறது...";
+ const found=[];
+ // Pre-check the 00–99 result table once. A number qualifies only when both
+ // mobile pair results (digits 5–6 and 7–8) and its final pyramid value are positive.
+ const positive=Array.from({length:100},(_,n)=>neeEntryIsPositive(bookData[String(n).padStart(2,"0")]));
+ const remainingDigits=10-prefix.length;
+ const totalSuffixes=10**remainingDigits;
+ for(let suffix=0;suffix<totalSuffixes && found.length<20;suffix++){
+   const tail=String(suffix).padStart(remainingDigits,"0");
+   const mobile=prefix+tail;
+   const pair1=Number(mobile.slice(4,6));
+   if(!positive[pair1]) continue;
+   const pair2=Number(mobile.slice(6,8));
+   if(!positive[pair2]) continue;
+   const pyramid=neePyramidFinal(mobile);
+   if(pyramid===null || !positive[pyramid]) continue;
+   found.push({mobile,pair1,pair2,pyramid});
+ }
+ if(!found.length){status.textContent="இந்த Series-ல் Positive + Pyramid Positive எண்கள் கிடைக்கவில்லை.";return;}
+ status.textContent=`${prefix} தொடக்கத்தில் கிடைத்த ${found.length} Positive + Pyramid Positive எண்கள்:`;
+ results.innerHTML=found.map((item,index)=>`<article class="nee-number-card"><div><div class="nee-number-main">${index+1}. ${item.mobile}</div><div class="hint">Pair: ${String(item.pair1).padStart(2,"0")} + ${String(item.pair2).padStart(2,"0")}</div></div><div class="nee-number-meta">✓ Positive<br>✓ Pyramid ${String(item.pyramid).padStart(2,"0")}</div></article>`).join("");
+}
+
 async function shareFinanceReport(){
  const output=document.getElementById("output");
  if(!output || output.hidden || !output.innerText.trim()){
@@ -876,6 +964,17 @@ function analyze(){
 document.getElementById("analyze").addEventListener("click",analyze);
 document.getElementById("mobile").addEventListener("keydown",e=>{if(e.key==="Enter")analyze();});
 document.getElementById("businessName").addEventListener("keydown",e=>{if(e.key==="Enter")analyze();});
+
+// Search New Numbers controls
+document.addEventListener("DOMContentLoaded",()=>{
+ const btn=document.getElementById("neeSearchBtn");
+ const input=document.getElementById("neePrefix");
+ if(btn) btn.addEventListener("click",searchNeeNumbers);
+ if(input){
+   input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,10);});
+   input.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();searchNeeNumbers();}});
+ }
+});
 </script>
 <script>
 /* Finance Account Module – isolated from the existing numerology calculator */
