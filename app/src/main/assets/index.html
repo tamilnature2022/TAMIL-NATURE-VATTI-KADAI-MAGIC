@@ -709,7 +709,8 @@ function businessBenefit(total){
 // mixed cautionary wording in their longer descriptions.
 const neeKnownPositiveNumbers = new Set([8,64,73,77,89]);
 // Explicitly reject book entries that are no-benefit, unavailable, neutral, or clearly harmful.
-const neeAlwaysRejectNumbers = new Set([0,1,5,7,9,11,13,15,17,18,19,21,23,24,25,27,28,31,34,38,40,43,46,47,48,49,50,53,55,57,58,59,61,62,63,65,67,69,75,76,78,81,82,83,86,91,94,96,98]);
+// User-verified exclusions: 12 (no special benefit), 30, 36, 37, 52, and 93 (not positive / not to be listed).
+const neeAlwaysRejectNumbers = new Set([0,1,5,7,9,11,12,13,15,17,18,19,21,23,24,25,27,28,30,31,34,36,37,38,40,43,46,47,48,49,50,52,53,55,57,58,59,61,62,63,65,67,69,75,76,78,81,82,83,86,91,93,94,96,98]);
 const neeNegativeTerms=["பயன் இல்லை","பலன் கிடைக்காத நிலை","கெடுதல்","நடுநிலை","மத்திமம்","நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","தங்காது","சிரமம்","தடைகள்","கவலை","தாமதம்","பிரச்சினை","பாதகமான","மன உளைச்சல்","மகிழ்ச்சியின்மை","வெறுப்பார்கள்","அபாயம்","விபத்து","இருக்காது","கிடைக்காது","குறையும்","செலவுகள்"];
 function neeEntryIsPositive(entry){
  if(!entry) return false;
