@@ -394,15 +394,17 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 }
 
 
-/* V189 – Search New Numbers: seven positive categories */
+/* V192 – Search New Numbers: screenshot-style result cards */
 .nee-search-panel{border:2px solid #087e8b;background:linear-gradient(145deg,#f0fbf9,#fff)}
 .nee-search-panel .nee-input-row{display:flex;gap:9px;align-items:stretch}
 .nee-search-panel input{font-size:23px;font-weight:800;letter-spacing:3px;text-align:center;border:2px solid #0b8790;background:#fff8e8}
 .nee-search-panel button{min-width:108px}
-.nee-results{display:grid;gap:9px;margin-top:14px}
-.nee-number-card{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid #cfe5df;border-radius:13px;background:#fff}
-.nee-number-main{font-size:20px;font-weight:900;letter-spacing:1px;color:#102a43;overflow-wrap:anywhere}
-.nee-number-meta{font-size:12px;color:#176b45;text-align:right;line-height:1.5;font-weight:750}
+.nee-results{display:grid;gap:12px;margin-top:16px}
+.nee-number-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 14px;padding:18px 16px;border:1.5px solid #cfe5df;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(15,70,65,.04)}
+.nee-number-main{font-size:25px;font-weight:900;letter-spacing:1px;color:#102a43;overflow-wrap:anywhere;line-height:1.25}
+.nee-number-meta{font-size:17px;color:#176b45;text-align:right;line-height:1.8;font-weight:800;white-space:nowrap}
+.nee-number-breakdown{grid-column:1/-1;border-top:1px solid #edf3f1;padding-top:8px;margin-top:3px;color:#526777;font-size:13px;line-height:1.7}
+@media(max-width:420px){.nee-number-main{font-size:21px}.nee-number-meta{font-size:14px}.nee-number-card{padding:15px 13px}}
 .nee-empty{padding:14px;background:#fff1e8;border-radius:12px;color:#9a3412;line-height:1.6}
 @media(max-width:420px){.nee-search-panel .nee-input-row{flex-direction:column}.nee-search-panel button{width:100%}.nee-number-main{font-size:18px}}
 
@@ -699,25 +701,28 @@ function businessBenefit(total){
  const resultNumber = total % 100 === 0 ? 100 : total % 100;
  return `<div class="benefit"><b>பலன் பார்க்கும் எண்:</b> ${String(resultNumber).padStart(2,"0")}</div>${renderBenefit(resultNumber)}`;
 }
-// V189: Search 10-digit mobile numbers by fixed 4–10 digit prefix.
+// V191: Search 10-digit mobile numbers by fixed 4–10 digit prefix.
 // Uses the same bookData meanings and negative-word checks as the existing calculator.
-const neeNegativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","தங்காது","சிரமம்","தடைகள்","கவலை","தாமதம்","மற்றவர்கள் அடையும்","பிரச்சினை","பாதகமான","மன உளைச்சல்","மகிழ்ச்சியின்மை","வெறுப்பார்கள்","அபாயம்","விபத்து"];
+const neeNegativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","தங்காது","சிரமம்","தடைகள்","கவலை","தாமதம்","மற்றவர்கள் அடையும்","பிரச்சினை","பாதகமான","மன உளைச்சல்","மகிழ்ச்சியின்மை","வெறுப்பார்கள்","அபாயம்","விபத்து","இருக்காது","கிடைக்காது","குறையும்","செலவுகள்"];
 const neeNeutralTerms=["பயன் இல்லை","நடுநிலை","மத்திமம்","சமநிலை","நன்மையும் தீமையும் கலந்த"];
 function neeEntryIsPositive(entry){
  if(!entry) return false;
- if([8,73,89].includes(Number(entry.number))) return true;
- const text=String(entry.title||"")+" "+String(entry.prediction||"");
+ let text=String(entry.title||"")+" "+String(entry.prediction||"");
+ // Follow the Numerology Calculator's own bookData wording. Remove explicit
+ // negation-relief phrases before checking for adverse terms; e.g. 64 says
+ // "கவலைகள் நீங்கி", so 64 must remain Positive.
+ const reliefPhrases=[
+  /கவலைகள்?\s*நீங்க(?:ி|ும்|ிய|ி)ய?/g,
+  /தடைகள்?\s*நீங்க(?:ி|ும்|ிய|ி)ய?/g,
+  /பிரச்சினைகள்?\s*நீங்க(?:ி|ும்|ிய|ி)ய?/g,
+  /நஷ்டங்கள்?\s*ஏற்படாது/g,
+  /பணத்தட்டுப்பாடு\s*இல்லாமல்/g,
+  /தீமைகள்?\s*ஏற்படாது/g
+ ];
+ for(const phrase of reliefPhrases) text=text.replace(phrase," ");
  if(neeNeutralTerms.some(term=>text.includes(term))) return false;
- const hasNegative=neeNegativeTerms.some(term=>{
-   let pos=text.indexOf(term);
-   while(pos!==-1){
-     const after=text.slice(pos+term.length,pos+term.length+24);
-     if(!/^(?:\s*)(?:இல்லை|இல்லாமல்|இல்லாத|நீங்கி|நீங்கும்|தவிர்த்து|தவிர)/.test(after)) return true;
-     pos=text.indexOf(term,pos+term.length);
-   }
-   return false;
- });
- return !hasNegative;
+ const negativePattern=/(நஷ்டம்|பண\s*இழப்பு|இழப்பு|கடன்|வறுமை|பணத்தட்டுப்பாடு|வளர்ச்சி\s*இல்லை|வளர்ச்சியின்மை|பலன்\s*கிடைக்காமல்|ஏமாற்றம்|கையில்\s*தங்காது|தங்காது|சிரமம்|தடை(?:கள்)?|கவலை(?:கள்)?|தாமதம்|பிரச்சினை(?:கள்)?|பாதகமான|மன\s*உளைச்சல்|மகிழ்ச்சியின்மை|வெறுப்பார்கள்|அபாயம்|விபத்து|இருக்காது|கிடைக்காது|குறையும்|தேவையற்ற\s*செலவுகள்?)/;
+ return !negativePattern.test(text);
 }
 function neePyramidFinal(digits){
  let row=String(digits).replace(/\D/g,"");
@@ -752,16 +757,17 @@ function searchNeeNumbers(){
    const tail=String(suffix).padStart(remainingDigits,"0");
    const mobile=prefix+tail;
    const pairs=Array.from({length:5},(_,i)=>Number(mobile.slice(i*2,i*2+2)));
-   if(!pairs.every(n=>positive[n])) continue;
    const familyTotal=[...mobile].reduce((sum,d)=>sum+Number(d),0);
-   if(familyTotal<0 || familyTotal>99 || !positive[familyTotal]) continue;
    const pyramid=neePyramidFinal(mobile);
-   if(pyramid===null || !positive[pyramid]) continue;
+   // Seven required checks: customer, spouse, business, property, children,
+   // family total and pyramid. Reject the number if even one is not positive.
+   const sevenChecks=[...pairs,familyTotal,pyramid];
+   if(sevenChecks.length!==7 || sevenChecks.some(n=>n===null || n<0 || n>99 || !positive[n])) continue;
    found.push({mobile,pairs,familyTotal,pyramid});
  }
  if(!found.length){status.textContent="இந்த Series-ல் 7 பிரிவுகளும் Positive ஆக உள்ள எண்கள் கிடைக்கவில்லை. வேறு தொடக்க இலக்கங்களை முயற்சிக்கவும்.";return;}
  status.textContent=`${prefix} தொடக்கத்தில் அனைத்து 7 பிரிவுகளும் Positive ஆன ${found.length} எண்கள்:`;
- results.innerHTML=found.map((item,index)=>`<article class="nee-number-card"><div style="min-width:0;flex:1"><div class="nee-number-main">${index+1}. ${item.mobile}</div><div class="hint">வாடிக்கையாளர் ${String(item.pairs[0]).padStart(2,"0")} · துணைவர் ${String(item.pairs[1]).padStart(2,"0")}<br>தொழில் ${String(item.pairs[2]).padStart(2,"0")} · சொத்து ${String(item.pairs[3]).padStart(2,"0")}<br>குழந்தைகள் ${String(item.pairs[4]).padStart(2,"0")} · குடும்பம் ${String(item.familyTotal).padStart(2,"0")}<br>பிரமிடு ${String(item.pyramid).padStart(2,"0")}</div></div><div class="nee-number-meta">✓ 7 பிரிவுகளும் Positive</div></article>`).join("");
+ results.innerHTML=found.map((item,index)=>`<article class="nee-number-card"><div style="min-width:0"><div class="nee-number-main">${index+1}. ${item.mobile}</div><div style="font-size:17px;color:#718096;margin-top:8px">Total: ${item.familyTotal}</div></div><div class="nee-number-meta">Pyramid No: ${String(item.pyramid).padStart(2,"0")}<br><span style="color:#15803d;font-weight:800">✓ Positive</span></div></article>`).join("");
 }
 
 async function shareFinanceReport(){
