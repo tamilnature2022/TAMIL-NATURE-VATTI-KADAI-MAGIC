@@ -421,6 +421,18 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 .nee-empty{padding:14px;background:#fff1e8;border-radius:12px;color:#9a3412;line-height:1.6}
 @media(max-width:420px){.nee-search-panel .nee-input-row{flex-direction:column}.nee-search-panel button{width:100%}}
 
+
+.weekly-expense-entry{margin:0 0 16px;padding:13px;border:1px solid var(--line,#d6e0e5);border-radius:14px;background:#fbfdfe}
+.weekly-expense-entry h3{margin:0 0 10px;font-size:16px;color:var(--ink,#17324d)}
+.weekly-expense-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.weekly-expense-fields label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:700;color:#627283;min-width:0}
+.weekly-expense-fields input,.weekly-expense-fields select{width:100%;min-width:0;box-sizing:border-box;padding:10px;border:1px solid #cbd7dd;border-radius:9px;background:#fff;color:#17324d;font:inherit;font-size:14px}
+.weekly-expense-save{width:100%;margin-top:11px;padding:12px;border:0;border-radius:10px;background:#087e8b;color:#fff;font:inherit;font-weight:800;cursor:pointer}
+.weekly-expense-history{margin-top:10px;color:#627283;font-size:13px}
+.weekly-expense-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid #e4eaee}
+.weekly-expense-item span{min-width:0;display:flex;flex-direction:column;gap:2px}.weekly-expense-item small{color:#82909b}
+.weekly-expense-item strong{white-space:nowrap;color:#b42336}.weekly-expense-item button{border:0;background:#fce8e8;color:#b42336;border-radius:8px;width:30px;height:30px;font-size:20px}
+@media(max-width:360px){.weekly-expense-fields{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -592,6 +604,17 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       </div>
       <span id="faWeeklyCycleNote" class="finance-hidden" aria-hidden="true"></span>
       <span id="faWeeklyDue" class="finance-hidden" aria-hidden="true">₹0</span>
+    </div>
+    <div class="weekly-expense-entry">
+      <h3>💸 செலவு பதிவு / Expense Entry</h3>
+      <div class="weekly-expense-fields">
+        <label>செலவு விவரம்<input id="faWeeklyExpenseDetail" type="text" maxlength="100" placeholder="உதா: பெட்ரோல் செலவு"></label>
+        <label>தொகை (₹)<input id="faWeeklyExpenseAmount" type="number" min="1" step="0.01" inputmode="decimal" placeholder="செலவு தொகை"></label>
+        <label>செலவு தேதி<input id="faWeeklyExpenseDate" type="date"></label>
+        <label>பணம் செலுத்திய முறை<select id="faWeeklyExpenseMode"><option value="Cash">Cash</option><option value="Online">Online</option></select></label>
+      </div>
+      <button type="button" id="faWeeklyExpenseSave" class="weekly-expense-save">+ செலவைச் சேமிக்கவும் / Save Expense</button>
+      <div id="faWeeklyExpenseHistory" class="weekly-expense-history"></div>
     </div>
     <div class="weekly-view-tabs" role="tablist" aria-label="வார வசூல் பிரிவுகள்">
       <button type="button" class="active" data-weekly-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
@@ -1032,8 +1055,8 @@ document.addEventListener("DOMContentLoaded",()=>{
 (function(){
   const $=id=>document.getElementById(id);
   const STORAGE_KEY='tn_vatti_finance_accounts_v1';
-  let db={customers:[],loans:[],payments:[]};
-  try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(saved)db=Object.assign(db,saved);}catch(e){}
+  let db={customers:[],loans:[],payments:[],expenses:[]};
+  try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(saved)db=Object.assign(db,saved); if(!Array.isArray(db.expenses))db.expenses=[];}catch(e){}
   const save=()=>{
     try{
       const payload=JSON.stringify(db);
@@ -1370,13 +1393,16 @@ document.addEventListener("DOMContentLoaded",()=>{
       });
       const weeklyLoanAmount=loansInCycle.reduce((sum,l)=>sum+Number(l.principal||0),0);
       const weeklyMahimaiAmount=loansInCycle.reduce((sum,l)=>sum+Number(l.documentCharges||0),0);
-      // Expense entries are not yet stored in this app version; keep the display at zero rather than inventing a value.
-      const weeklyExpenseAmount=0;
+      const cycleExpenses=db.expenses.filter(e=>{const d=dateObj(e.date);return d>=weeklyCycleStart&&d<=weeklyCycleEnd;});
+      const weeklyExpenseAmount=cycleExpenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
       const weeklyCashBalance=weeklyCycleTotal+weeklyMahimaiAmount-weeklyLoanAmount-weeklyExpenseAmount;
       $('faWeeklyMahimai').textContent=money(weeklyMahimaiAmount);
       $('faWeeklyLoanOut').textContent=money(weeklyLoanAmount);
       $('faWeeklyExpense').textContent=money(weeklyExpenseAmount);
       $('faWeeklyCashBalance').textContent=money(weeklyCashBalance);
+      const history=$('faWeeklyExpenseHistory');
+      if(history)history.innerHTML=cycleExpenses.length?'<b>இந்த வார செலவு பதிவுகள்</b>'+cycleExpenses.slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date)).map(e=>'<div class="weekly-expense-item"><span><b>'+esc(e.detail)+'</b><small>'+dateText(e.date)+' · '+esc(e.mode||'Cash')+'</small></span><strong>'+money(e.amount)+'</strong><button type="button" data-weekly-expense-delete="'+esc(e.id)+'" aria-label="செலவை நீக்கு">×</button></div>').join(''):'<span class="finance-note">இந்த வாரம் செலவு பதிவு இல்லை.</span>';
+      const dateInput=$('faWeeklyExpenseDate');if(dateInput&&!dateInput.dataset.userEdited){dateInput.value=weeklyCycleEnd?weeklyCycleEnd.getFullYear()+'-'+String(weeklyCycleEnd.getMonth()+1).padStart(2,'0')+'-'+String(weeklyCycleEnd.getDate()).padStart(2,'0'):today();}
     }
     $(isWeekly?'faWeeklyReceived':'faDailyReceived').textContent=money(isWeekly?weeklyCycleTotal:collected);
     $(isWeekly?'faWeeklyDue':'faDailyDue').textContent=money(dueTotal);
@@ -1920,6 +1946,24 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   wireWeeklySearch('faWeeklyCollectSearch','faWeeklyList','.weekly-smart-row');
   wireWeeklySearch('faWeeklyCompletedSearch','faWeeklyCompletedList','.weekly-completed-card');
+  if($('faWeeklyExpenseDate'))$('faWeeklyExpenseDate').addEventListener('change',e=>{e.target.dataset.userEdited='1';});
+  if($('faWeeklyExpenseSave'))$('faWeeklyExpenseSave').addEventListener('click',()=>{
+    const detail=$('faWeeklyExpenseDetail').value.trim(),amount=Number($('faWeeklyExpenseAmount').value),date=$('faWeeklyExpenseDate').value,mode=$('faWeeklyExpenseMode').value;
+    if(!detail){alert('செலவு விவரத்தை உள்ளிடவும்.');$('faWeeklyExpenseDetail').focus();return;}
+    if(!Number.isFinite(amount)||amount<=0){alert('சரியான செலவு தொகையை உள்ளிடவும்.');$('faWeeklyExpenseAmount').focus();return;}
+    if(!date){alert('செலவு தேதியைத் தேர்வு செய்யவும்.');return;}
+    const record={id:'EXP'+Date.now()+Math.random().toString(36).slice(2,6),detail,amount,date,mode,timestamp:new Date().toISOString()};
+    db.expenses.push(record);if(!save()){db.expenses.pop();return;}
+    $('faWeeklyExpenseDetail').value='';$('faWeeklyExpenseAmount').value='';$('faWeeklyExpenseDate').dataset.userEdited='';
+    renderCollection('weekly');
+    alert('செலவு வெற்றிகரமாகச் சேமிக்கப்பட்டது.');
+  });
+  if($('faWeeklyExpenseHistory'))$('faWeeklyExpenseHistory').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-weekly-expense-delete]');if(!btn)return;
+    const id=btn.dataset.weeklyExpenseDelete;if(!confirm('இந்த செலவு பதிவை நீக்கவா?'))return;
+    const index=db.expenses.findIndex(x=>x.id===id);if(index<0)return;
+    const removed=db.expenses.splice(index,1)[0];if(!save()){db.expenses.splice(index,0,removed);return;}renderCollection('weekly');
+  });
   document.querySelectorAll('[data-main-fin-tab]').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.mainFinTab!=='weekly')restoreLoanFormHome();
   }));
