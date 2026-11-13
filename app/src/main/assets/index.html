@@ -160,6 +160,7 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 .weekly-cash-right>div{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .weekly-cash-right strong{font-size:clamp(14px,3.8vw,18px);font-weight:800;color:#263746;text-align:right;overflow-wrap:anywhere}
 .weekly-cash-right .weekly-cash-balance{border-top:1px solid #dce3e8;padding-top:9px}
+.weekly-cash-right .weekly-expense-open{display:inline-flex;align-items:center;width:auto;margin:0;padding:5px 8px;border:0;border-radius:9px;background:#16834a;color:#fff;font:inherit;font-size:13px;font-weight:850;white-space:nowrap;cursor:pointer;box-shadow:none}
 .weekly-cash-balance strong{color:#087e83;font-size:clamp(17px,4.5vw,22px)}
 @media(max-width:360px){.weekly-cash-summary{gap:6px}.weekly-cash-left,.weekly-cash-right{padding:9px}}
 /* V105 weekly collection customer selector */
@@ -422,6 +423,14 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 @media(max-width:420px){.nee-search-panel .nee-input-row{flex-direction:column}.nee-search-panel button{width:100%}}
 
 
+
+.weekly-expense-open{display:block;width:100%;margin:0 0 14px;padding:13px 16px;border:0;border-radius:13px;background:#16834a;color:#fff;font:inherit;font-size:17px;font-weight:900;text-align:center;cursor:pointer;box-shadow:0 3px 9px rgba(8,126,139,.16)}
+.weekly-expense-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
+.weekly-expense-modal.finance-hidden{display:none!important}
+.weekly-expense-backdrop{position:absolute;inset:0;background:rgba(12,28,42,.55)}
+.weekly-expense-dialog{position:relative;z-index:1;width:min(100%,520px);max-height:88vh;overflow:auto;margin:0;padding:18px;background:#fff;box-shadow:0 15px 45px rgba(0,0,0,.22)}
+.weekly-expense-close{float:right;border:0;border-radius:50%;width:34px;height:34px;background:#edf3f5;color:#17324d;font-size:25px;line-height:1;cursor:pointer}
+
 .weekly-expense-entry{margin:0 0 16px;padding:13px;border:1px solid var(--line,#d6e0e5);border-radius:14px;background:#fbfdfe}
 .weekly-expense-entry h3{margin:0 0 10px;font-size:16px;color:var(--ink,#17324d)}
 .weekly-expense-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -599,14 +608,17 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       </div>
       <div class="weekly-cash-right">
         <div><span>லோன்</span><strong id="faWeeklyLoanOut">₹0</strong></div>
-        <div><span>செலவு</span><strong id="faWeeklyExpense">₹0</strong></div>
+        <div><button type="button" id="faOpenExpenseEntry" class="weekly-expense-open">＋ செலவு</button><strong id="faWeeklyExpense">₹0</strong></div>
         <div class="weekly-cash-balance"><span>இருப்பு</span><strong id="faWeeklyCashBalance">₹0</strong></div>
       </div>
       <span id="faWeeklyCycleNote" class="finance-hidden" aria-hidden="true"></span>
       <span id="faWeeklyDue" class="finance-hidden" aria-hidden="true">₹0</span>
     </div>
-    <div class="weekly-expense-entry">
-      <h3>💸 செலவு பதிவு / Expense Entry</h3>
+    <div id="faExpenseModal" class="weekly-expense-modal finance-hidden" role="dialog" aria-modal="true" aria-labelledby="faExpenseModalTitle">
+      <div class="weekly-expense-backdrop" data-expense-close></div>
+      <div class="weekly-expense-entry weekly-expense-dialog">
+      <button type="button" id="faCloseExpenseEntry" class="weekly-expense-close" aria-label="மூடு">×</button>
+      <h3 id="faExpenseModalTitle">💸 செலவு பதிவு / Expense Entry</h3>
       <div class="weekly-expense-fields">
         <label>செலவு விவரம்<input id="faWeeklyExpenseDetail" type="text" maxlength="100" placeholder="உதா: பெட்ரோல் செலவு"></label>
         <label>தொகை (₹)<input id="faWeeklyExpenseAmount" type="number" min="1" step="0.01" inputmode="decimal" placeholder="செலவு தொகை"></label>
@@ -615,6 +627,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       </div>
       <button type="button" id="faWeeklyExpenseSave" class="weekly-expense-save">+ செலவைச் சேமிக்கவும் / Save Expense</button>
       <div id="faWeeklyExpenseHistory" class="weekly-expense-history"></div>
+      </div>
     </div>
     <div class="weekly-view-tabs" role="tablist" aria-label="வார வசூல் பிரிவுகள்">
       <button type="button" class="active" data-weekly-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
@@ -1947,6 +1960,12 @@ document.addEventListener("DOMContentLoaded",()=>{
   wireWeeklySearch('faWeeklyCollectSearch','faWeeklyList','.weekly-smart-row');
   wireWeeklySearch('faWeeklyCompletedSearch','faWeeklyCompletedList','.weekly-completed-card');
   if($('faWeeklyExpenseDate'))$('faWeeklyExpenseDate').addEventListener('change',e=>{e.target.dataset.userEdited='1';});
+  const expenseModal=$('faExpenseModal');
+  function closeExpenseModal(){if(expenseModal)expenseModal.classList.add('finance-hidden');}
+  if($('faOpenExpenseEntry'))$('faOpenExpenseEntry').addEventListener('click',()=>{if(expenseModal){expenseModal.classList.remove('finance-hidden');$('faWeeklyExpenseDetail').focus();}});
+  if($('faCloseExpenseEntry'))$('faCloseExpenseEntry').addEventListener('click',closeExpenseModal);
+  if(expenseModal)expenseModal.addEventListener('click',e=>{if(e.target.hasAttribute('data-expense-close'))closeExpenseModal();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeExpenseModal();});
   if($('faWeeklyExpenseSave'))$('faWeeklyExpenseSave').addEventListener('click',()=>{
     const detail=$('faWeeklyExpenseDetail').value.trim(),amount=Number($('faWeeklyExpenseAmount').value),date=$('faWeeklyExpenseDate').value,mode=$('faWeeklyExpenseMode').value;
     if(!detail){alert('செலவு விவரத்தை உள்ளிடவும்.');$('faWeeklyExpenseDetail').focus();return;}
@@ -1956,6 +1975,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     db.expenses.push(record);if(!save()){db.expenses.pop();return;}
     $('faWeeklyExpenseDetail').value='';$('faWeeklyExpenseAmount').value='';$('faWeeklyExpenseDate').dataset.userEdited='';
     renderCollection('weekly');
+    closeExpenseModal();
     alert('செலவு வெற்றிகரமாகச் சேமிக்கப்பட்டது.');
   });
   if($('faWeeklyExpenseHistory'))$('faWeeklyExpenseHistory').addEventListener('click',e=>{
