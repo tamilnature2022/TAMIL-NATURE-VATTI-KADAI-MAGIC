@@ -400,13 +400,13 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 .nee-search-panel input{font-size:23px;font-weight:800;letter-spacing:3px;text-align:center;border:2px solid #0b8790;background:#fff8e8}
 .nee-search-panel button{min-width:108px}
 .nee-results{display:grid;gap:12px;margin-top:16px}
-.nee-number-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 14px;padding:18px 16px;border:1.5px solid #cfe5df;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(15,70,65,.04)}
-.nee-number-main{font-size:25px;font-weight:900;letter-spacing:1px;color:#102a43;overflow-wrap:anywhere;line-height:1.25}
-.nee-number-meta{font-size:17px;color:#176b45;text-align:right;line-height:1.8;font-weight:800;white-space:nowrap}
+.nee-number-card{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:8px;padding:18px 16px;border:1.5px solid #cfe5df;border-radius:20px;background:#fff;box-shadow:0 1px 2px rgba(15,70,65,.04)}
+.nee-number-main{font-size:clamp(17px,4.8vw,25px);font-weight:900;letter-spacing:.3px;color:#102a43;white-space:nowrap;overflow-wrap:normal;word-break:keep-all;line-height:1.25}
+.nee-number-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:17px;color:#176b45;text-align:left;line-height:1.5;font-weight:800;white-space:nowrap}
 .nee-number-breakdown{grid-column:1/-1;border-top:1px solid #edf3f1;padding-top:8px;margin-top:3px;color:#526777;font-size:13px;line-height:1.7}
-@media(max-width:420px){.nee-number-main{font-size:21px}.nee-number-meta{font-size:14px}.nee-number-card{padding:15px 13px}}
+@media(max-width:420px){.nee-number-main{font-size:clamp(16px,4.5vw,20px);letter-spacing:0}.nee-number-meta{font-size:14px}.nee-number-card{padding:15px 13px}}
 .nee-empty{padding:14px;background:#fff1e8;border-radius:12px;color:#9a3412;line-height:1.6}
-@media(max-width:420px){.nee-search-panel .nee-input-row{flex-direction:column}.nee-search-panel button{width:100%}.nee-number-main{font-size:18px}}
+@media(max-width:420px){.nee-search-panel .nee-input-row{flex-direction:column}.nee-search-panel button{width:100%}}
 
 </style>
 </head>
@@ -708,10 +708,13 @@ function businessBenefit(total){
 // interpretation. Strong positive book entries are explicitly protected from
 // mixed cautionary wording in their longer descriptions.
 const neeKnownPositiveNumbers = new Set([8,64,73,77,89]);
-const neeNegativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","தங்காது","சிரமம்","தடைகள்","கவலை","தாமதம்","பிரச்சினை","பாதகமான","மன உளைச்சல்","மகிழ்ச்சியின்மை","வெறுப்பார்கள்","அபாயம்","விபத்து","இருக்காது","கிடைக்காது","குறையும்","செலவுகள்"];
+// Explicitly reject book entries that are no-benefit, unavailable, neutral, or clearly harmful.
+const neeAlwaysRejectNumbers = new Set([0,1,5,7,9,11,13,15,17,18,19,21,23,24,25,27,28,31,34,38,40,43,46,47,48,49,50,53,55,57,58,59,61,62,63,65,67,69,75,76,78,81,82,83,86,91,94,96,98]);
+const neeNegativeTerms=["பயன் இல்லை","பலன் கிடைக்காத நிலை","கெடுதல்","நடுநிலை","மத்திமம்","நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","தங்காது","சிரமம்","தடைகள்","கவலை","தாமதம்","பிரச்சினை","பாதகமான","மன உளைச்சல்","மகிழ்ச்சியின்மை","வெறுப்பார்கள்","அபாயம்","விபத்து","இருக்காது","கிடைக்காது","குறையும்","செலவுகள்"];
 function neeEntryIsPositive(entry){
  if(!entry) return false;
  const number=Number(entry.number);
+ if(neeAlwaysRejectNumbers.has(number)) return false;
  if(neeKnownPositiveNumbers.has(number)) return true;
  const text=String(entry.title||"")+" "+String(entry.prediction||"");
  return !neeNegativeTerms.some(term=>{
@@ -754,7 +757,11 @@ function searchNeeNumbers(nextPage=false){
  const found=[];
  const positive=Array.from({length:100},(_,n)=>neeEntryIsPositive(bookData[String(n).padStart(2,"0")]));
  function neeCategoryIsPositive(number,categoryIndex){
+   // 97: special only in Customer (0) and Profession/Work (2).
    if(number===97 && categoryIndex!==0 && categoryIndex!==2) return false;
+   // 77: may appear in Customer (0), Profession/Work (2), Family (5),
+   // and Pyramid (6); must not appear in Spouse (1), Property (3), or Children (4).
+   if(number===77 && ![0,2,5,6].includes(categoryIndex)) return false;
    return !!positive[number];
  }
  const remainingDigits=10-prefix.length;
@@ -777,7 +784,7 @@ function searchNeeNumbers(nextPage=false){
  }
  const offset=(neeSearchState.page-1)*20;
  status.textContent=`${prefix} Series – ${offset+1} முதல் ${offset+found.length} வரை (${neeSearchState.page}ஆம் பக்கம்)`;
- results.innerHTML+=found.map((item,index)=>`<article class="nee-number-card"><div style="min-width:0"><div class="nee-number-main">${offset+index+1}. ${item.mobile}</div><div style="font-size:17px;color:#718096;margin-top:8px">Total: ${item.familyTotal}</div></div><div class="nee-number-meta">Pyramid No: ${String(item.pyramid).padStart(2,"0")}<br><span style="color:#15803d;font-weight:800">✓ Positive</span></div></article>`).join("");
+ results.innerHTML+=found.map((item,index)=>`<article class="nee-number-card"><div class="nee-number-main">${offset+index+1}. ${item.mobile}</div><div style="font-size:17px;color:#718096;margin-top:2px">Total: ${item.familyTotal}</div><div class="nee-number-meta"><span>Pyramid No: ${String(item.pyramid).padStart(2,"0")}</span><span style="color:#15803d;font-weight:800">✓ Positive</span></div></article>`).join("");
  nextBtn.style.display=neeSearchState.cursor<neeSearchState.total?"block":"none";
  if(neeSearchState.cursor>=neeSearchState.total) status.textContent+= " · இந்த Series முடிந்தது";
 }
