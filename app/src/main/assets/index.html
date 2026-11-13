@@ -394,7 +394,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 }
 
 
-/* V186 – Search New Numbers */
+/* V189 – Search New Numbers: seven positive categories */
 .nee-search-panel{border:2px solid #087e8b;background:linear-gradient(145deg,#f0fbf9,#fff)}
 .nee-search-panel .nee-input-row{display:flex;gap:9px;align-items:stretch}
 .nee-search-panel input{font-size:23px;font-weight:800;letter-spacing:3px;text-align:center;border:2px solid #0b8790;background:#fff8e8}
@@ -699,7 +699,7 @@ function businessBenefit(total){
  const resultNumber = total % 100 === 0 ? 100 : total % 100;
  return `<div class="benefit"><b>பலன் பார்க்கும் எண்:</b> ${String(resultNumber).padStart(2,"0")}</div>${renderBenefit(resultNumber)}`;
 }
-// V186: Search 10-digit mobile numbers by fixed 4-digit prefix.
+// V189: Search 10-digit mobile numbers by fixed 4–10 digit prefix.
 // Uses the same bookData meanings and negative-word checks as the existing calculator.
 const neeNegativeTerms=["நஷ்டம்","பண இழப்பு","இழப்பு","கடன்","வறுமை","பணத்தட்டுப்பாடு","வளர்ச்சி இல்லை","வளர்ச்சியின்மை","பலன் கிடைக்காமல்","ஏமாற்றம்","கையில் தங்காது","தங்காது","சிரமம்","தடைகள்","கவலை","தாமதம்","மற்றவர்கள் அடையும்","பிரச்சினை","பாதகமான","மன உளைச்சல்","மகிழ்ச்சியின்மை","வெறுப்பார்கள்","அபாயம்","விபத்து"];
 const neeNeutralTerms=["பயன் இல்லை","நடுநிலை","மத்திமம்","சமநிலை","நன்மையும் தீமையும் கலந்த"];
@@ -742,25 +742,26 @@ function searchNeeNumbers(){
  if(prefix.length<4 || prefix.length>10){status.textContent="குறைந்தது 4 இலக்கங்கள்; அதிகபட்சம் 10 இலக்கங்கள் உள்ளிடவும்.";return;}
  status.textContent="20 நல்ல எண்களைத் தேடுகிறது...";
  const found=[];
- // Pre-check the 00–99 result table once. A number qualifies only when both
- // mobile pair results (digits 5–6 and 7–8) and its final pyramid value are positive.
+ // V189: ALL seven app categories must be positive before a number is shown.
+ // 1 Customer, 2 Spouse, 3 Business, 4 Property, 5 Children,
+ // 6 Family (sum of all 10 digits), 7 Pyramid final value.
  const positive=Array.from({length:100},(_,n)=>neeEntryIsPositive(bookData[String(n).padStart(2,"0")]));
  const remainingDigits=10-prefix.length;
  const totalSuffixes=10**remainingDigits;
  for(let suffix=0;suffix<totalSuffixes && found.length<20;suffix++){
    const tail=String(suffix).padStart(remainingDigits,"0");
    const mobile=prefix+tail;
-   const pair1=Number(mobile.slice(4,6));
-   if(!positive[pair1]) continue;
-   const pair2=Number(mobile.slice(6,8));
-   if(!positive[pair2]) continue;
+   const pairs=Array.from({length:5},(_,i)=>Number(mobile.slice(i*2,i*2+2)));
+   if(!pairs.every(n=>positive[n])) continue;
+   const familyTotal=[...mobile].reduce((sum,d)=>sum+Number(d),0);
+   if(familyTotal<0 || familyTotal>99 || !positive[familyTotal]) continue;
    const pyramid=neePyramidFinal(mobile);
    if(pyramid===null || !positive[pyramid]) continue;
-   found.push({mobile,pair1,pair2,pyramid});
+   found.push({mobile,pairs,familyTotal,pyramid});
  }
- if(!found.length){status.textContent="இந்த Series-ல் Positive + Pyramid Positive எண்கள் கிடைக்கவில்லை.";return;}
- status.textContent=`${prefix} தொடக்கத்தில் கிடைத்த ${found.length} Positive + Pyramid Positive எண்கள்:`;
- results.innerHTML=found.map((item,index)=>`<article class="nee-number-card"><div><div class="nee-number-main">${index+1}. ${item.mobile}</div><div class="hint">Pair: ${String(item.pair1).padStart(2,"0")} + ${String(item.pair2).padStart(2,"0")}</div></div><div class="nee-number-meta">✓ Positive<br>✓ Pyramid ${String(item.pyramid).padStart(2,"0")}</div></article>`).join("");
+ if(!found.length){status.textContent="இந்த Series-ல் 7 பிரிவுகளும் Positive ஆக உள்ள எண்கள் கிடைக்கவில்லை. வேறு தொடக்க இலக்கங்களை முயற்சிக்கவும்.";return;}
+ status.textContent=`${prefix} தொடக்கத்தில் அனைத்து 7 பிரிவுகளும் Positive ஆன ${found.length} எண்கள்:`;
+ results.innerHTML=found.map((item,index)=>`<article class="nee-number-card"><div style="min-width:0;flex:1"><div class="nee-number-main">${index+1}. ${item.mobile}</div><div class="hint">வாடிக்கையாளர் ${String(item.pairs[0]).padStart(2,"0")} · துணைவர் ${String(item.pairs[1]).padStart(2,"0")}<br>தொழில் ${String(item.pairs[2]).padStart(2,"0")} · சொத்து ${String(item.pairs[3]).padStart(2,"0")}<br>குழந்தைகள் ${String(item.pairs[4]).padStart(2,"0")} · குடும்பம் ${String(item.familyTotal).padStart(2,"0")}<br>பிரமிடு ${String(item.pyramid).padStart(2,"0")}</div></div><div class="nee-number-meta">✓ 7 பிரிவுகளும் Positive</div></article>`).join("");
 }
 
 async function shareFinanceReport(){
