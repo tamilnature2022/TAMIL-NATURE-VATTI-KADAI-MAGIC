@@ -1551,7 +1551,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     $(isWeekly?'faWeeklyDue':'faDailyDue').textContent=money(dueTotal);
     if(isWeekly && $('faWeekdayCaption'))$('faWeekdayCaption').textContent=weekdayNames[selectedWeekday]+' வசூல்';
     if(isWeekly && $('faWeeklyReceivedLabel')){
-      const weekdayTamil=selectedWeekday===0?'ஞாயிற்றுக்கிழமை':weekdayNames[selectedWeekday]+'க்கிழமை';
+      const weekdayTamil=weekdayNames[selectedWeekday];
       const cycleStartDate=weeklyCycleStart?dateText(weeklyCycleStart.toISOString().slice(0,10)):'';
       const cycleEndDate=weeklyCycleEnd?dateText(weeklyCycleEnd.toISOString().slice(0,10)):'';
       $('faWeeklyReceivedLabel').textContent=weekdayTamil+' ('+cycleStartDate+' – '+cycleEndDate+') மொத்த வசூல்';
