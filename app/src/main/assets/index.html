@@ -473,26 +473,9 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 
 
 <style id="weekly-income-nav-style">
-.weekday-picker .weekly-income-nav{grid-column:auto;white-space:normal;overflow-wrap:anywhere;background:#17345d;color:#fff;border:1px solid #2b4c78;font-weight:700;min-height:54px;padding:8px 5px;font-size:clamp(11px,3vw,14px);line-height:1.25}
+.weekday-picker .weekly-income-nav{grid-column:1/-1;white-space:normal;background:#17345d;color:#fff;border:1px solid #2b4c78;font-weight:700;min-height:42px}
 .weekday-picker .weekly-income-nav.active{background:#087e83;color:#fff;border-color:#087e83}
 </style>
-
-<style id="v217-weekly-layout-and-nav-fix">
-/* V217: place Income/Expense beside Saturday and keep summary cards aligned */
-.weekday-picker{grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
-.weekday-picker button{min-width:0;min-height:54px;display:flex;align-items:center;justify-content:center;text-align:center}
-.weekday-picker .weekly-income-nav{grid-column:auto;min-width:0;min-height:54px}
-.weekly-cash-summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch}
-.weekly-cash-left,.weekly-cash-right{min-width:0;min-height:210px;box-sizing:border-box}
-.weekly-cash-left{display:flex;flex-direction:column;justify-content:space-between}
-.weekly-cash-right{display:flex;flex-direction:column;justify-content:space-between;gap:12px}
-.weekly-cash-right>div{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px;min-width:0}
-.weekly-cash-right strong{min-width:0;font-size:clamp(12px,3.2vw,17px);white-space:nowrap;overflow-wrap:normal;letter-spacing:-.35px}
-.weekly-cash-right .weekly-expense-open{min-width:0;padding:6px 7px;font-size:clamp(11px,2.9vw,13px);white-space:nowrap}
-.weekly-cash-right .weekly-cash-balance{display:grid;grid-template-columns:minmax(0,1fr) auto}
-@media(max-width:380px){.weekly-cash-summary{gap:7px}.weekly-cash-left,.weekly-cash-right{padding:10px 8px;min-height:195px}.weekly-cash-right>div{gap:3px}.weekly-cash-right strong{font-size:12px}.weekly-cash-right .weekly-expense-open{padding:5px 5px;font-size:11px}}
-</style>
-
 </head>
 <body>
 <span id="faTodayCollected" class="finance-hidden" aria-hidden="true">₹0</span>
@@ -540,6 +523,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   <button type="button" data-main-fin-tab="loans">2. Loan</button>
   <button type="button" data-main-fin-tab="weekly">3. வார வசூல்</button>
   <button type="button" data-main-fin-tab="daily">4. தினசரி வசூல்</button>
+  <button type="button" data-main-fin-tab="history">7. History</button>
 </div>
 <section class="panel finance-hidden" data-fin-panel="customers">
     <h2>👥 Customer Details / வாடிக்கையாளர் விவரம்</h2>
@@ -646,7 +630,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <button type="button" data-weekday="4">வியாழன்</button>
       <button type="button" data-weekday="5">வெள்ளி</button>
       <button type="button" data-weekday="6">சனி</button>
-      <button type="button" data-main-fin-tab="weeklyIncome" class="weekly-income-nav">வரவு செலவு</button>
+      <button type="button" data-main-fin-tab="weeklyIncome" class="weekly-income-nav">5. வார வசூல் வரவு செலவு</button>
     </div>
     <p class="finance-note" id="faWeekdayCaption">ஞாயிற்றுக்கிழமை வசூல்</p>
     <div class="weekly-cash-summary weekly-total-above-tabs">
@@ -683,7 +667,6 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <button type="button" data-weekly-view="newloan" role="tab" aria-selected="false"><span>New Loan</span><small>புதிய கடன்</small></button>
     </div>
     <div data-weekly-view-panel="collect">
-      <input id="faWeeklyCollectSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக" aria-label="Collect வாடிக்கையாளர்களைத் தேடுக">
       <div id="faWeeklyList" class="finance-list"></div>
     </div>
     <div data-weekly-view-panel="completed" class="finance-hidden">
@@ -1489,7 +1472,8 @@ document.addEventListener("DOMContentLoaded",()=>{
           :'';
         return '<article class="weekly-smart-row" data-loan-id="'+esc(l.id)+'" data-search="'+esc(((c?.name||'')+' '+(c?.mobile||'')).toLowerCase())+'"><div class="weekly-smart-top"><div class="weekly-smart-person"><b>'+(index+1)+'. '+esc(c?.name||'Customer')+'</b><small class="weekly-phone"><a class="weekly-call-link" href="tel:'+esc(phoneDigits)+'" aria-label="Call '+esc(c?.name||'customer')+'"> <span class="call-icon" aria-hidden="true"><svg viewBox="0 0 24 24" role="img"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.2 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.35 1.9.69 2.8a2 2 0 0 1-.45 2.11L8.08 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.84.57 2.8.69A2 2 0 0 1 22 16.92z"/></svg></span><span class="call-number">'+esc(phoneDisplay)+'</span></a></small><small>📅 '+dateText(l.loanDate||l.start)+'</small></div><div class="weekly-smart-numbers"><div><small>Balance</small><b class="weekly-red">'+money(balance(l))+'</b></div><div><small>Paid</small><b class="weekly-green">'+money(paid(l.id))+'</b></div><div><small>Total</small><b>'+money(l.total||l.principal)+'</b></div></div></div><div class="weekly-installment-line">தவணை: '+money(l.installment)+' ('+Math.min(Number(l.installmentCount)||0,Math.floor((paid(l.id)+0.000001)/Math.max(Number(l.installment)||1,1)))+'/'+(l.installmentCount||'-')+')</div><div class="weekly-smart-pay"><label>Online<input type="number" min="0" step="0.01" inputmode="decimal" id="faOnline_'+esc(l.id)+'" placeholder="₹ 0"></label><label>Cash<input type="number" min="0" step="0.01" inputmode="decimal" id="faCash_'+esc(l.id)+'" placeholder="₹ 0"></label><button type="button" class="weekly-save-btn" data-fa-pay="'+esc(l.id)+'" aria-label="வசூலை சேமிக்க">💾</button></div>'+paymentRows+'</article>';
       }).join(''):'<div class="finance-empty">இந்தக் கிழமை வசூல் செய்ய வேண்டிய வாடிக்கையாளர்கள் இல்லை.</div>';
-      list.innerHTML='<div class="weekly-collection-summary"><b>'+weekdayNames[selectedWeekday]+' – இந்த வார வசூல் பட்டியல்</b><div class="finance-note">மொத்த வாடிக்கையாளர்கள்: '+loans.length+' பேர்</div></div>'+weeklyCards;
+      list.innerHTML='<div class="weekly-collection-summary"><b>'+weekdayNames[selectedWeekday]+' – இந்த வார வசூல் பட்டியல்</b><div class="finance-note">மொத்த வாடிக்கையாளர்கள்: '+loans.length+' பேர்</div></div><input id="faWeeklyCollectSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக" aria-label="Collect வாடிக்கையாளர்களைத் தேடுக">'+weeklyCards;
+      wireWeeklySearch('faWeeklyCollectSearch','faWeeklyList','.weekly-smart-row');
     }else{
       if(!loans.some(l=>l.id===selectedPaymentLoanId))selectedPaymentLoanId='';
       const dailyOptions='<option value="">வாடிக்கையாளர் பெயரைத் தேர்வு செய்யவும்</option>'+loans.map(l=>{const c=customer(l.customerId);return '<option value="'+esc(l.id)+'" '+(l.id===selectedPaymentLoanId?'selected':'')+'>'+esc(c?.name||'Customer')+' – '+esc(c?.mobile||'')+' – நிலுவை '+money(balance(l))+'</option>';}).join('');
@@ -1998,6 +1982,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   function wireWeeklySearch(inputId,listId,selector){
     const input=$(inputId),list=$(listId);
     if(!input||!list)return;
+    if(input.dataset.searchWired==='1')return;
+    input.dataset.searchWired='1';
     input.addEventListener('input',()=>{
       const q=input.value.trim().toLocaleLowerCase();
       list.querySelectorAll(selector).forEach(card=>{
