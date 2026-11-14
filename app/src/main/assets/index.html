@@ -1257,8 +1257,27 @@ document.addEventListener("DOMContentLoaded",()=>{
     }).reduce((sum,p)=>sum+Number(p.amount||0),0);
   }
   function showMainFinanceTab(name){
-    document.querySelectorAll('[data-main-fin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.mainFinTab===name));
-    document.querySelectorAll('[data-fin-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.finPanel!==name));
+    // V225: show exactly one finance panel at a time. The weekly-income view is
+    // independent from the weekday collection view; selecting it hides the
+    // complete weekday picker and all weekly collection content.
+    document.querySelectorAll('[data-main-fin-tab]').forEach(b=>{
+      const active=b.dataset.mainFinTab===name;
+      b.classList.toggle('active',active);
+      b.setAttribute('aria-current',active?'page':'false');
+    });
+    document.querySelectorAll('[data-fin-panel]').forEach(p=>{
+      const active=p.dataset.finPanel===name;
+      p.classList.toggle('finance-hidden',!active);
+      p.hidden=!active;
+      p.setAttribute('aria-hidden',active?'false':'true');
+    });
+    const weeklyPanel=document.querySelector('[data-fin-panel="weekly"]');
+    const incomePanel=document.querySelector('[data-fin-panel="weeklyIncome"]');
+    if(name==='weeklyIncome'){
+      if(weeklyPanel){weeklyPanel.classList.add('finance-hidden');weeklyPanel.hidden=true;}
+      if(incomePanel){incomePanel.classList.remove('finance-hidden');incomePanel.hidden=false;}
+    }
+    if(name==='weekly' && weeklyPanel){weeklyPanel.classList.remove('finance-hidden');weeklyPanel.hidden=false;}
   }
   function normalizeCustomerWeekday(value){
     if(value===null||value===undefined||value==='')return null;
@@ -2447,4 +2466,23 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 .weekly-call-link .call-icon svg{width:19px;height:19px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .weekly-call-link .call-number{text-decoration:underline;text-decoration-color:#9aabb5;text-underline-offset:4px;font-size:1em;letter-spacing:.2px}
 .weekly-call-link:active .call-icon{background:#067c60;transform:scale(.96)}
-</style></body></html>
+</style>
+<script>
+/* V226: collapse weekday choices after a day is selected; tapping main Weekly Collection shows choices again. */
+(function(){
+  const picker=document.getElementById('faWeekdayPicker');
+  if(!picker)return;
+  document.querySelectorAll('[data-weekday]').forEach(button=>{
+    button.addEventListener('click',()=>picker.classList.add('finance-hidden'));
+  });
+  document.querySelectorAll('.finance-main-tabs [data-main-fin-tab="weekly"]').forEach(button=>{
+    button.addEventListener('click',()=>picker.classList.remove('finance-hidden'));
+  });
+})();
+</script>
+
+</body></html>
+<style id="v225-exclusive-finance-tabs">
+[data-fin-panel][hidden]{display:none!important}
+[data-fin-panel].finance-hidden{display:none!important}
+</style>
