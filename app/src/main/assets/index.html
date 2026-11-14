@@ -442,6 +442,8 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 .weekly-expense-item span{min-width:0;display:flex;flex-direction:column;gap:2px}.weekly-expense-item small{color:#82909b}
 .weekly-expense-item strong{white-space:nowrap;color:#b42336}.weekly-expense-item button{border:0;background:#fce8e8;color:#b42336;border-radius:8px;width:30px;height:30px;font-size:20px}
 @media(max-width:360px){.weekly-expense-fields{grid-template-columns:1fr}}
+/* V223: wrap only the opening-balance button label onto two lines */
+#faOpenOpeningBalance{white-space:normal!important;line-height:1.15!important;word-break:keep-all!important;overflow-wrap:normal!important;text-align:center!important}
 </style>
 
 <style id="v215-weekly-summary-polish">
@@ -492,6 +494,46 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
  .weekly-cash-right .weekly-expense-open{font-size:10px!important;padding:6px 4px!important}
 }
 </style>
+
+<style id="v221-weekly-summary-alignment">
+/* V221: prevent opening-balance / expense controls from colliding with amounts */
+.weekly-cash-right{min-width:0!important;box-sizing:border-box!important}
+.weekly-cash-right>div{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,max-content)!important;align-items:center!important;column-gap:7px!important;min-width:0!important}
+.weekly-cash-right>div>button.weekly-expense-open{display:flex!important;justify-self:stretch!important;align-items:center!important;justify-content:center!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:7px 5px!important;font-size:clamp(10px,2.7vw,14px)!important;line-height:1.2!important;white-space:normal!important;overflow-wrap:anywhere!important;text-align:center!important}
+.weekly-cash-right>div>strong{display:block!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important;text-align:right!important;font-size:clamp(12px,3.1vw,17px)!important;letter-spacing:-.25px!important;white-space:nowrap!important;overflow-wrap:normal!important}
+.weekly-cash-right .weekly-cash-balance{grid-template-columns:minmax(0,1fr) minmax(0,max-content)!important;column-gap:7px!important}
+.weekly-cash-right .weekly-cash-balance>span{min-width:0!important}
+.weekly-cash-right .weekly-cash-balance>strong{font-size:clamp(14px,3.5vw,20px)!important}
+@media(max-width:380px){
+ .weekly-cash-summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px!important}
+ .weekly-cash-left,.weekly-cash-right{padding:10px 8px!important}
+ .weekly-cash-right>div{column-gap:4px!important}
+ .weekly-cash-right>div>button.weekly-expense-open{font-size:10px!important;padding:6px 3px!important}
+ .weekly-cash-right>div>strong{font-size:11px!important}
+ .weekly-cash-right .weekly-cash-balance>strong{font-size:13px!important}
+}
+</style>
+
+
+<style id="v222-weekly-row-alignment">
+/* V222: keep each action button and its amount on the same horizontal row */
+.weekly-cash-right{min-width:0!important}
+.weekly-cash-right>div{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;column-gap:5px!important;width:100%!important}
+.weekly-cash-right>div>button.weekly-expense-open{justify-self:start!important;display:inline-flex!important;width:auto!important;max-width:100%!important;min-width:0!important;padding:6px 6px!important;white-space:nowrap!important;overflow-wrap:normal!important;word-break:keep-all!important;font-size:clamp(9px,2.65vw,12px)!important;line-height:1.15!important;text-align:center!important}
+.weekly-cash-right>div>strong{justify-self:end!important;display:block!important;width:auto!important;max-width:100%!important;min-width:0!important;text-align:right!important;white-space:nowrap!important;overflow-wrap:normal!important;font-size:clamp(10px,3vw,15px)!important;letter-spacing:-.35px!important}
+.weekly-cash-right>div>span{min-width:0!important}
+.weekly-cash-right .weekly-cash-balance{grid-template-columns:minmax(0,1fr) auto!important}
+.weekly-cash-right .weekly-cash-balance>strong{font-size:clamp(12px,3.5vw,18px)!important}
+@media(max-width:380px){
+ .weekly-cash-summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:6px!important}
+ .weekly-cash-left,.weekly-cash-right{padding:9px 7px!important}
+ .weekly-cash-right>div{column-gap:3px!important}
+ .weekly-cash-right>div>button.weekly-expense-open{font-size:9px!important;padding:5px 4px!important}
+ .weekly-cash-right>div>strong{font-size:10px!important}
+ .weekly-cash-right .weekly-cash-balance>strong{font-size:12px!important}
+}
+</style>
+
 </head>
 <body>
 <span id="faTodayCollected" class="finance-hidden" aria-hidden="true">₹0</span>
@@ -654,7 +696,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
         <div class="weekly-cash-stat weekly-mahimai"><small>மகிமை</small><strong id="faWeeklyMahimai">₹0</strong></div>
       </div>
       <div class="weekly-cash-right">
-        <div><button type="button" id="faOpenOpeningBalance" class="weekly-expense-open">＋ முன் இருப்பு</button><strong id="faWeeklyOpeningBalance">₹0</strong></div>
+        <div><button type="button" id="faOpenOpeningBalance" class="weekly-expense-open">＋ முன்<br>இருப்பு</button><strong id="faWeeklyOpeningBalance">₹0</strong></div>
         <div><span>லோன்</span><strong id="faWeeklyLoanOut">₹0</strong></div>
         <div><button type="button" id="faOpenExpenseEntry" class="weekly-expense-open">＋ செலவு</button><strong id="faWeeklyExpense">₹0</strong></div>
         <div class="weekly-cash-balance"><span>இருப்பு</span><strong id="faWeeklyCashBalance">₹0</strong></div>
