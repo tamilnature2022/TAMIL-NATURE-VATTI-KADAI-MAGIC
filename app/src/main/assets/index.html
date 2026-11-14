@@ -534,6 +534,9 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 }
 </style>
 
+<style id="v224-weekly-tab-isolation">
+/* V224: tab visibility is controlled by the dedicated weekly navigation handlers. */
+</style>
 </head>
 <body>
 <span id="faTodayCollected" class="finance-hidden" aria-hidden="true">₹0</span>
@@ -2004,8 +2007,12 @@ document.addEventListener("DOMContentLoaded",()=>{
   $('faLoanDate').addEventListener('change',updateFirstDueDate);
   $('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value!=='weekly');
   document.querySelectorAll('[data-weekday]').forEach(btn=>btn.addEventListener('click',()=>{
+    // A weekday selection always opens only the Weekly Collection screen.
+    // The separate Weekly Income & Expense tab is hidden until explicitly selected.
+    showMainFinanceTab('weekly');
     selectedWeekday=Number(btn.dataset.weekday);selectedWeeklyLoanId='';
     document.querySelectorAll('[data-weekday]').forEach(b=>b.classList.toggle('active',b===btn));
+    openWeeklyView('collect');
     renderCollection('weekly');refreshLoanCustomerOptions();
   }));
   // Weekly Collection tabs: Collect, Completed, New Loan
@@ -2121,6 +2128,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   });
   document.querySelectorAll('[data-main-fin-tab]').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.mainFinTab!=='weekly')restoreLoanFormHome();
+    if(button.dataset.mainFinTab==='weeklyIncome'){
+      // Show the Weekly Income & Expense panel alone; weekday collection content stays hidden.
+      showMainFinanceTab('weeklyIncome');
+    }
   }));
   openWeeklyView('collect');
   $('faLoanDate').value=today();updateFirstDueDate();render();
