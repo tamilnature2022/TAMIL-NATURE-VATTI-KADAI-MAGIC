@@ -1267,6 +1267,30 @@ document.addEventListener("DOMContentLoaded",()=>{
     }).reduce((sum,p)=>sum+Number(p.amount||0),0);
   }
   let activeCustomerMode='weekly';
+  // V239: Opening the Customer sub-tab always starts with a blank new-customer form.
+  // Existing customer details are populated only after the user explicitly taps Edit.
+  function prepareBlankCustomerForm(mode){
+    if(editingCustomerId && typeof cancelCustomerEdit==='function') cancelCustomerEdit();
+    else {
+      const form=$('faCustomerForm');
+      if(form) form.reset();
+      editingCustomerId=null;
+      if($('faCustomerSubmitBtn')) $('faCustomerSubmitBtn').textContent='➕ வாடிக்கையாளரை சேமிக்கவும்';
+      $('faCustomerCancelEdit')?.classList.add('finance-hidden');
+    }
+    if($('faName')) $('faName').value='';
+    if($('faMobile')) $('faMobile').value='';
+    if($('faAadhaar')) $('faAadhaar').value='';
+    if($('faAddress')) $('faAddress').value='';
+    if($('faCustomerSearch')) $('faCustomerSearch').value='';
+    if($('faCustomerDropdown')) $('faCustomerDropdown').classList.add('finance-hidden');
+    $('faCustomerSearch')?.setAttribute('aria-expanded','false');
+    if($('faCustomerSaveNotice')) $('faCustomerSaveNotice').classList.add('finance-hidden');
+    activeCustomerMode=mode;
+    if($('faCustomerFrequency')) $('faCustomerFrequency').value=mode;
+    if($('faCustomerWeekday')) $('faCustomerWeekday').value='';
+    if(typeof syncCustomerWeekdayField==='function') syncCustomerWeekdayField();
+  }
   function showMainFinanceTab(name){
     // V238: Customer management is available only from the Customer sub-tab.
     const customerPanel=$('faCustomerManagement');
@@ -2111,6 +2135,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(customerPanel)customerPanel.classList.toggle('finance-hidden',view!=='customer');
       if(view==='completed')renderCollection('weekly');
       if(view==='customer'){
+        prepareBlankCustomerForm('weekly');
         const panel=$('faCustomerManagement'),mount=$('faWeeklyCustomerMount');activeCustomerMode='weekly';
         if(panel&&mount&&panel.parentElement!==mount)mount.appendChild(panel);
         panel?.classList.remove('finance-hidden');
@@ -2142,6 +2167,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       const customerPanel=$('faCustomerManagement');
       if(customerPanel)customerPanel.classList.toggle('finance-hidden',view!=='customer');
       if(view==='customer'){
+        prepareBlankCustomerForm('daily');
         const panel=$('faCustomerManagement'),mount=$('faDailyCustomerMount');activeCustomerMode='daily';
         if(panel&&mount&&panel.parentElement!==mount)mount.appendChild(panel);
         panel?.classList.remove('finance-hidden');
