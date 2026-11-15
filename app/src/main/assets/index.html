@@ -679,7 +679,6 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     <div id="faLoanSaveNotice" class="finance-save-notice finance-hidden" role="status" aria-live="polite"></div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="weekly">
-    <div id="faWeeklyCustomerMount"></div>
     <h2>📅 வார வசூல் / Weekly Collection</h2>
     <div class="weekday-picker" id="faWeekdayPicker" aria-label="வசூல் கிழமை தேர்வு">
       <button type="button" data-weekday="0" class="active">ஞாயிறு</button>
@@ -738,6 +737,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <button type="button" class="active" data-weekly-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
       <button type="button" data-weekly-view="completed" role="tab" aria-selected="false"><span>Completed</span><small>முடிந்தது</small></button>
       <button type="button" data-weekly-view="newloan" role="tab" aria-selected="false"><span>New Loan</span><small>புதிய கடன்</small></button>
+      <button type="button" data-weekly-view="customer" role="tab" aria-selected="false"><span>Customer</span><small>வாடிக்கையாளர்</small></button>
     </div>
     <div data-weekly-view-panel="collect">
       <input id="faWeeklyCollectSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக" aria-label="Collect வாடிக்கையாளர்களைத் தேடுக">
@@ -752,9 +752,9 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <h3>புதிய கடன் வழங்குதல் / New Loan</h3>
       <div id="faWeeklyNewLoanMount"></div>
     </div>
+    <div data-weekly-view-panel="customer" class="finance-hidden"><div id="faWeeklyCustomerMount"></div></div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="daily">
-    <div id="faDailyCustomerMount"></div>
     <h2>📆 தினசரி வசூல் / Daily Collection</h2>
     <div class="finance-grid">
       <div class="finance-stat"><small>இன்று பெற்ற தொகை</small><strong id="faDailyReceived">₹0</strong></div>
@@ -763,10 +763,14 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     </div>
     <div class="weekly-view-tabs" role="tablist" aria-label="தினசரி வசூல் பிரிவுகள்">
       <button type="button" class="active" data-daily-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
-      <button type="button" data-daily-view="newloan" role="tab" aria-selected="false"><span>Loan</span><small>புதிய கடன்</small></button>
+      <button type="button" data-daily-view="completed" role="tab" aria-selected="false"><span>Completed</span><small>முடிந்தது</small></button>
+      <button type="button" data-daily-view="newloan" role="tab" aria-selected="false"><span>New Loan</span><small>புதிய கடன்</small></button>
+      <button type="button" data-daily-view="customer" role="tab" aria-selected="false"><span>Customer</span><small>வாடிக்கையாளர்</small></button>
     </div>
     <div data-daily-view-panel="collect"><div id="faDailyList" class="finance-list"></div></div>
+    <div data-daily-view-panel="completed" class="finance-hidden"><h3>Completed / முடிந்த தினசரி கடன்கள்</h3><div id="faDailyCompletedList" class="finance-list"></div></div>
     <div data-daily-view-panel="newloan" class="finance-hidden"><h3>தினசரி புதிய கடன் / Daily New Loan</h3><div id="faDailyNewLoanMount"></div></div>
+    <div data-daily-view-panel="customer" class="finance-hidden"><div id="faDailyCustomerMount"></div></div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="history">
     <h2>🧾 Payment History / வசூல் வரலாறு</h2>
@@ -1268,16 +1272,14 @@ document.addEventListener("DOMContentLoaded",()=>{
     const customerPanel=$('faCustomerManagement');
     if(customerPanel && (name==='weekly'||name==='daily')){
       activeCustomerMode=name;
-      const mount=$(name==='weekly'?'faWeeklyCustomerMount':'faDailyCustomerMount');
-      if(mount && customerPanel.parentElement!==mount) mount.appendChild(customerPanel);
       const typeLabel=$('faCustomerFrequency')?.closest('label');
-      if(typeLabel) typeLabel.classList.add('finance-hidden');
+      if(typeLabel)typeLabel.classList.add('finance-hidden');
       if(!editingCustomerId){ $('faCustomerFrequency').value=name; syncCustomerWeekdayField(); }
       const heading=customerPanel.querySelector('h2');
-      if(heading) heading.textContent=name==='weekly'?'👥 வார வசூல் வாடிக்கையாளர் விவரம்':'👥 தினசரி வசூல் வாடிக்கையாளர் விவரம்';
-      if($('faCustomerSearch')) $('faCustomerSearch').value='';
+      if(heading)heading.textContent=name==='weekly'?'👥 வார வசூல் வாடிக்கையாளர் விவரம்':'👥 தினசரி வசூல் வாடிக்கையாளர் விவரம்';
       if(typeof render==='function') render();
     }
+
     // V225: show exactly one finance panel at a time. The weekly-income view is
     // independent from the weekday collection view; selecting it hides the
     // complete weekday picker and all weekly collection content.
@@ -2105,6 +2107,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     }else{
       restoreLoanFormHome();
       if(view==='completed')renderCollection('weekly');
+      if(view==='customer'){
+        const panel=$('faCustomerManagement'),mount=$('faWeeklyCustomerMount');activeCustomerMode='weekly';
+        if(panel&&mount&&panel.parentElement!==mount)mount.appendChild(panel);
+        if($('faCustomerFrequency'))$('faCustomerFrequency').value='weekly';
+        const label=$('faCustomerFrequency')?.closest('label');if(label)label.classList.add('finance-hidden');
+        const h=panel?.querySelector('h2');if(h)h.textContent='👥 வார வசூல் வாடிக்கையாளர் விவரம்';render();
+      }
     }
   }
   weeklyViewButtons.forEach(button=>button.addEventListener('click',()=>openWeeklyView(button.dataset.weeklyView)));
@@ -2124,7 +2133,17 @@ document.addEventListener("DOMContentLoaded",()=>{
       if($('faWeekdayWrap'))$('faWeekdayWrap').classList.add('finance-hidden');
       if($('faWeekday'))$('faWeekday').value='';
       refreshLoanCustomerOptions();renderLoanCustomerPreview();
-    }else{restoreLoanFormHome();}
+    }else{
+      restoreLoanFormHome();
+      if(view==='customer'){
+        const panel=$('faCustomerManagement'),mount=$('faDailyCustomerMount');activeCustomerMode='daily';
+        if(panel&&mount&&panel.parentElement!==mount)mount.appendChild(panel);
+        if($('faCustomerFrequency'))$('faCustomerFrequency').value='daily';
+        const label=$('faCustomerFrequency')?.closest('label');if(label)label.classList.add('finance-hidden');
+        const h=panel?.querySelector('h2');if(h)h.textContent='👥 தினசரி வசூல் வாடிக்கையாளர் விவரம்';render();
+      }
+      if(view==='completed')renderCollection('daily');
+    }
   }
   dailyViewButtons.forEach(button=>button.addEventListener('click',()=>openDailyView(button.dataset.dailyView)));
   function wireWeeklySearch(inputId,listId,selector){
@@ -2548,4 +2567,20 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 #faWeeklyCustomerMount,#faDailyCustomerMount{margin:0 0 14px}
 #faCustomerManagement{margin:0 0 14px;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
 #faCustomerManagement h2{font-size:1.15rem;margin-bottom:12px}
+</style>
+
+<style id="v235-four-subtabs">
+.weekly-view-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px!important}
+.weekly-view-tabs button{min-width:0;padding:10px 5px!important;white-space:normal}
+.weekly-view-tabs button span{display:block;font-size:clamp(.82rem,3.2vw,1rem)}
+.weekly-view-tabs button small{display:block;font-size:clamp(.7rem,2.8vw,.86rem)}
+#faCustomerManagement{margin-top:8px}
+</style>
+
+<style id="v236-four-tabs-single-row">
+/* Keep Collect, Completed, New Loan and Customer on one horizontal row. */
+.weekly-view-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-auto-flow:column!important;grid-auto-columns:minmax(0,1fr)!important;flex-wrap:nowrap!important;gap:6px!important;width:100%!important;overflow:visible!important}
+.weekly-view-tabs>button{width:100%!important;min-width:0!important;max-width:none!important;padding:9px 2px!important;margin:0!important;white-space:normal!important;overflow-wrap:normal!important;word-break:keep-all!important;font-size:clamp(11px,3vw,16px)!important;line-height:1.15!important}
+.weekly-view-tabs>button span{font-size:clamp(11px,3vw,16px)!important;white-space:nowrap!important;letter-spacing:-.35px}
+.weekly-view-tabs>button small{font-size:clamp(9px,2.5vw,13px)!important;white-space:normal!important;line-height:1.1!important}
 </style>
