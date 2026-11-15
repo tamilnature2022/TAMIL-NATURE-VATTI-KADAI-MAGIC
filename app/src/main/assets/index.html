@@ -546,7 +546,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 
 <div class="account-nav" aria-label="App navigation">
   <button type="button" id="showCalculator" class="active" onclick="document.getElementById(&quot;calculatorView&quot;).classList.remove(&quot;finance-hidden&quot;);document.getElementById(&quot;financeView&quot;).classList.add(&quot;finance-hidden&quot;);document.getElementById(&quot;showCalculator&quot;).classList.add(&quot;active&quot;);document.getElementById(&quot;showCalculator&quot;).classList.remove(&quot;secondary&quot;);document.getElementById(&quot;showFinance&quot;).classList.remove(&quot;active&quot;);document.getElementById(&quot;showFinance&quot;).classList.add(&quot;secondary&quot;)">🔢 Calculator</button>
-  <button type="button" id="showFinance" class="secondary" onclick="document.getElementById(&quot;calculatorView&quot;).classList.add(&quot;finance-hidden&quot;);document.getElementById(&quot;financeView&quot;).classList.remove(&quot;finance-hidden&quot;);document.getElementById(&quot;showFinance&quot;).classList.add(&quot;active&quot;);document.getElementById(&quot;showFinance&quot;).classList.remove(&quot;secondary&quot;);document.getElementById(&quot;showCalculator&quot;).classList.remove(&quot;active&quot;);document.getElementById(&quot;showCalculator&quot;).classList.add(&quot;secondary&quot;);try{showMainFinanceTab(&quot;customers&quot;);render()}catch(e){console.error(&quot;Account display error&quot;,e)}">💰 Account</button>
+  <button type="button" id="showFinance" class="secondary" onclick="document.getElementById(&quot;calculatorView&quot;).classList.add(&quot;finance-hidden&quot;);document.getElementById(&quot;financeView&quot;).classList.remove(&quot;finance-hidden&quot;);document.getElementById(&quot;showFinance&quot;).classList.add(&quot;active&quot;);document.getElementById(&quot;showFinance&quot;).classList.remove(&quot;secondary&quot;);document.getElementById(&quot;showCalculator&quot;).classList.remove(&quot;active&quot;);document.getElementById(&quot;showCalculator&quot;).classList.add(&quot;secondary&quot;);try{showMainFinanceTab(&quot;weekly&quot;);render()}catch(e){console.error(&quot;Account display error&quot;,e)}">💰 Account</button>
 </div>
 <div id="calculatorView">
 <section class="panel">
@@ -1268,8 +1268,9 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   let activeCustomerMode='weekly';
   function showMainFinanceTab(name){
-    // V234: Customer management lives inside the selected collection section.
+    // V238: Customer management is available only from the Customer sub-tab.
     const customerPanel=$('faCustomerManagement');
+    if(customerPanel)customerPanel.classList.add('finance-hidden');
     if(customerPanel && (name==='weekly'||name==='daily')){
       activeCustomerMode=name;
       const typeLabel=$('faCustomerFrequency')?.closest('label');
@@ -1969,7 +1970,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   activateLedgerTab('customerLedger');
 
   $('showCalculator').addEventListener('click',()=>{$('calculatorView').classList.remove('finance-hidden');$('financeView').classList.add('finance-hidden');$('showCalculator').classList.add('active');$('showCalculator').classList.remove('secondary');$('showFinance').classList.remove('active');$('showFinance').classList.add('secondary');});
-  $('showFinance').addEventListener('click',()=>{$('calculatorView').classList.add('finance-hidden');$('financeView').classList.remove('finance-hidden');$('showFinance').classList.add('active');$('showFinance').classList.remove('secondary');$('showCalculator').classList.remove('active');$('showCalculator').classList.add('secondary');showMainFinanceTab('customers');render();});
+  $('showFinance').addEventListener('click',()=>{$('calculatorView').classList.add('finance-hidden');$('financeView').classList.remove('finance-hidden');$('showFinance').classList.add('active');$('showFinance').classList.remove('secondary');$('showCalculator').classList.remove('active');$('showCalculator').classList.add('secondary');showMainFinanceTab('weekly');render();});
   $('faFrequency').addEventListener('change',()=>{$('faWeekdayWrap').classList.toggle('finance-hidden',!!$('faLoanForm')?.classList.contains('loan-fixed-frequency') || !['weekly','weekly_daily'].includes($('faFrequency').value));updateFirstDueDate();refreshLoanCustomerOptions();});
   $('faWeekday').addEventListener('change',()=>{updateFirstDueDate();refreshLoanCustomerOptions();});
   document.addEventListener('change',event=>{
