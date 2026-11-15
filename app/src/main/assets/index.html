@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V240">
+<meta name="app-version" content="V241">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -739,7 +739,8 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     <div class="weekly-view-tabs" role="tablist" aria-label="வார வசூல் பிரிவுகள்">
       <button type="button" class="active" data-weekly-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
       <button type="button" data-weekly-view="completed" role="tab" aria-selected="false"><span>Completed</span><small>முடிந்தது</small></button>
-      <button type="button" data-weekly-view="newloan" role="tab" aria-selected="false"><span>New Loan</span><small>புதிய கடன்</small></button>
+      <button type="button" data-weekly-view="newloan" role="tab" aria-selected="false"><span>Loan</span><small>கடன்</small></button>
+      <button type="button" data-weekly-view="customer" role="tab" aria-selected="false"><span>Customer</span><small>வாடிக்கையாளர்</small></button>
     </div>
     <div data-weekly-view-panel="collect">
       <input id="faWeeklyCollectSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக" aria-label="Collect வாடிக்கையாளர்களைத் தேடுக">
@@ -754,6 +755,11 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <h3>புதிய கடன் வழங்குதல் / New Loan</h3>
       <div id="faWeeklyNewLoanMount"></div>
     </div>
+    <div data-weekly-view-panel="customer" class="finance-hidden">
+      <h3>வார வசூல் வாடிக்கையாளர்கள் / Weekly Customers</h3>
+      <input id="faWeeklyCustomerTabSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக">
+      <div id="faWeeklyCustomerTabList" class="finance-list"></div>
+    </div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="daily">
     <h2>📆 தினசரி வசூல் / Daily Collection</h2>
@@ -762,7 +768,16 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <div class="finance-stat"><small>இன்றைய தவணை நிலுவை</small><strong id="faDailyDue">₹0</strong></div>
       <button type="button" data-main-fin-tab="dailyIncome" class="weekly-income-nav">தினசரி வசூல் வரவு செலவு</button>
     </div>
-    <div id="faDailyList" class="finance-list"></div>
+    <div class="weekly-view-tabs daily-view-tabs" role="tablist" aria-label="தினசரி வசூல் பிரிவுகள்">
+      <button type="button" class="active" data-daily-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
+      <button type="button" data-daily-view="completed" role="tab" aria-selected="false"><span>Completed</span><small>முடிந்தது</small></button>
+      <button type="button" data-daily-view="newloan" role="tab" aria-selected="false"><span>Loan</span><small>கடன்</small></button>
+      <button type="button" data-daily-view="customer" role="tab" aria-selected="false"><span>Customer</span><small>வாடிக்கையாளர்</small></button>
+    </div>
+    <div data-daily-view-panel="collect"><div id="faDailyList" class="finance-list"></div></div>
+    <div data-daily-view-panel="completed" class="finance-hidden"><h3>முடிந்த தினசரிக் கடன்கள் / Completed</h3><div id="faDailyCompletedList" class="finance-list"></div></div>
+    <div data-daily-view-panel="newloan" class="finance-hidden"><h3>புதிய தினசரிக் கடன் / New Daily Loan</h3><div id="faDailyNewLoanMount"></div></div>
+    <div data-daily-view-panel="customer" class="finance-hidden"><h3>தினசரி வசூல் வாடிக்கையாளர்கள் / Daily Customers</h3><input id="faDailyCustomerTabSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக"><div id="faDailyCustomerTabList" class="finance-list"></div></div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="history">
     <h2>🧾 Payment History / வசூல் வரலாறு</h2>
@@ -1499,6 +1514,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   function renderCollection(freq){
     const isWeekly=freq==='weekly',list=$(isWeekly?'faWeeklyList':'faDailyList');
     const loans=db.loans.filter(l=>(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily'))&&(balance(l)>0||l.id===selectedPaymentLoanId||(freq==='weekly'&&l.id===selectedWeeklyLoanId))&&(freq!=='weekly'||(loanWeekday(l)===selectedWeekday&&weeklyPaidThisCycle(l)<=0.009)));
+    const customerLoans=db.loans.filter(l=>freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily'));
+    const customerIds=[...new Set(customerLoans.map(l=>l.customerId))];
+    const customerCards=customerIds.map(id=>{const c=customer(id),ls=customerLoans.filter(l=>l.customerId===id),out=ls.reduce((n,l)=>n+balance(l),0),principal=ls.reduce((n,l)=>n+Number(l.principal||0),0);return c?'<div class="finance-item customer-tab-card" data-search="'+esc((c.name+' '+(c.mobile||'')).toLowerCase())+'"><div class="finance-row"><h3>'+esc(c.name)+'</h3><span class="finance-pill">'+(out>0.009?'கடன் நிலுவை':'முடிந்தது')+'</span></div><div class="finance-meta">📱 '+esc(c.mobile||'-')+'<br>கடன் தொகை: '+money(principal)+'<br><b>நிலுவை: '+money(out)+'</b></div></div>':'';}).join('');
+    const customerList=$(isWeekly?'faWeeklyCustomerTabList':'faDailyCustomerTabList');
+    if(customerList)customerList.innerHTML=customerCards||'<div class="finance-empty">வாடிக்கையாளர்கள் இல்லை.</div>';
+    const completedDaily=$('faDailyCompletedList');
+    if(!isWeekly&&completedDaily){const done=customerLoans.filter(l=>balance(l)<=0.009);completedDaily.innerHTML=done.length?done.map(l=>{const c=customer(l.customerId);return '<div class="finance-item"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">முடிந்தது</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>கடன் தொகை: '+money(l.principal)+'<br>செலுத்தியது: '+money(paid(l.id))+'<br><b>நிலுவை: '+money(balance(l))+'</b></div></div>';}).join(''):'<div class="finance-empty">முடிந்த கடன்கள் இல்லை.</div>';}
+
     const collected=db.payments.filter(p=>p.date===today() && db.loans.some(l=>l.id===p.loanId&&(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily')))).reduce((a,p)=>a+Number(p.amount),0);
     const dueTotal=loans.reduce((a,l)=>a+Math.min(dueNow(l,freq),balance(l)),0);
     if(isWeekly){
@@ -2109,6 +2132,18 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
   }
   weeklyViewButtons.forEach(button=>button.addEventListener('click',()=>openWeeklyView(button.dataset.weeklyView)));
+  const dailyViewButtons=[...document.querySelectorAll('[data-daily-view]')],dailyViewPanels=[...document.querySelectorAll('[data-daily-view-panel]')];
+  function openDailyView(view){
+    dailyViewButtons.forEach(b=>{const active=b.dataset.dailyView===view;b.classList.toggle('active',active);b.setAttribute('aria-selected',active?'true':'false');});
+    dailyViewPanels.forEach(p=>p.classList.toggle('finance-hidden',p.dataset.dailyViewPanel!==view));
+    if(view==='newloan'&&loanForm){$('faDailyNewLoanMount').appendChild(loanForm);[loanPanelNote,loanListHeading,loanList,loanNotice].forEach(n=>{if(n)$('faDailyNewLoanMount').appendChild(n);});if($('faFrequency')){$('faFrequency').value='daily';$('faFrequency').dispatchEvent(new Event('change',{bubbles:true}));}refreshLoanCustomerOptions();renderLoanCustomerPreview();}
+    else {restoreLoanFormHome();}
+    if(view==='completed'||view==='customer')renderCollection('daily');
+  }
+  dailyViewButtons.forEach(b=>b.addEventListener('click',()=>openDailyView(b.dataset.dailyView)));
+  function wireCustomerTabSearch(inputId,listId){const input=$(inputId),list=$(listId);if(!input||!list)return;input.addEventListener('input',()=>{const q=input.value.trim().toLocaleLowerCase();list.querySelectorAll('.customer-tab-card').forEach(card=>card.classList.toggle('finance-hidden',!!q&&!card.dataset.search.includes(q)));});}
+  wireCustomerTabSearch('faWeeklyCustomerTabSearch','faWeeklyCustomerTabList');wireCustomerTabSearch('faDailyCustomerTabSearch','faDailyCustomerTabList');
+
   function wireWeeklySearch(inputId,listId,selector){
     const input=$(inputId),list=$(listId);
     if(!input||!list)return;
@@ -2530,4 +2565,12 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 <style id="v225-exclusive-finance-tabs">
 [data-fin-panel][hidden]{display:none!important}
 [data-fin-panel].finance-hidden{display:none!important}
+</style>
+
+<style>
+/* V241: four single-row tabs for Weekly and Daily collection */
+.weekly-view-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+.weekly-view-tabs button{padding:8px 2px!important;font-size:clamp(11px,3vw,16px)!important}
+.weekly-view-tabs button span{font-size:inherit!important}
+.weekly-view-tabs button small{font-size:clamp(10px,2.6vw,13px)!important}
 </style>
