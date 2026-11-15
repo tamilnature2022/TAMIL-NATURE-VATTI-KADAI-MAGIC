@@ -580,11 +580,10 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 
 
 <div class="finance-main-tabs" role="tablist" aria-label="Account main sections">
-  <button type="button" class="active" data-main-fin-tab="customers">1. Customer</button>
-  <button type="button" data-main-fin-tab="weekly">3. வார வசூல்</button>
+  <button type="button" class="active" data-main-fin-tab="weekly">3. வார வசூல்</button>
   <button type="button" data-main-fin-tab="daily">4. தினசரி வசூல்</button>
 </div>
-<section class="panel finance-hidden" data-fin-panel="customers">
+<section class="panel customer-management-panel" id="faCustomerManagement">
     <h2>👥 Customer Details / வாடிக்கையாளர் விவரம்</h2>
     <form id="faCustomerForm" class="finance-form">
       <label>வாடிக்கையாளர் பெயர்<input id="faName" required maxlength="80" placeholder="பெயர்"></label>
@@ -680,6 +679,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     <div id="faLoanSaveNotice" class="finance-save-notice finance-hidden" role="status" aria-live="polite"></div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="weekly">
+    <div id="faWeeklyCustomerMount"></div>
     <h2>📅 வார வசூல் / Weekly Collection</h2>
     <div class="weekday-picker" id="faWeekdayPicker" aria-label="வசூல் கிழமை தேர்வு">
       <button type="button" data-weekday="0" class="active">ஞாயிறு</button>
@@ -754,6 +754,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     </div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="daily">
+    <div id="faDailyCustomerMount"></div>
     <h2>📆 தினசரி வசூல் / Daily Collection</h2>
     <div class="finance-grid">
       <div class="finance-stat"><small>இன்று பெற்ற தொகை</small><strong id="faDailyReceived">₹0</strong></div>
@@ -1261,7 +1262,22 @@ document.addEventListener("DOMContentLoaded",()=>{
       return d>=range.start&&d<=range.end;
     }).reduce((sum,p)=>sum+Number(p.amount||0),0);
   }
+  let activeCustomerMode='weekly';
   function showMainFinanceTab(name){
+    // V234: Customer management lives inside the selected collection section.
+    const customerPanel=$('faCustomerManagement');
+    if(customerPanel && (name==='weekly'||name==='daily')){
+      activeCustomerMode=name;
+      const mount=$(name==='weekly'?'faWeeklyCustomerMount':'faDailyCustomerMount');
+      if(mount && customerPanel.parentElement!==mount) mount.appendChild(customerPanel);
+      const typeLabel=$('faCustomerFrequency')?.closest('label');
+      if(typeLabel) typeLabel.classList.add('finance-hidden');
+      if(!editingCustomerId){ $('faCustomerFrequency').value=name; syncCustomerWeekdayField(); }
+      const heading=customerPanel.querySelector('h2');
+      if(heading) heading.textContent=name==='weekly'?'👥 வார வசூல் வாடிக்கையாளர் விவரம்':'👥 தினசரி வசூல் வாடிக்கையாளர் விவரம்';
+      if($('faCustomerSearch')) $('faCustomerSearch').value='';
+      if(typeof render==='function') render();
+    }
     // V225: show exactly one finance panel at a time. The weekly-income view is
     // independent from the weekday collection view; selecting it hides the
     // complete weekday picker and all weekly collection content.
@@ -1331,6 +1347,9 @@ document.addEventListener("DOMContentLoaded",()=>{
         const loanText=active.length?' | ACTIVE '+active.map(l=>'கடன் ₹'+Number(l.principal||0).toLocaleString('en-IN')+' / நிலுவை ₹'+balance(l).toLocaleString('en-IN')).join(', '):' | புதிய கடன் அனுமதி';
         return '<option value="'+esc(c.id)+'">'+esc(c.name)+' – '+esc(c.mobile)+loanText+'</option>';
       }).join('');
+    // Keep the visible customer-search datalist in sync with the same eligible list.
+    const customerDatalist=$('faLoanCustomerOptions');
+    if(customerDatalist)customerDatalist.innerHTML=eligible.map(c=>'<option value="'+esc(c.name+' – '+c.mobile)+'"></option>').join('');
     if(eligible.some(c=>c.id===previous))$('faLoanCustomer').value=previous;
     renderLoanCustomerPreview();
   }
@@ -1380,7 +1399,8 @@ document.addEventListener("DOMContentLoaded",()=>{
       const byDate=String(b.c.created||'').localeCompare(String(a.c.created||''));
       return byDate||b.index-a.index;
     }).map(x=>x.c);
-    const latestCustomer=orderedCustomers[0]||null;
+    const scopedCustomers=orderedCustomers.filter(c=>activeCustomerMode==='daily' ? c.collectionType==='daily' : (c.collectionType==='weekly'||c.collectionType==='weekly_daily'||!c.collectionType));
+    const latestCustomer=scopedCustomers[0]||null;
     $('faLatestCustomer').innerHTML=latestCustomer?
       '<div class="finance-item latest-customer-card"><div class="customer-added-title">✓ NEW CUSTOMER ADDED / புதிய வாடிக்கையாளர்</div>'+ 
       '<div class="finance-row"><h3>'+esc(latestCustomer.name)+'</h3><span class="finance-pill">சேமிக்கப்பட்டது</span></div>'+ 
@@ -1395,7 +1415,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const searchValue=String(customerSearch?.value||'').trim().toLocaleLowerCase();
     const customerDropdown=$('faCustomerDropdown');
     if(customerDropdown){
-      const matches=orderedCustomers.filter(c=>{
+      const matches=scopedCustomers.filter(c=>{
         if(c.active===false)return false;
         const q=searchValue;
         return !q || String(c.name||'').toLocaleLowerCase().includes(q) || String(c.mobile||'').replace(/\\D/g,'').includes(q.replace(/\\D/g,''));
@@ -1406,7 +1426,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
     let selectedCustomer=null;
     if(searchValue){
-      selectedCustomer=orderedCustomers.find(c=>(String(c.name||'')+' – '+String(c.mobile||'')).toLocaleLowerCase()===searchValue || String(c.name||'').toLocaleLowerCase()===searchValue || String(c.mobile||'').replace(/\D/g,'')===searchValue.replace(/\D/g,''));
+      selectedCustomer=scopedCustomers.find(c=>(String(c.name||'')+' – '+String(c.mobile||'')).toLocaleLowerCase()===searchValue || String(c.name||'').toLocaleLowerCase()===searchValue || String(c.mobile||'').replace(/\D/g,'')===searchValue.replace(/\D/g,''));
     }
     $('faCustomerList').innerHTML=selectedCustomer?
       '<div class="finance-item '+(selectedCustomer.active===false?'customer-inactive':'')+'" data-customer-id="'+esc(selectedCustomer.id)+'"><div class="finance-row"><h3>'+esc(selectedCustomer.name)+'</h3><span class="finance-pill '+(selectedCustomer.active===false?'customer-status-inactive':'')+'">'+(selectedCustomer.active===false?'செயலற்றவர் / INACTIVE':'Customer Details')+'</span></div>'+
@@ -1649,7 +1669,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(!/^\d{10}$/.test(mobile)){alert('மொபைல் எண் சரியாக 10 இலக்கங்களாக இருக்க வேண்டும்.');$('faMobile').focus();return;}
     if(aadhaar && !/^\d{12}$/.test(aadhaar)){alert('ஆதார் எண் 12 இலக்கங்களாக இருக்க வேண்டும்.');return;}
     if(db.customers.some(c=>c.id!==editingCustomerId && String(c.mobile).replace(/\D/g,'')===mobile.replace(/\D/g,''))){alert('இந்த மொபைல் எண் ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது.');return;}
-    const customerFrequency=$('faCustomerFrequency').value;
+    const customerFrequency=editingCustomerId ? $('faCustomerFrequency').value : activeCustomerMode;
+    $('faCustomerFrequency').value=customerFrequency;
     if(!customerFrequency){alert('கடன் வசூல் வகையைத் தேர்வு செய்யவும்.');return;}
     const customerWeekday=$('faCustomerWeekday').value;
     const needsWeekday=customerFrequency==='weekly'||customerFrequency==='weekly_daily';
@@ -1667,6 +1688,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
     editingCustomerId=null;
     e.target.reset();
+    $('faCustomerFrequency').value=activeCustomerMode;
+    syncCustomerWeekdayField();
     $('faCustomerSubmitBtn').textContent='➕ வாடிக்கையாளரை சேமிக்கவும்';
     $('faCustomerCancelEdit').classList.add('finance-hidden');
     justAddedCustomerId=customerRecord.id;
@@ -2177,7 +2200,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
   }));
   openWeeklyView('collect');
-  $('faLoanDate').value=today();updateFirstDueDate();render();
+  $('faLoanDate').value=today();updateFirstDueDate();showMainFinanceTab('weekly');render();
 })();
 </script>
 
@@ -2519,4 +2542,10 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 <style id="v232-weekly-loan-day-default">
 /* Weekly collection Loan inherits the selected weekday; no manual weekday picker. */
 #faLoanForm.loan-fixed-frequency #faWeekdayWrap{display:none!important}
+</style>
+
+<style id="v234-customer-management-in-collection-tabs">
+#faWeeklyCustomerMount,#faDailyCustomerMount{margin:0 0 14px}
+#faCustomerManagement{margin:0 0 14px;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+#faCustomerManagement h2{font-size:1.15rem;margin-bottom:12px}
 </style>
