@@ -537,6 +537,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 <style id="v224-weekly-tab-isolation">
 /* V224: tab visibility is controlled by the dedicated weekly navigation handlers. */
 </style>
+<style id="v228-loan-type-cleanup">#faWeekdayWrap{display:none!important}</style>
 </head>
 <body>
 <span id="faTodayCollected" class="finance-hidden" aria-hidden="true">₹0</span>
@@ -595,7 +596,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
           <option value="">கடன் வசூல் வகையைத் தேர்வு செய்யவும்</option>
           <option value="weekly">வார வசூல் / Weekly Collection</option>
           <option value="daily">தின வசூல் / Daily Collection</option>
-          <option value="weekly_daily">வார வசூல் + தினசரி / Weekly + Daily</option>
+          
         </select>
       </label>
       <label id="faCustomerWeekdayWrap">வாடிக்கையாளர் வசூல் கிழமை / Customer Collection Day
@@ -629,8 +630,8 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   <section class="panel finance-hidden" data-fin-panel="loans">
     <h2>💳 Loan Details / கடன் விவரம்</h2>
     <form id="faLoanForm" class="finance-form">
-      <label>கடன் வசூல் வகை<select id="faFrequency"><option value="weekly">வார வசூல் / Weekly Collection</option><option value="daily">தினசரி கடன் / Daily Finance</option><option value="weekly_daily">வார வசூல் + தினசரி / Weekly + Daily</option></select></label>
-      <label id="faWeekdayWrap">வசூல் கிழமை / Collection Day
+      <label>கடன் வசூல் வகை<select id="faFrequency"><option value="weekly">வார வசூல் / Weekly Collection</option><option value="daily">தினசரி கடன் / Daily Finance</option></select></label>
+      <label id="faWeekdayWrap" class="finance-hidden">வசூல் கிழமை / Collection Day
         <select id="faWeekday" required>
           <option value="" selected>கிழமையைத் தேர்வு செய்யவும்</option>
           <option value="0">ஞாயிற்றுக்கிழமை</option>
@@ -1219,17 +1220,17 @@ document.addEventListener("DOMContentLoaded",()=>{
   function updateFirstDueDate(){
     const loanDate=$('faLoanDate').value;
     const frequency=$('faFrequency').value;
-    const weekdayValue=$('faWeekday').value;
-    const weekday=weekdayValue===''?null:Number(weekdayValue);
+    const selectedCustomer=db.customers.find(c=>c.id===$('faLoanCustomer').value);
+    const weekday=selectedCustomer?normalizeCustomerWeekday(selectedCustomer.collectionDay):null;
     if(frequency==='daily'){
       $('faStartDate').value=firstDueDate(loanDate,frequency,0);
-      $('faDueRule').textContent='தினசரி வசூல்: கடன் வழங்கிய தேதிக்கு அடுத்த நாளிலிருந்து தவணை தொடங்கும்.';
+      $('faDueRule').textContent='தினசரி: கடன் வழங்கிய தேதிக்கு அடுத்த நாளிலிருந்து தவணை தொடங்கும்.';
     }else if(weekday===null){
       $('faStartDate').value='';
-      $('faDueRule').textContent='முதலில் வசூல் கிழமையைத் தேர்வு செய்யவும்.';
+      $('faDueRule').textContent='வார வசூல் வாடிக்கையாளரைத் தேர்வு செய்யவும்.';
     }else{
       $('faStartDate').value=firstDueDate(loanDate,frequency,weekday);
-      $('faDueRule').textContent='வார வசூல்: கடன் வழங்கிய தேதிக்குப் பிறகு வரும் அடுத்த '+weekdayNames[weekday]+' அன்று முதல் தவணை தொடங்கும்.';
+      $('faDueRule').textContent='வார வசூல்: வாடிக்கையாளர் தேர்வு செய்த கிழமையில் முதல் தவணை தொடங்கும்.';
     }
   }
 
@@ -1305,17 +1306,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   function refreshLoanCustomerOptions(){
     const freq=normalizeCustomerLoanType($('faFrequency').value);
-    const day=normalizeCustomerWeekday($('faWeekday').value);
     const previous=$('faLoanCustomer').value;
-    const weekdayRequired=freq==='weekly'||freq==='weekly_daily';
     const eligible=db.customers.filter(c=>c.active!==false).filter(c=>{
       const customerType=normalizeCustomerLoanType(c.collectionType);
-      const typeMatches=!customerType || customerType===freq || customerType==='weekly_daily';
-      if(!typeMatches)return false;
-      if(weekdayRequired){
-        if(day===null)return false;
-        return normalizeCustomerWeekday(c.collectionDay)===day;
-      }
+      if(freq==='weekly')return customerType==='weekly'||customerType==='weekly_daily';
       return customerType==='daily'||customerType==='weekly_daily'||!customerType;
     });
     $('faLoanCustomer').innerHTML='<option value="">வாடிக்கையாளரைத் தேர்வு செய்யவும்</option>'+
@@ -1753,11 +1747,12 @@ document.addEventListener("DOMContentLoaded",()=>{
     const installmentCountValue=$('faInstallmentCount').value;
     const installmentCount=Number(installmentCountValue);
     if(!Number.isInteger(installmentCount)||installmentCount<1)return alert('மொத்த தவணைகளின் எண்ணிக்கையை உள்ளிடவும்.');
-    const weekdayValue=$('faWeekday').value;
-    const weekday=weekdayValue===''?null:Number(weekdayValue);
-    if((frequency==='weekly'||frequency==='weekly_daily')&&weekday===null)return alert('வசூல் கிழமையைத் தேர்வு செய்யவும்.');
-    const start=firstDueDate(loanDate,frequency,weekday===null?0:weekday),customerId=$('faLoanCustomer').value;
-    if(!db.customers.some(c=>c.id===customerId))return alert('முதலில் வாடிக்கையாளரைத் தேர்வு செய்யவும்.');
+    const customerId=$('faLoanCustomer').value;
+    const selectedCustomer=db.customers.find(c=>c.id===customerId);
+    if(!selectedCustomer)return alert('முதலில் வாடிக்கையாளரைத் தேர்வு செய்யவும்.');
+    const weekday=frequency==='weekly'?normalizeCustomerWeekday(selectedCustomer.collectionDay):null;
+    if(frequency==='weekly'&&weekday===null)return alert('இந்த வாடிக்கையாளருக்கு வார வசூல் கிழமை பதிவு செய்யப்படவில்லை. Customer பகுதியில் கிழமையைச் சேர்க்கவும்.');
+    const start=firstDueDate(loanDate,frequency,weekday===null?0:weekday);
     const existingActiveLoans=activeLoansForCustomer(customerId);
     if(existingActiveLoans.length){
       renderLoanCustomerPreview();
@@ -1765,7 +1760,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
     if(!principal||!total||!installment||!loanDate||!start)return alert('அனைத்து கடன் விவரங்களையும் சரிபார்க்கவும்.');
     if(total<principal&&!confirm('மொத்த திருப்பிச் செலுத்த வேண்டிய தொகை, கடன் தொகையைவிடக் குறைவாக உள்ளது. தொடரவா?'))return;
-    const loanRecord={id:'L'+Date.now(),customerId,frequency,weekday:(frequency==='weekly'||frequency==='weekly_daily')?weekday:null,loanDate,principal,total,installment,installmentCount,start,documentCharges:Number($('faDocumentCharges').value)||0,guarantorName:$('faGuarantorName').value.trim(),guarantorPhone:$('faGuarantorPhone').value.trim(),note:$('faLoanNote').value.trim()};
+    const loanRecord={id:'L'+Date.now(),customerId,frequency,weekday:frequency==='weekly'?weekday:null,loanDate,principal,total,installment,installmentCount,start,documentCharges:Number($('faDocumentCharges').value)||0,guarantorName:$('faGuarantorName').value.trim(),guarantorPhone:$('faGuarantorPhone').value.trim(),note:$('faLoanNote').value.trim()};
     db.loans.push(loanRecord);
     if(!save()){db.loans=db.loans.filter(l=>l.id!==loanRecord.id);return;}
     e.target.reset();
@@ -1773,7 +1768,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     $('faLoanDate').value=today();
     $('faWeekday').value='';
     updateFirstDueDate();
-    $('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value==='daily');
+    $('faWeekdayWrap').classList.add('finance-hidden');
     refreshLoanCustomerOptions();
     justAddedLoanId=loanRecord.id;
     const notice=$('faLoanSaveNotice');
@@ -1783,7 +1778,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     notice.innerHTML='<div class="customer-added-title">✓ LOAN ADDED / கடன் விவரம் சேமிக்கப்பட்டது</div>'+
       '<div class="customer-added-details"><b>'+esc(loanCustomer?.name||'வாடிக்கையாளர்')+'</b><br>📱 '+esc(loanCustomer?.mobile||'-')+
       '<br>கடன் வகை: '+loanTypeLabel+
-      ((loanRecord.frequency==='weekly'||loanRecord.frequency==='weekly_daily')?'<br>வசூல் கிழமை: '+esc(weekdayNames[Number(loanRecord.weekday)]||'பதிவு இல்லை'):'')+
+      
       '<br>வழங்கிய தொகை: '+money(loanRecord.principal)+(loanRecord.documentCharges?'<br>மகிமை / Document Charges: '+money(loanRecord.documentCharges):'')+'<br>மொத்தம் திரும்பப் பெற வேண்டியது: '+money(loanRecord.total)+
       '<br>ஒவ்வொரு தவணை: '+money(loanRecord.installment)+(loanRecord.installmentCount?'<br>மொத்த தவணைகள்: '+loanRecord.installmentCount:'')+'<br>கடன் வழங்கிய தேதி: '+dateText(loanRecord.loanDate)+
       '<br>முதல் தவணை தேதி: '+dateText(loanRecord.start)+(loanRecord.guarantorName?'<br>ஜாமீன்: '+esc(loanRecord.guarantorName):'')+(loanRecord.guarantorPhone?'<br>ஜாமீன் தொலைபேசி: '+esc(loanRecord.guarantorPhone):'')+'<br><b>மீதமுள்ள கடன்: '+money(balance(loanRecord))+'</b><br>✓ சேமிக்கப்பட்டது</div>';
@@ -1953,7 +1948,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   $('showCalculator').addEventListener('click',()=>{$('calculatorView').classList.remove('finance-hidden');$('financeView').classList.add('finance-hidden');$('showCalculator').classList.add('active');$('showCalculator').classList.remove('secondary');$('showFinance').classList.remove('active');$('showFinance').classList.add('secondary');});
   $('showFinance').addEventListener('click',()=>{$('calculatorView').classList.add('finance-hidden');$('financeView').classList.remove('finance-hidden');$('showFinance').classList.add('active');$('showFinance').classList.remove('secondary');$('showCalculator').classList.remove('active');$('showCalculator').classList.add('secondary');showMainFinanceTab('customers');render();});
-  $('faFrequency').addEventListener('change',()=>{$('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value==='daily');updateFirstDueDate();refreshLoanCustomerOptions();});
+  $('faFrequency').addEventListener('change',()=>{$('faWeekdayWrap').classList.add('finance-hidden');updateFirstDueDate();refreshLoanCustomerOptions();});
   $('faWeekday').addEventListener('change',()=>{updateFirstDueDate();refreshLoanCustomerOptions();});
   document.addEventListener('change',event=>{
     if(event.target && event.target.id==='faDailyCustomerSelect'){
@@ -2003,12 +1998,9 @@ document.addEventListener("DOMContentLoaded",()=>{
   $('faLoanCustomerSearch').addEventListener('input',()=>{
     const typed=$('faLoanCustomerSearch').value.trim().toLocaleLowerCase();
     const freq=normalizeCustomerLoanType($('faFrequency').value);
-    const day=normalizeCustomerWeekday($('faWeekday').value);
     const eligible=db.customers.filter(c=>{
       const t=normalizeCustomerLoanType(c.collectionType);
-      const typeMatches=!t||t===freq||t==='weekly_daily';
-      if(!typeMatches)return false;
-      if(freq==='weekly'||freq==='weekly_daily')return day!==null&&normalizeCustomerWeekday(c.collectionDay)===day;
+      if(freq==='weekly')return t==='weekly'||t==='weekly_daily';
       return t==='daily'||t==='weekly_daily'||!t;
     });
     const match=eligible.find(c=>typed.startsWith((c.name+' – '+c.mobile).trim().toLocaleLowerCase()) || String(c.name||'').trim().toLocaleLowerCase()===typed);
@@ -2017,11 +2009,13 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(visibleList)visibleList.value=match?match.id:'';
     if(match)renderLoanCustomerPreview();
     else { $('faLoanCustomerPreview').classList.add('finance-hidden'); $('faLoanCustomerPreview').innerHTML=''; }
+    updateFirstDueDate();
   });
   $('faLoanCustomer').addEventListener('change',()=>{
     const c=db.customers.find(x=>x.id===$('faLoanCustomer').value);
     $('faLoanCustomerSearch').value=c?(c.name+' – '+c.mobile):'';
     renderLoanCustomerPreview();
+    updateFirstDueDate();
   });
   $('faLoanDate').addEventListener('change',updateFirstDueDate);
   $('faWeekdayWrap').classList.toggle('finance-hidden',$('faFrequency').value!=='weekly');
