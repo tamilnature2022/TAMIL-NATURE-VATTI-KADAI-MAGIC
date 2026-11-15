@@ -580,12 +580,13 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 
 
 <div class="finance-main-tabs" role="tablist" aria-label="Account main sections">
-  <button type="button" class="active" data-main-fin-tab="customers">1. Customer</button>
+  <button type="button" data-main-fin-tab="customers" hidden>1. Customer</button>
   <button type="button" data-main-fin-tab="loans">2. Loan</button>
   <button type="button" data-main-fin-tab="weekly">3. வார வசூல்</button>
   <button type="button" data-main-fin-tab="daily">4. தினசரி வசூல்</button>
 </div>
-<section class="panel finance-hidden" data-fin-panel="customers">
+<div id="faCustomerModuleHome"></div>
+<section class="panel finance-hidden" id="faCustomerModule">
     <h2>👥 Customer Details / வாடிக்கையாளர் விவரம்</h2>
     <form id="faCustomerForm" class="finance-form">
       <label>வாடிக்கையாளர் பெயர்<input id="faName" required maxlength="80" placeholder="பெயர்"></label>
@@ -756,9 +757,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
       <div id="faWeeklyNewLoanMount"></div>
     </div>
     <div data-weekly-view-panel="customer" class="finance-hidden">
-      <h3>வார வசூல் வாடிக்கையாளர்கள் / Weekly Customers</h3>
-      <input id="faWeeklyCustomerTabSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக">
-      <div id="faWeeklyCustomerTabList" class="finance-list"></div>
+      <div id="faWeeklyCustomerModuleMount"></div>
     </div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="daily">
@@ -777,7 +776,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     <div data-daily-view-panel="collect"><div id="faDailyList" class="finance-list"></div></div>
     <div data-daily-view-panel="completed" class="finance-hidden"><h3>முடிந்த தினசரிக் கடன்கள் / Completed</h3><div id="faDailyCompletedList" class="finance-list"></div></div>
     <div data-daily-view-panel="newloan" class="finance-hidden"><h3>புதிய தினசரிக் கடன் / New Daily Loan</h3><div id="faDailyNewLoanMount"></div></div>
-    <div data-daily-view-panel="customer" class="finance-hidden"><h3>தினசரி வசூல் வாடிக்கையாளர்கள் / Daily Customers</h3><input id="faDailyCustomerTabSearch" class="weekly-tab-search" type="search" placeholder="பெயர் / மொபைல் எண் தேடுக"><div id="faDailyCustomerTabList" class="finance-list"></div></div>
+    <div data-daily-view-panel="customer" class="finance-hidden"><div id="faDailyCustomerModuleMount"></div></div>
   </section>
   <section class="panel finance-hidden" data-fin-panel="history">
     <h2>🧾 Payment History / வசூல் வரலாறு</h2>
@@ -1514,17 +1513,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   function renderCollection(freq){
     const isWeekly=freq==='weekly',list=$(isWeekly?'faWeeklyList':'faDailyList');
     const loans=db.loans.filter(l=>(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily'))&&(balance(l)>0||l.id===selectedPaymentLoanId||(freq==='weekly'&&l.id===selectedWeeklyLoanId))&&(freq!=='weekly'||(loanWeekday(l)===selectedWeekday&&weeklyPaidThisCycle(l)<=0.009)));
-    // Reuse the existing 1.Customer records and actions; show customers by their saved collection type.
-    const customerTypeMatches=c=>freq==='weekly'?(c.collectionType==='weekly'||c.collectionType==='weekly_daily'):(c.collectionType==='daily'||c.collectionType==='weekly_daily');
-    const customerRecords=db.customers.filter(c=>customerTypeMatches(c));
-    const customerCards=customerRecords.slice().reverse().map(c=>{
-      const ls=db.loans.filter(l=>l.customerId===c.id&&(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily')));
-      const out=ls.reduce((n,l)=>n+balance(l),0),principal=ls.reduce((n,l)=>n+Number(l.principal||0),0);
-      const status=c.active===false?'செயலற்றவர் / INACTIVE':(out>0.009?'கடன் நிலுவை':'செயல்பாட்டில்');
-      return '<div class="finance-item customer-tab-card" data-search="'+esc((c.name+' '+(c.mobile||'')).toLowerCase())+'" data-customer-id="'+esc(c.id)+'"><div class="finance-row"><h3>'+esc(c.name)+'</h3><span class="finance-pill">'+status+'</span></div><div class="finance-meta">📱 மொபைல்: '+esc(c.mobile||'-')+'<br>கடன் வகை: '+(freq==='weekly'?'வார வசூல்':'தினசரி வசூல்')+(freq==='weekly'&&c.collectionDay!==null&&c.collectionDay!==undefined?'<br>வசூல் கிழமை: '+esc(weekdayNames[Number(c.collectionDay)]||'-'):'')+'<br>கடன் தொகை: '+money(principal)+'<br><b>நிலுவை: '+money(out)+'</b><br>📍 முகவரி: '+esc(c.address||'-')+'</div><div class="customer-actions"><button type="button" data-customer-action="edit" data-id="'+esc(c.id)+'">✏️ Edit / திருத்து</button>'+(c.active===false?'<button type="button" data-customer-action="activate" data-id="'+esc(c.id)+'">♻️ Activate</button>':'<button type="button" class="secondary" data-customer-action="deactivate" data-id="'+esc(c.id)+'">⏸ Deactivate</button>')+'</div></div>';
-    }).join('');
-    const customerList=$(isWeekly?'faWeeklyCustomerTabList':'faDailyCustomerTabList');
-    if(customerList)customerList.innerHTML=customerCards||'<div class="finance-empty">வாடிக்கையாளர்கள் இல்லை.</div>';
+    // Customer management is the original 1.Customer module, physically mounted inside the selected collection Customer tab.
     const completedDaily=$('faDailyCompletedList');
     if(!isWeekly&&completedDaily){const done=customerLoans.filter(l=>balance(l)<=0.009);completedDaily.innerHTML=done.length?done.map(l=>{const c=customer(l.customerId);return '<div class="finance-item"><div class="finance-row"><h3>'+esc(c?.name||'Customer')+'</h3><span class="finance-pill">முடிந்தது</span></div><div class="finance-meta">📱 '+esc(c?.mobile||'-')+'<br>கடன் தொகை: '+money(l.principal)+'<br>செலுத்தியது: '+money(paid(l.id))+'<br><b>நிலுவை: '+money(balance(l))+'</b></div></div>';}).join(''):'<div class="finance-empty">முடிந்த கடன்கள் இல்லை.</div>';}
 
@@ -2113,7 +2102,17 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(node){parent.insertBefore(node,cursor.nextSibling);cursor=node;}
     });
   }
+  const customerModule=$('faCustomerModule'),customerModuleHome=$('faCustomerModuleHome');
+  function mountCustomerModule(kind){
+    if(!customerModule)return;
+    const target=$(kind==='weekly'?'faWeeklyCustomerModuleMount':kind==='daily'?'faDailyCustomerModuleMount':'faCustomerModuleHome');
+    if(target && customerModule.parentNode!==target){target.appendChild(customerModule);}
+    const visible=kind==='weekly'||kind==='daily';
+    customerModule.classList.toggle('finance-hidden',!visible);
+    customerModule.hidden=!visible;
+  }
   function openWeeklyView(view){
+    mountCustomerModule(view==='customer'?'weekly':'home');
     weeklyViewButtons.forEach(b=>{
       const active=b.dataset.weeklyView===view;
       b.classList.toggle('active',active);
@@ -2141,6 +2140,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   weeklyViewButtons.forEach(button=>button.addEventListener('click',()=>openWeeklyView(button.dataset.weeklyView)));
   const dailyViewButtons=[...document.querySelectorAll('[data-daily-view]')],dailyViewPanels=[...document.querySelectorAll('[data-daily-view-panel]')];
   function openDailyView(view){
+    mountCustomerModule(view==='customer'?'daily':'home');
     dailyViewButtons.forEach(b=>{const active=b.dataset.dailyView===view;b.classList.toggle('active',active);b.setAttribute('aria-selected',active?'true':'false');});
     dailyViewPanels.forEach(p=>p.classList.toggle('finance-hidden',p.dataset.dailyViewPanel!==view));
     if(view==='newloan'&&loanForm){$('faDailyNewLoanMount').appendChild(loanForm);[loanPanelNote,loanListHeading,loanList,loanNotice].forEach(n=>{if(n)$('faDailyNewLoanMount').appendChild(n);});if($('faFrequency')){$('faFrequency').value='daily';$('faFrequency').dispatchEvent(new Event('change',{bubbles:true}));}refreshLoanCustomerOptions();renderLoanCustomerPreview();}
@@ -2149,7 +2149,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   dailyViewButtons.forEach(b=>b.addEventListener('click',()=>openDailyView(b.dataset.dailyView)));
   function wireCustomerTabSearch(inputId,listId){const input=$(inputId),list=$(listId);if(!input||!list)return;input.addEventListener('input',()=>{const q=input.value.trim().toLocaleLowerCase();list.querySelectorAll('.customer-tab-card').forEach(card=>card.classList.toggle('finance-hidden',!!q&&!card.dataset.search.includes(q)));});}
-  wireCustomerTabSearch('faWeeklyCustomerTabSearch','faWeeklyCustomerTabList');wireCustomerTabSearch('faDailyCustomerTabSearch','faDailyCustomerTabList');
+  
 
   function wireWeeklySearch(inputId,listId,selector){
     const input=$(inputId),list=$(listId);
