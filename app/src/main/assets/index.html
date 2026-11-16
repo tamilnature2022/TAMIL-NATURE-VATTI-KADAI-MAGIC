@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V253">
+<meta name="app-version" content="V256">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -1721,6 +1721,14 @@ document.addEventListener("DOMContentLoaded",()=>{
       const customerMount=$('faCustomerModule')?.parentElement?.id;
       $('faCustomerFrequency').value=customerMount==='faWeeklyCustomerModuleMount'?'weekly':customerMount==='faDailyCustomerModuleMount'?'daily':(c.collectionType||'');
       $('faCustomerWeekday').value=c.collectionDay===null||c.collectionDay===undefined?'':String(c.collectionDay);
+      // V256: In Weekly Customer Details, keep weekday fixed for new customers,
+      // but allow changing the saved weekday while editing an existing customer.
+      if(customerMount==='faWeeklyCustomerModuleMount'){
+        $('faCustomerWeekday').innerHTML=customerWeekdayOptions;
+        $('faCustomerWeekday').value=c.collectionDay===null||c.collectionDay===undefined?'':String(c.collectionDay);
+        $('faCustomerWeekday').disabled=false;
+        $('faCustomerWeekday').removeAttribute('aria-disabled');
+      }
       $('faCustomerSubmitBtn').textContent='💾 மாற்றங்களை சேமிக்கவும் / Update Customer';
       $('faCustomerCancelEdit').classList.remove('finance-hidden');
       $('faCustomerForm').scrollIntoView({behavior:'smooth',block:'start'});
@@ -2146,6 +2154,8 @@ document.addEventListener("DOMContentLoaded",()=>{
     });
   }
   const customerModule=$('faCustomerModule'),customerModuleHome=$('faCustomerModuleHome');
+  const customerWeekdaySelect=$('faCustomerWeekday');
+  const customerWeekdayOptions=customerWeekdaySelect?customerWeekdaySelect.innerHTML:'';
   function mountCustomerModule(kind){
     if(!customerModule)return;
     const target=$(kind==='weekly'?'faWeeklyCustomerModuleMount':kind==='daily'?'faDailyCustomerModuleMount':'faCustomerModuleHome');
@@ -2168,6 +2178,45 @@ document.addEventListener("DOMContentLoaded",()=>{
       }
       syncCustomerWeekdayField();
     }
+    if(customerWeekdaySelect){
+      if(kind==='weekly'){
+        const day=Number(selectedWeekday);
+        const dayName=weekdayNames[day]||'ஞாயிற்றுக்கிழமை';
+        customerWeekdaySelect.innerHTML='<option value="'+day+'">'+dayName+'</option>';
+        customerWeekdaySelect.value=String(day);
+        customerWeekdaySelect.disabled=true;
+        customerWeekdaySelect.setAttribute('aria-disabled','true');
+      }else if(kind==='daily'){
+        customerWeekdaySelect.innerHTML=customerWeekdayOptions;
+        customerWeekdaySelect.value='';
+        customerWeekdaySelect.disabled=true;
+        customerWeekdaySelect.setAttribute('aria-disabled','true');
+      }else{
+        customerWeekdaySelect.innerHTML=customerWeekdayOptions;
+        customerWeekdaySelect.disabled=false;
+        customerWeekdaySelect.removeAttribute('aria-disabled');
+      }
+      syncCustomerWeekdayField();
+    }
+  }
+  const loanWeekdaySelect=$('faWeekday');
+  const loanWeekdayOptions=loanWeekdaySelect?loanWeekdaySelect.innerHTML:'';
+  function lockNewLoanWeekday(kind){
+    const daySelect=$('faWeekday');
+    if(!daySelect)return;
+    if(kind==='weekly'){
+      const day=Number(selectedWeekday);
+      const dayName=weekdayNames[day]||'ஞாயிற்றுக்கிழமை';
+      daySelect.innerHTML='<option value="'+day+'">'+dayName+'</option>';
+      daySelect.value=String(day);
+      daySelect.disabled=true;
+      daySelect.setAttribute('aria-disabled','true');
+    }else{
+      daySelect.innerHTML=loanWeekdayOptions;
+      daySelect.value='';
+      daySelect.disabled=true;
+      daySelect.setAttribute('aria-disabled','true');
+    }
   }
   function lockNewLoanFrequency(kind){
     const select=$('faFrequency');
@@ -2181,8 +2230,11 @@ document.addEventListener("DOMContentLoaded",()=>{
     select.value=choice[0];
     select.disabled=true;
     select.setAttribute('aria-disabled','true');
+    lockNewLoanWeekday(kind);
     select.dispatchEvent(new Event('change',{bubbles:true}));
+    if(kind==='weekly'&&daySelectAvailable())$('faWeekday').dispatchEvent(new Event('change',{bubbles:true}));
   }
+  function daySelectAvailable(){return !!$('faWeekday');}
   function openWeeklyView(view){
     mountCustomerModule(view==='customer'?'weekly':'home');
     weeklyViewButtons.forEach(b=>{
@@ -2201,7 +2253,6 @@ document.addEventListener("DOMContentLoaded",()=>{
         [loanPanelNote,loanListHeading,loanList,loanNotice].forEach(node=>{if(node)mount.appendChild(node);});
       }
       lockNewLoanFrequency('weekly');
-      if($('faWeekday')){$('faWeekday').value=String(selectedWeekday);$('faWeekday').dispatchEvent(new Event('change',{bubbles:true}));}
       refreshLoanCustomerOptions();
       renderLoanCustomerPreview();
     }else{
