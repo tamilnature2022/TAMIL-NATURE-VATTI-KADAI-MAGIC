@@ -822,10 +822,13 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 <section class="panel finance-hidden" data-fin-panel="weeklyIncome">
   <h2>📊 வார வசூல் விபரம்</h2>
   <div class="weekly-view-tabs" id="faWeeklyIncomeTabs" role="tablist" aria-label="வார வசூல் விபரம்">
-    <button type="button" class="active" data-weekly-income-tab="total" role="tab" aria-selected="true"><span>வார வசூல்</span><small>மொத்த வரவு</small></button>
     <button type="button" data-weekly-income-tab="other" role="tab" aria-selected="false"><span>இதர செலவுகள்</span><small>Other Expenses</small></button>
   </div>
   <div data-weekly-income-panel="total">
+    <div class="ledger-panel weekly-day-income-panel">
+      <h3>வார வசூல் விபரம்</h3>
+      <div id="faWeeklyDayIncomeList" class="finance-list"></div>
+    </div>
     <div class="finance-grid income-summary-grid">
       <div class="finance-stat"><small>வாரக் கடன்கள்</small><strong id="faWeeklyIncomeLoans">0</strong></div>
       <div class="finance-stat"><small>வார வசூல் மொத்த வரவு</small><strong id="faWeeklyIncomeTotal">₹0</strong></div>
@@ -1461,6 +1464,26 @@ document.addEventListener("DOMContentLoaded",()=>{
   let customerNoticeTimer=null;
   let justAddedLoanId=null;
   let loanNoticeTimer=null;
+  function renderWeeklyDayIncome(){
+    const host=$('faWeeklyDayIncomeList'); if(!host)return;
+    const totals=Array(7).fill(0);
+    const daysWithLoans=new Set();
+    db.loans.filter(l=>l.frequency==='weekly'||l.frequency==='weekly_daily').forEach(l=>{
+      const day=loanWeekday(l);
+      if(day>=0&&day<=6){daysWithLoans.add(day);totals[day]+=paid(l.id);}
+    });
+    let order=[0,1,2,3,4,5,6];
+    try{
+      const saved=JSON.parse(localStorage.getItem('tnFinanceWeeklyWeekdayOrderV1')||'null');
+      if(Array.isArray(saved)){
+        const valid=saved.map(Number).filter((v,i,a)=>Number.isInteger(v)&&v>=0&&v<=6&&a.indexOf(v)===i);
+        order=[...valid,...order.filter(v=>!valid.includes(v))];
+      }
+    }catch(e){}
+    const visibleDays=order.filter(day=>daysWithLoans.has(day));
+    host.innerHTML=visibleDays.map(day=>'<div class="finance-item weekly-day-income-row"><div class="finance-row"><h3>'+esc(weekdayNames[day])+'</h3><strong>'+money(totals[day])+'</strong></div></div>').join('');
+  }
+  window.addEventListener('tn-weekday-order-changed',renderWeeklyDayIncome);
   function render(){
     $('faCustomerCount').textContent=db.customers.length;
     $('faLoanCount').textContent=db.loans.filter(l=>balance(l)>0).length;
@@ -1543,6 +1566,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     $('faWeeklyIncomeLoans').textContent=weeklyLoansForIncome.length;
     $('faWeeklyIncomeTotal').textContent=money(weeklyLoansForIncome.reduce((sum,l)=>sum+paid(l.id),0));
     $('faWeeklyIncomeBalance').textContent=money(weeklyLoansForIncome.reduce((sum,l)=>sum+balance(l),0));
+    renderWeeklyDayIncome();
     $('faDailyIncomeLoans').textContent=dailyLoansForIncome.length;
     $('faDailyIncomeTotal').textContent=money(dailyLoansForIncome.reduce((sum,l)=>sum+paid(l.id),0));
     $('faDailyIncomeBalance').textContent=money(dailyLoansForIncome.reduce((sum,l)=>sum+balance(l),0));
@@ -2778,7 +2802,7 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
     clearTimeout(timer);timer=null;
     if(drag){drag.btn.classList.remove('weekday-dragging');}
     getDays().forEach(b=>b.classList.remove('weekday-drop-target'));
-    if(moved){saveOrder();suppressClick=true;setTimeout(()=>suppressClick=false,350);}
+    if(moved){saveOrder();window.dispatchEvent(new Event('tn-weekday-order-changed'));suppressClick=true;setTimeout(()=>suppressClick=false,350);}
     drag=null; moved=false;
   }
   picker.addEventListener('pointerup',finish);
@@ -2803,21 +2827,25 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
   $('faOtherExpenseTotal').textContent=money(rows.reduce((s,x)=>s+Number(x.amount||0),0));
  }
  function reset(){editingId=null;$('faOtherExpenseForm').reset();$('faOtherExpenseDate').value=today();$('faOtherExpenseSubmit').textContent='செலவைச் சேமிக்கவும்';$('faOtherExpenseCancel').classList.add('finance-hidden')}
- document.querySelectorAll('[data-weekly-income-tab]').forEach(b=>b.addEventListener('click',()=>{const name=b.dataset.weeklyIncomeTab;document.querySelectorAll('[data-weekly-income-tab]').forEach(x=>{const on=x===b;x.classList.toggle('active',on);x.setAttribute('aria-selected',String(on))});document.querySelectorAll('[data-weekly-income-panel]').forEach(p=>p.classList.toggle('finance-hidden',p.dataset.weeklyIncomePanel!==name));if(name==='other')render()}));
+ document.querySelectorAll('[data-weekly-income-tab]').forEach(b=>b.addEventListener('click',()=>{const panel=document.querySelector('[data-weekly-income-panel="other"]');const open=panel.classList.contains('finance-hidden');panel.classList.toggle('finance-hidden',!open);b.classList.toggle('active',open);b.setAttribute('aria-selected',String(open));if(open)render()}));
  $('faOtherExpenseForm')?.addEventListener('submit',e=>{e.preventDefault();const detail=$('faOtherExpenseDetail').value.trim(),amount=Number($('faOtherExpenseAmount').value),date=$('faOtherExpenseDate').value;if(!detail||!(amount>0)||!date)return;const db=read();if(!Array.isArray(db.otherExpenses))db.otherExpenses=[];if(editingId){const x=db.otherExpenses.find(x=>String(x.id)===String(editingId));if(x)Object.assign(x,{detail,amount,date});}else db.otherExpenses.push({id:'OE'+Date.now()+Math.random().toString(36).slice(2,7),detail,amount,date,createdAt:new Date().toISOString()});if(write(db)){reset();render()}});
  $('faOtherExpenseList')?.addEventListener('click',e=>{const edit=e.target.closest('[data-other-edit]'),del=e.target.closest('[data-other-delete]');if(edit){const x=(read().otherExpenses||[]).find(x=>String(x.id)===edit.dataset.otherEdit);if(!x)return;editingId=x.id;$('faOtherExpenseDetail').value=x.detail;$('faOtherExpenseAmount').value=x.amount;$('faOtherExpenseDate').value=x.date;$('faOtherExpenseSubmit').textContent='மாற்றத்தைச் சேமிக்கவும்';$('faOtherExpenseCancel').classList.remove('finance-hidden')}if(del){if(!confirm('இந்த இதர செலவு பதிவை நீக்கவா?'))return;const db=read();db.otherExpenses=(db.otherExpenses||[]).filter(x=>String(x.id)!==del.dataset.otherDelete);if(write(db))render()}});
  $('faOtherExpenseCancel')?.addEventListener('click',reset);
- const tabs=$('faWeeklyIncomeTabs');if(tabs){tabs.style.width='100%';tabs.style.gridTemplateColumns='repeat(2,minmax(0,1fr))'}
+ const tabs=$('faWeeklyIncomeTabs');if(tabs){tabs.style.width='100%';tabs.style.gridTemplateColumns='1fr'}
  $('faOtherExpenseDate').value=today();render();
 })();
 </script>
 <style id="v258-weekly-income-tabs-style">
-#faWeeklyIncomeTabs{display:grid!important;width:100%!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+#faWeeklyIncomeTabs{display:grid!important;width:100%!important;grid-template-columns:1fr!important}
 #faWeeklyIncomeTabs button{min-width:0}
 #faOtherExpenseForm{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
 #faOtherExpenseForm label{display:flex;flex-direction:column;gap:5px;font-weight:600}
 #faOtherExpenseForm input{width:100%;min-height:42px;padding:9px;border:1px solid var(--border,#ccd3dc);border-radius:9px}
 #faOtherExpenseForm button{width:100%}
+.weekly-day-income-panel{margin-bottom:16px}
+.weekly-day-income-row{padding:10px 14px}
+.weekly-day-income-row h3{margin:0;font-size:1rem}
+.weekly-day-income-row strong{font-size:1.05rem;color:var(--navy,#17324d)}
 </style>
 
 </body></html>
