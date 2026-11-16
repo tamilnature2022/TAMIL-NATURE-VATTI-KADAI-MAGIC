@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V245">
+<meta name="app-version" content="V246">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -780,9 +780,9 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
         <div class="weekly-cash-stat weekly-mahimai"><small>மகிமை</small><strong id="faDailyCashMahimai">₹0</strong></div>
       </div>
       <div class="weekly-cash-right">
-        <div><span>முன்னிருப்பு</span><strong id="faDailyCashOpening">₹0</strong></div>
+        <div><button type="button" id="faDailyOpenOpeningBalance" class="weekly-expense-open">＋ முன்<br>இருப்பு</button><strong id="faDailyCashOpening">₹0</strong></div>
         <div><span>லோன்</span><strong id="faDailyCashLoan">₹0</strong></div>
-        <div><span>செலவு</span><strong id="faDailyCashExpense">₹0</strong></div>
+        <div><button type="button" id="faDailyOpenExpenseEntry" class="weekly-expense-open">＋ செலவு</button><strong id="faDailyCashExpense">₹0</strong></div>
         <div class="weekly-cash-balance"><span>இருப்பு</span><strong id="faDailyCashBalance">₹0</strong></div>
       </div>
     </div>
@@ -1544,7 +1544,8 @@ document.addEventListener("DOMContentLoaded",()=>{
       const dailyLoanAmount=dailyLoansIssued.reduce((sum,l)=>sum+Number(l.principal||0),0);
       const dailyMahimaiAmount=dailyLoansIssued.reduce((sum,l)=>sum+Number(l.documentCharges||0),0);
       const dailyExpenseAmount=db.expenses.filter(e=>e.date===day).reduce((sum,e)=>sum+Number(e.amount||0),0);
-      const dailyOpeningAmount=0;
+      const dailyOpeningRecord=db.openingBalances.find(x=>x.scope==='daily'&&x.date===day);
+      const dailyOpeningAmount=dailyOpeningRecord?Number(dailyOpeningRecord.amount||0):0;
       const dailyCashBalance=dailyOpeningAmount+collected+dailyMahimaiAmount-dailyLoanAmount-dailyExpenseAmount;
       $('faDailyDate').textContent=dateText(day);
       $('faDailyCashReceived').textContent=money(collected);
@@ -2199,11 +2200,24 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   wireWeeklySearch('faWeeklyCollectSearch','faWeeklyList','.weekly-smart-row');
   wireWeeklySearch('faWeeklyCompletedSearch','faWeeklyCompletedList','.weekly-completed-card');
-  // Weekly opening balance: one opening amount per selected weekly cycle.
+  // Opening balance modal supports both weekly-cycle and daily-date entries.
+  let openingBalanceMode='weekly';
   const openingModal=$('faOpeningBalanceModal');
   function closeOpeningModal(){if(openingModal)openingModal.classList.add('finance-hidden');}
-  if($('faOpenOpeningBalance'))$('faOpenOpeningBalance').addEventListener('click',()=>{
+  function openOpeningBalance(mode){
     if(!openingModal)return;
+    openingBalanceMode=mode;
+    if(mode==='daily'){
+      const day=today();
+      const rec=db.openingBalances.find(x=>x.scope==='daily'&&x.date===day);
+      $('faOpeningBalanceTitle').textContent='＋ தினசரி முன் இருப்பு பதிவு';
+      $('faOpeningBalanceAmount').value=rec?String(rec.amount):'';
+      $('faOpeningBalanceDate').value=day;
+      openingModal.classList.remove('finance-hidden');
+      $('faOpeningBalanceAmount').focus();
+      return;
+    }
+    $('faOpeningBalanceTitle').textContent='＋ முன் இருப்பு பதிவு';
     const day=dateObj(today());day.setDate(day.getDate()-((day.getDay()-selectedWeekday+7)%7));
     const cycleKey=day.getFullYear()+'-'+String(day.getMonth()+1).padStart(2,'0')+'-'+String(day.getDate()).padStart(2,'0');
     const rec=db.openingBalances.find(x=>x.cycleKey===cycleKey);
@@ -2211,7 +2225,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     $('faOpeningBalanceDate').value=cycleKey;
     openingModal.classList.remove('finance-hidden');
     $('faOpeningBalanceAmount').focus();
-  });
+  }
+  if($('faOpenOpeningBalance'))$('faOpenOpeningBalance').addEventListener('click',()=>openOpeningBalance('weekly'));
+  if($('faDailyOpenOpeningBalance'))$('faDailyOpenOpeningBalance').addEventListener('click',()=>openOpeningBalance('daily'));
   if($('faCloseOpeningBalance'))$('faCloseOpeningBalance').addEventListener('click',closeOpeningModal);
   if(openingModal)openingModal.addEventListener('click',e=>{if(e.target.hasAttribute('data-opening-close'))closeOpeningModal();});
   if($('faOpeningBalanceSave'))$('faOpeningBalanceSave').addEventListener('click',()=>{
@@ -2219,17 +2235,20 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(!Number.isFinite(amount)||amount<0){alert('சரியான முன் இருப்பு தொகையை உள்ளிடவும்.');$('faOpeningBalanceAmount').focus();return;}
     if(!date){alert('தேதியைத் தேர்வு செய்யவும்.');return;}
     const d=dateObj(date);const cycleKey=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    const index=db.openingBalances.findIndex(x=>x.cycleKey===cycleKey);
+    const isDaily=openingBalanceMode==='daily';
+    const index=db.openingBalances.findIndex(x=>isDaily?(x.scope==='daily'&&x.date===date):(!x.scope&&x.cycleKey===cycleKey));
     const previous=index>=0?db.openingBalances[index]:null;
-    const record={cycleKey,amount,date,updatedAt:new Date().toISOString()};
+    const record=isDaily?{scope:'daily',date,amount,updatedAt:new Date().toISOString()}:{cycleKey,amount,date,updatedAt:new Date().toISOString()};
     if(index>=0)db.openingBalances[index]=record;else db.openingBalances.push(record);
     if(!save()){if(index>=0)db.openingBalances[index]=previous;else db.openingBalances.pop();return;}
-    renderCollection('weekly');closeOpeningModal();alert('முன் இருப்பு சேமிக்கப்பட்டது.');
+    renderCollection(isDaily?'daily':'weekly');closeOpeningModal();alert('முன் இருப்பு சேமிக்கப்பட்டது.');
   });
   if($('faWeeklyExpenseDate'))$('faWeeklyExpenseDate').addEventListener('change',e=>{e.target.dataset.userEdited='1';});
   const expenseModal=$('faExpenseModal');
   function closeExpenseModal(){if(expenseModal)expenseModal.classList.add('finance-hidden');}
-  if($('faOpenExpenseEntry'))$('faOpenExpenseEntry').addEventListener('click',()=>{if(expenseModal){expenseModal.classList.remove('finance-hidden');$('faWeeklyExpenseDetail').focus();}});
+  function openExpenseEntry(mode){if(expenseModal){expenseModal.dataset.mode=mode;$('faWeeklyExpenseDate').value=mode==='daily'?today():$('faWeeklyExpenseDate').value||today();$('faWeeklyExpenseDate').dataset.userEdited='';expenseModal.classList.remove('finance-hidden');$('faWeeklyExpenseDetail').focus();}}
+  if($('faOpenExpenseEntry'))$('faOpenExpenseEntry').addEventListener('click',()=>openExpenseEntry('weekly'));
+  if($('faDailyOpenExpenseEntry'))$('faDailyOpenExpenseEntry').addEventListener('click',()=>openExpenseEntry('daily'));
   if($('faCloseExpenseEntry'))$('faCloseExpenseEntry').addEventListener('click',closeExpenseModal);
   if(expenseModal)expenseModal.addEventListener('click',e=>{if(e.target.hasAttribute('data-expense-close'))closeExpenseModal();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeExpenseModal();closeOpeningModal();}});
@@ -2241,7 +2260,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     const record={id:'EXP'+Date.now()+Math.random().toString(36).slice(2,6),detail,amount,date,mode,timestamp:new Date().toISOString()};
     db.expenses.push(record);if(!save()){db.expenses.pop();return;}
     $('faWeeklyExpenseDetail').value='';$('faWeeklyExpenseAmount').value='';$('faWeeklyExpenseDate').dataset.userEdited='';
-    renderCollection('weekly');
+    renderCollection(expenseModal?.dataset.mode==='daily'?'daily':'weekly');
     closeExpenseModal();
     alert('செலவு வெற்றிகரமாகச் சேமிக்கப்பட்டது.');
   });
