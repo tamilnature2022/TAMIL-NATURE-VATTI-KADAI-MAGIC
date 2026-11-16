@@ -544,6 +544,10 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 .daily-cash-summary .weekly-cash-stat strong,.daily-cash-summary .weekly-cash-right strong{color:#fff}
 .daily-cash-summary .weekly-cash-right .weekly-cash-balance{border-top-color:#45617e}
 </style>
+
+<style>
+.daily-cash-summary #faDailyDate{display:block!important;visibility:visible!important;opacity:1!important;font-size:1.05em;font-weight:700;color:#dcecff;margin-bottom:6px;min-height:1.2em}
+</style>
 </head>
 <body>
 <span id="faTodayCollected" class="finance-hidden" aria-hidden="true">₹0</span>
@@ -769,13 +773,12 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   </section>
   <section class="panel finance-hidden" data-fin-panel="daily">
     <h2>📆 தினசரி வசூல் / Daily Collection</h2>
-    <div class="finance-grid">
-      <div class="finance-stat"><small>இன்றைய வசூல்</small><strong id="faDailyReceived">₹0</strong></div>
-      <button type="button" data-main-fin-tab="dailyIncome" class="weekly-income-nav">வரவு செலவு</button>
+    <div class="finance-grid" style="grid-template-columns:1fr">
+      <button type="button" data-main-fin-tab="dailyIncome" class="weekly-income-nav" style="width:max-content;max-width:100%">வரவு செலவு</button>
     </div>
     <div class="weekly-cash-summary daily-cash-summary">
       <div class="weekly-cash-left">
-        <div class="weekly-cash-stat"><small id="faDailyDate"></small><small>இன்றைய வசூல்</small><strong id="faDailyCashReceived">₹0</strong></div>
+        <div class="weekly-cash-stat"><small id="faDailyDate" class="daily-current-date">16/11/2026</small><small>இன்றைய வசூல்</small><strong id="faDailyCashReceived">₹0</strong></div>
         <div class="weekly-cash-stat weekly-mahimai"><small>மகிமை</small><strong id="faDailyCashMahimai">₹0</strong></div>
       </div>
       <div class="weekly-cash-right">
@@ -1546,7 +1549,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       const dailyOpeningRecord=db.openingBalances.find(x=>x.scope==='daily'&&x.date===day);
       const dailyOpeningAmount=dailyOpeningRecord?Number(dailyOpeningRecord.amount||0):0;
       const dailyCashBalance=dailyOpeningAmount+collected+dailyMahimaiAmount-dailyLoanAmount-dailyExpenseAmount;
-      if($('faDailyDate'))$('faDailyDate').textContent=dateText(day);
+      if($('faDailyDate'))$('faDailyDate').textContent=String(day).split('-').reverse().join('/');
       $('faDailyCashReceived').textContent=money(collected);
       $('faDailyCashMahimai').textContent=money(dailyMahimaiAmount);
       $('faDailyCashOpening').textContent=money(dailyOpeningAmount);
@@ -1622,7 +1625,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(history)history.innerHTML=cycleExpenses.length?'<b>இந்த வார செலவு பதிவுகள்</b>'+cycleExpenses.slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date)).map(e=>'<div class="weekly-expense-item"><span><b>'+esc(e.detail)+'</b><small>'+dateText(e.date)+' · '+esc(e.mode||'Cash')+'</small></span><strong>'+money(e.amount)+'</strong><button type="button" data-weekly-expense-delete="'+esc(e.id)+'" aria-label="செலவை நீக்கு">×</button></div>').join(''):'<span class="finance-note">இந்த வாரம் செலவு பதிவு இல்லை.</span>';
       const dateInput=$('faWeeklyExpenseDate');if(dateInput&&!dateInput.dataset.userEdited){dateInput.value=weeklyCycleEnd?weeklyCycleEnd.getFullYear()+'-'+String(weeklyCycleEnd.getMonth()+1).padStart(2,'0')+'-'+String(weeklyCycleEnd.getDate()).padStart(2,'0'):today();}
     }
-    $(isWeekly?'faWeeklyReceived':'faDailyReceived').textContent=money(isWeekly?weeklyCycleTotal:collected);
+    if(isWeekly && $('faWeeklyReceived')) $('faWeeklyReceived').textContent=money(weeklyCycleTotal);
     const dueDisplay=$(isWeekly?'faWeeklyDue':'faDailyDue');if(dueDisplay)dueDisplay.textContent=money(dueTotal);
     if(isWeekly && $('faWeekdayCaption'))$('faWeekdayCaption').textContent=weekdayNames[selectedWeekday]+' வசூல்';
     if(isWeekly && $('faWeeklyReceivedLabel')){
