@@ -548,6 +548,15 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 <style>
 .daily-cash-summary #faDailyDate{display:block!important;visibility:visible!important;opacity:1!important;font-size:1.05em;font-weight:700;color:#dcecff;margin-bottom:6px;min-height:1.2em}
 </style>
+
+<style id="v257-weekday-reorder-style">
+/* V257: touch-friendly reorder handles for weekly collection weekdays */
+#faWeekdayPicker [data-weekday]{position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;padding-right:22px!important}
+#faWeekdayPicker [data-weekday]::after{content:'⠿';position:absolute;right:5px;top:4px;font-size:16px;line-height:1;color:currentColor;opacity:.58}
+#faWeekdayPicker [data-weekday].weekday-dragging{opacity:.45;outline:2px dashed #087e8b;transform:scale(.97)}
+#faWeekdayPicker [data-weekday].weekday-drop-target{outline:2px solid #087e8b;outline-offset:1px}
+</style>
+
 </head>
 <body>
 <span id="faTodayCollected" class="finance-hidden" aria-hidden="true">₹0</span>
@@ -2708,6 +2717,57 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 .active-loan-warning{margin-top:10px;padding:12px 14px;border:2px solid #d65b5b;border-radius:12px;background:#fff0f0;color:#a51f1f;line-height:1.55}
 .active-loan-warning b:first-child{font-size:1.02em}
 </style>
+
+
+<script id="v257-weekday-reorder-script">
+/* V257: reorder Sunday-Saturday by long-press and drag; save order on this device. */
+(function(){
+  const picker=document.getElementById('faWeekdayPicker');
+  if(!picker || picker.dataset.reorderReady==='1') return;
+  picker.dataset.reorderReady='1';
+  const key='tnFinanceWeeklyWeekdayOrderV1';
+  const getDays=()=>Array.from(picker.querySelectorAll('button[data-weekday]'));
+  function applySavedOrder(){
+    let saved=[]; try{saved=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}
+    if(!Array.isArray(saved)) return;
+    const byDay=new Map(getDays().map(b=>[String(b.dataset.weekday),b]));
+    saved.forEach(id=>{const b=byDay.get(String(id));if(b)picker.insertBefore(b,picker.querySelector('.weekly-income-nav'));});
+  }
+  function saveOrder(){try{localStorage.setItem(key,JSON.stringify(getDays().map(b=>Number(b.dataset.weekday))))}catch(e){}}
+  applySavedOrder();
+  let timer=null,drag=null,moved=false,suppressClick=false;
+  picker.addEventListener('pointerdown',e=>{
+    const btn=e.target.closest('button[data-weekday]'); if(!btn || e.button!==0) return;
+    moved=false; drag={btn,startX:e.clientX,startY:e.clientY,pointerId:e.pointerId};
+    timer=setTimeout(()=>{
+      if(!drag)return;
+      moved=true; btn.classList.add('weekday-dragging');
+      try{btn.setPointerCapture(e.pointerId)}catch(err){}
+    },260);
+  });
+  picker.addEventListener('pointermove',e=>{
+    if(!drag)return;
+    if(!moved){if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>12){clearTimeout(timer);timer=null;}return;}
+    e.preventDefault();
+    const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('#faWeekdayPicker button[data-weekday]');
+    getDays().forEach(b=>b.classList.toggle('weekday-drop-target',b===target && b!==drag.btn));
+    if(target && target!==drag.btn){
+      const r=target.getBoundingClientRect();
+      picker.insertBefore(drag.btn,e.clientY<r.top+r.height/2?target:target.nextSibling);
+    }
+  },{passive:false});
+  function finish(){
+    clearTimeout(timer);timer=null;
+    if(drag){drag.btn.classList.remove('weekday-dragging');}
+    getDays().forEach(b=>b.classList.remove('weekday-drop-target'));
+    if(moved){saveOrder();suppressClick=true;setTimeout(()=>suppressClick=false,350);}
+    drag=null; moved=false;
+  }
+  picker.addEventListener('pointerup',finish);
+  picker.addEventListener('pointercancel',finish);
+  picker.addEventListener('click',e=>{if(suppressClick && e.target.closest('button[data-weekday]')){e.preventDefault();e.stopImmediatePropagation();}},true);
+})();
+</script>
 
 </body></html>
 <style id="v225-exclusive-finance-tabs">
