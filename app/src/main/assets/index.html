@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V248">
+\g<1>V251\g<3>>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -2149,6 +2149,20 @@ document.addEventListener("DOMContentLoaded",()=>{
     customerModule.classList.toggle('finance-hidden',!visible);
     customerModule.hidden=!visible;
   }
+  function lockNewLoanFrequency(kind){
+    const select=$('faFrequency');
+    if(!select)return;
+    const choices={
+      weekly:['weekly','வார வசூல் / Weekly Collection'],
+      daily:['daily','தினசரி கடன் / Daily Finance']
+    };
+    const choice=choices[kind]||choices.weekly;
+    select.innerHTML='<option value="'+choice[0]+'">'+choice[1]+'</option>';
+    select.value=choice[0];
+    select.disabled=true;
+    select.setAttribute('aria-disabled','true');
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+  }
   function openWeeklyView(view){
     mountCustomerModule(view==='customer'?'weekly':'home');
     weeklyViewButtons.forEach(b=>{
@@ -2166,7 +2180,7 @@ document.addEventListener("DOMContentLoaded",()=>{
         mount.appendChild(loanForm);
         [loanPanelNote,loanListHeading,loanList,loanNotice].forEach(node=>{if(node)mount.appendChild(node);});
       }
-      if($('faFrequency')){$('faFrequency').value='weekly';$('faFrequency').dispatchEvent(new Event('change',{bubbles:true}));}
+      lockNewLoanFrequency('weekly');
       if($('faWeekday')){$('faWeekday').value=String(selectedWeekday);$('faWeekday').dispatchEvent(new Event('change',{bubbles:true}));}
       refreshLoanCustomerOptions();
       renderLoanCustomerPreview();
@@ -2181,7 +2195,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     mountCustomerModule(view==='customer'?'daily':'home');
     dailyViewButtons.forEach(b=>{const active=b.dataset.dailyView===view;b.classList.toggle('active',active);b.setAttribute('aria-selected',active?'true':'false');});
     dailyViewPanels.forEach(p=>p.classList.toggle('finance-hidden',p.dataset.dailyViewPanel!==view));
-    if(view==='newloan'&&loanForm){$('faDailyNewLoanMount').appendChild(loanForm);[loanPanelNote,loanListHeading,loanList,loanNotice].forEach(n=>{if(n)$('faDailyNewLoanMount').appendChild(n);});if($('faFrequency')){$('faFrequency').value='daily';$('faFrequency').dispatchEvent(new Event('change',{bubbles:true}));}refreshLoanCustomerOptions();renderLoanCustomerPreview();}
+    if(view==='newloan'&&loanForm){$('faDailyNewLoanMount').appendChild(loanForm);[loanPanelNote,loanListHeading,loanList,loanNotice].forEach(n=>{if(n)$('faDailyNewLoanMount').appendChild(n);});lockNewLoanFrequency('daily');refreshLoanCustomerOptions();renderLoanCustomerPreview();}
     else {restoreLoanFormHome();}
     if(view==='completed'||view==='customer')renderCollection('daily');
   }
