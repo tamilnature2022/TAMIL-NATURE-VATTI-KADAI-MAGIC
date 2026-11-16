@@ -155,6 +155,11 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 .weekly-cash-left{background:#edf7f6;border-color:#cfe5e2;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
 .weekly-cash-stat small,.weekly-cash-right span{display:block;color:#526575;font-size:12px;line-height:1.4;font-weight:650}
 .weekly-cash-stat strong{display:block;color:#087e83;font-size:clamp(19px,5vw,25px);font-weight:800;margin-top:5px;overflow-wrap:anywhere}
+.weekly-cash-day-totals{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.weekly-cash-day-total-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(218,234,250,.2);font-size:clamp(13px,3.5vw,16px);font-weight:750;line-height:1.35}
+.weekly-cash-day-total-row:last-child{border-bottom:0}
+.weekly-cash-day-total-row strong{font-size:inherit!important;margin:0!important;white-space:nowrap;color:#fff!important}
+.weekly-day-total-stat>small{font-size:clamp(13px,3.5vw,15px)!important}
 .weekly-mahimai{border-top:1px solid #cfe2df;padding-top:10px}
 .weekly-cash-right{background:#f7f8fa;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
 .weekly-cash-right>div{display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -717,7 +722,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
     <p class="finance-note" id="faWeekdayCaption">ஞாயிற்றுக்கிழமை வசூல்</p>
     <div class="weekly-cash-summary weekly-total-above-tabs">
       <div class="weekly-cash-left">
-        <div class="weekly-cash-stat"><small id="faWeeklyReceivedLabel">ஞாயிற்றுக்கிழமை மொத்த வசூல்</small><strong id="faWeeklyReceived">₹0</strong></div>
+        <div class="weekly-cash-stat weekly-day-total-stat"><small>வார வசூல் மொத்த வரவு</small><div id="faWeeklyReceivedList" class="weekly-cash-day-totals"></div></div>
         <div class="weekly-cash-stat weekly-mahimai"><small>மகிமை</small><strong id="faWeeklyMahimai">₹0</strong></div>
       </div>
       <div class="weekly-cash-right">
@@ -1468,9 +1473,20 @@ document.addEventListener("DOMContentLoaded",()=>{
     const host=$('faWeeklyDayIncomeList'); if(!host)return;
     const totals=Array(7).fill(0);
     const daysWithLoans=new Set();
-    db.loans.filter(l=>l.frequency==='weekly'||l.frequency==='weekly_daily').forEach(l=>{
-      const day=loanWeekday(l);
-      if(day>=0&&day<=6){daysWithLoans.add(day);totals[day]+=paid(l.id);}
+    const validWeekday=value=>{
+      if(value===null||value===undefined||value==='')return null;
+      const n=Number(value);return Number.isInteger(n)&&n>=0&&n<=6?n:null;
+    };
+    db.loans.forEach(l=>{
+      const c=customer(l.customerId);
+      const isWeekly=l.frequency==='weekly'||l.frequency==='weekly_daily'||
+        c?.collectionType==='weekly'||c?.collectionType==='weekly_daily';
+      if(!isWeekly)return;
+      // New loan records use loan.weekday; older records may only have customer.collectionDay.
+      let day=validWeekday(l.weekday);
+      if(day===null)day=validWeekday(c?.collectionDay);
+      if(day===null&&l.start)day=dateObj(l.start).getDay();
+      if(day!==null){daysWithLoans.add(day);totals[day]+=paid(l.id);}
     });
     let order=[0,1,2,3,4,5,6];
     try{
@@ -1481,9 +1497,9 @@ document.addEventListener("DOMContentLoaded",()=>{
       }
     }catch(e){}
     const visibleDays=order.filter(day=>daysWithLoans.has(day));
-    host.innerHTML=visibleDays.map(day=>'<div class="finance-item weekly-day-income-row"><div class="finance-row"><h3>'+esc(weekdayNames[day])+'</h3><strong>'+money(totals[day])+'</strong></div></div>').join('');
+    host.innerHTML=visibleDays.map(day=>'<div class="finance-item weekly-day-income-row"><div class="finance-row"><h3>'+esc(weekdayNames[day])+'</h3><strong>'+money(totals[day])+'</strong></div></div>').join('')||'<div class="finance-empty">வாரக் கடன் பதிவுகள் இல்லை.</div>';
   }
-  window.addEventListener('tn-weekday-order-changed',renderWeeklyDayIncome);
+  window.addEventListener('tn-weekday-order-changed',()=>{renderWeeklyDayIncome();try{render();}catch(e){}});
   function render(){
     $('faCustomerCount').textContent=db.customers.length;
     $('faLoanCount').textContent=db.loans.filter(l=>balance(l)>0).length;
@@ -1676,17 +1692,22 @@ document.addEventListener("DOMContentLoaded",()=>{
       if(history)history.innerHTML=cycleExpenses.length?'<b>இந்த வார செலவு பதிவுகள்</b>'+cycleExpenses.slice().sort((a,b)=>(b.timestamp||b.date).localeCompare(a.timestamp||a.date)).map(e=>'<div class="weekly-expense-item"><span><b>'+esc(e.detail)+'</b><small>'+dateText(e.date)+' · '+esc(e.mode||'Cash')+'</small></span><strong>'+money(e.amount)+'</strong><button type="button" data-weekly-expense-delete="'+esc(e.id)+'" aria-label="செலவை நீக்கு">×</button></div>').join(''):'<span class="finance-note">இந்த வாரம் செலவு பதிவு இல்லை.</span>';
       const dateInput=$('faWeeklyExpenseDate');if(dateInput&&!dateInput.dataset.userEdited){dateInput.value=weeklyCycleEnd?weeklyCycleEnd.getFullYear()+'-'+String(weeklyCycleEnd.getMonth()+1).padStart(2,'0')+'-'+String(weeklyCycleEnd.getDate()).padStart(2,'0'):today();}
     }
-    if(isWeekly && $('faWeeklyReceived')) $('faWeeklyReceived').textContent=money(weeklyCycleTotal);
     const dueDisplay=$(isWeekly?'faWeeklyDue':'faDailyDue');if(dueDisplay)dueDisplay.textContent=money(dueTotal);
     if(isWeekly && $('faWeekdayCaption'))$('faWeekdayCaption').textContent=weekdayNames[selectedWeekday]+' வசூல்';
-    if(isWeekly && $('faWeeklyReceivedLabel')){
-      const weekdayTamil=weekdayNames[selectedWeekday];
-      const cycleStartDate=weeklyCycleStart?dateText(weeklyCycleStart.toISOString().slice(0,10)):'';
-      const cycleEndDate=weeklyCycleEnd?dateText(weeklyCycleEnd.toISOString().slice(0,10)):'';
-      $('faWeeklyReceivedLabel').textContent=weekdayTamil+' ('+cycleStartDate+' – '+cycleEndDate+') மொத்த வசூல்';
-    }
 
     if(isWeekly){
+      // Show collection totals for each weekday in the selected weekly cycle.
+      const dayHost=$('faWeeklyReceivedList');
+      if(dayHost){
+        const orderBase=[0,1,2,3,4,5,6];let dayOrder=orderBase.slice();
+        try{const saved=JSON.parse(localStorage.getItem('tnFinanceWeeklyWeekdayOrderV1')||'null');if(Array.isArray(saved)){const valid=saved.map(Number).filter((v,i,a)=>Number.isInteger(v)&&v>=0&&v<=6&&a.indexOf(v)===i);dayOrder=[...valid,...orderBase.filter(v=>!valid.includes(v))];}}catch(e){}
+        const dayLoans=new Set(db.loans.filter(l=>(l.frequency==='weekly'||l.frequency==='weekly_daily')&&loanWeekday(l)!==null&&loanWeekday(l)!==undefined).map(l=>Number(loanWeekday(l))));
+        const dayTotals=dayOrder.filter(day=>dayLoans.has(day)).map(day=>{
+          const total=db.payments.filter(p=>{const d=dateObj(p.date);const loan=db.loans.find(l=>l.id===p.loanId);return loan&&(loan.frequency==='weekly'||loan.frequency==='weekly_daily')&&Number(loanWeekday(loan))===day&&d>=weeklyCycleStart&&d<=weeklyCycleEnd;}).reduce((sum,p)=>sum+Number(p.amount||0),0);
+          return '<div class="weekly-cash-day-total-row"><span>'+esc(weekdayNames[day])+'</span><strong>'+money(total)+'</strong></div>';
+        }).join('');
+        dayHost.innerHTML=dayTotals||'<div class="finance-note">வாரக் கடன் பதிவுகள் இல்லை.</div>';
+      }
       if(!loans.some(l=>l.id===selectedWeeklyLoanId))selectedWeeklyLoanId='';
       const weeklyCards=loans.length?loans.map((l,index)=>{
         const c=customer(l.customerId);
@@ -2413,6 +2434,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(button.dataset.mainFinTab==='weeklyIncome'){
       // Show the Weekly Income & Expense panel alone; weekday collection content stays hidden.
       showMainFinanceTab('weeklyIncome');
+      renderWeeklyDayIncome();
     }
   }));
   openWeeklyView('collect');
