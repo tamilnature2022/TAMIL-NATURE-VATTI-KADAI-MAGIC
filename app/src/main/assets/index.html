@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-\g<1>V251\g<3>>
+<meta name="app-version" content="V253">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -1698,6 +1698,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   function cancelCustomerEdit(){
     editingCustomerId=null;
     $('faCustomerForm').reset();
+    const customerMount=$('faCustomerModule')?.parentElement?.id;
+    if(customerMount==='faWeeklyCustomerModuleMount')$('faCustomerFrequency').value='weekly';
+    else if(customerMount==='faDailyCustomerModuleMount')$('faCustomerFrequency').value='daily';
+    $('faCustomerFrequency').dispatchEvent(new Event('change',{bubbles:true}));
     $('faCustomerSubmitBtn').textContent='➕ வாடிக்கையாளரை சேமிக்கவும்';
     $('faCustomerCancelEdit').classList.add('finance-hidden');
   }
@@ -1714,7 +1718,8 @@ document.addEventListener("DOMContentLoaded",()=>{
       $('faMobile').value=c.mobile||'';
       $('faAadhaar').value=c.aadhaar||'';
       $('faAddress').value=c.address||'';
-      $('faCustomerFrequency').value=c.collectionType||'';
+      const customerMount=$('faCustomerModule')?.parentElement?.id;
+      $('faCustomerFrequency').value=customerMount==='faWeeklyCustomerModuleMount'?'weekly':customerMount==='faDailyCustomerModuleMount'?'daily':(c.collectionType||'');
       $('faCustomerWeekday').value=c.collectionDay===null||c.collectionDay===undefined?'':String(c.collectionDay);
       $('faCustomerSubmitBtn').textContent='💾 மாற்றங்களை சேமிக்கவும் / Update Customer';
       $('faCustomerCancelEdit').classList.remove('finance-hidden');
@@ -2148,6 +2153,21 @@ document.addEventListener("DOMContentLoaded",()=>{
     const visible=kind==='weekly'||kind==='daily';
     customerModule.classList.toggle('finance-hidden',!visible);
     customerModule.hidden=!visible;
+    const frequency=$('faCustomerFrequency');
+    if(frequency){
+      if(kind==='weekly'||kind==='daily'){
+        const choice=kind==='weekly'?['weekly','வார வசூல் / Weekly Collection']:['daily','தின வசூல் / Daily Collection'];
+        frequency.innerHTML='<option value="'+choice[0]+'">'+choice[1]+'</option>';
+        frequency.value=choice[0];
+        frequency.disabled=true;
+        frequency.setAttribute('aria-disabled','true');
+      }else{
+        frequency.disabled=false;
+        frequency.removeAttribute('aria-disabled');
+        frequency.innerHTML='<option value="">கடன் வசூல் வகையைத் தேர்வு செய்யவும்</option><option value="weekly">வார வசூல் / Weekly Collection</option><option value="daily">தின வசூல் / Daily Collection</option><option value="weekly_daily">வார வசூல் + தினசரி / Weekly + Daily</option>';
+      }
+      syncCustomerWeekdayField();
+    }
   }
   function lockNewLoanFrequency(kind){
     const select=$('faFrequency');
