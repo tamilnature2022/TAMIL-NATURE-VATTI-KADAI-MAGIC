@@ -1512,6 +1512,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   window.addEventListener('tn-weekday-order-changed',renderWeeklyDayIncome);
   // Also refresh after the picker itself changes order through other UI actions.
   document.getElementById('faWeekdayPicker')?.addEventListener('sortupdate',renderWeeklyDayIncome);
+  // Ensure the seven weekday rows exist even before the first finance render.
+  renderWeeklyDayIncome();
   function render(){
     $('faCustomerCount').textContent=db.customers.length;
     $('faLoanCount').textContent=db.loans.filter(l=>balance(l)>0).length;
@@ -1988,7 +1990,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   });
   document.addEventListener('click',e=>{
     const mainTab=e.target.closest('[data-main-fin-tab]');
-    if(mainTab){showMainFinanceTab(mainTab.dataset.mainFinTab);return;}
+    if(mainTab){
+      showMainFinanceTab(mainTab.dataset.mainFinTab);
+      if(mainTab.dataset.mainFinTab==='weeklyIncome'){
+        // Refresh the weekly weekday summary whenever its tab is opened.
+        try{renderWeeklyDayIncome();}catch(err){console.error('Weekly weekday summary:',err);}
+      }
+      return;
+    }
     const payBtn=e.target.closest('[data-fa-pay]');
     if(!payBtn)return;
     e.preventDefault();
@@ -2668,6 +2677,10 @@ select:not(.finance-hidden) option{background:#fff!important;color:#17324d!impor
 </style>
 <style>
 .weekly-collection-summary{padding:12px 4px 4px;color:var(--ink,#17324d);font-weight:800}
+.weekly-day-income-panel{display:block!important;min-height:80px}
+#faWeeklyDayIncomeList{display:flex;flex-direction:column;gap:8px;min-height:24px}
+#faWeeklyDayIncomeList .weekly-day-income-row{display:block!important;width:100%;box-sizing:border-box}
+
 .weekly-collection-card{margin:14px 0;padding:16px;border:1px solid var(--line,#d6e0e5);border-radius:15px;background:#fff}
 .weekly-collection-card .finance-payrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;margin-top:14px}
 .weekly-collection-card .finance-payrow input{min-width:0;width:100%;box-sizing:border-box}
