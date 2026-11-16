@@ -149,6 +149,10 @@ input,select,textarea{width:100%;max-width:100%;min-width:0;box-sizing:border-bo
 .loan-payment-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #e1e9ec;font-size:.94em}
 .loan-payment-row strong{white-space:nowrap;color:#087e8b}
 
+.weekly-day-income-caption{margin:8px 0 10px;color:#627283;font-size:14px;font-weight:750}
+.weekly-day-income-row{margin:0 0 8px}
+.weekly-day-income-row .finance-row{align-items:center}
+.weekly-day-income-row h3{margin:0}
 /* V210 weekly collection two-column cash summary */
 .weekly-cash-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px;align-items:stretch}
 .weekly-cash-left,.weekly-cash-right{border:1px solid #dbe5eb;border-radius:16px;padding:12px;background:#fff;min-width:0;box-shadow:0 2px 8px rgba(20,45,65,.05)}
@@ -558,9 +562,11 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 </style>
 
 
-<style>
-.weekly-balance-expense-card .weekly-balance-expense-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.weekly-balance-expense-card .weekly-other-expense-tab{border:0;border-radius:9px;padding:7px 10px;background:#e6eff1;color:#17324d;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+<style id="v266-weekly-expense-tab-alignment">
+/* V266: keep the Other Expenses tab on the same line as the weekly balance label. */
+.weekly-balance-expense-card .weekly-balance-expense-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;column-gap:5px!important;width:100%!important}
+.weekly-balance-expense-card .weekly-balance-expense-head>small{display:block!important;min-width:0!important;margin:0!important;white-space:nowrap!important;font-size:clamp(10px,3vw,13px)!important;line-height:1.2!important}
+.weekly-balance-expense-card .weekly-other-expense-tab{justify-self:end!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;flex:0 0 auto!important;min-width:0!important;max-width:100%!important;border:0;border-radius:9px;padding:6px 7px;background:#e6eff1;color:#17324d;font:inherit;font-size:clamp(9px,2.7vw,11px)!important;line-height:1.2!important;font-weight:800;cursor:pointer}
 .weekly-balance-expense-card .weekly-other-expense-tab.active{background:#087e8b;color:#fff}
 </style>
 </head>
@@ -829,6 +835,7 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   <h2>📊 வரவு - செலவு</h2>
   <div class="ledger-panel weekly-day-income-panel">
     <h3>வார வசூல் விபரம்</h3>
+    <div class="weekly-day-income-caption">இந்த வார வசூல் – கிழமைகள் வரிசை</div>
     <div id="faWeeklyDayIncomeList" class="finance-list"></div>
   </div>
   <div data-weekly-income-panel="total">
@@ -1481,18 +1488,30 @@ document.addEventListener("DOMContentLoaded",()=>{
       const day=loanWeekday(l);
       if(day>=0&&day<=6){daysWithLoans.add(day);totals[day]+=paid(l.id);}
     });
-    let order=[0,1,2,3,4,5,6];
-    try{
-      const saved=JSON.parse(localStorage.getItem('tnFinanceWeeklyWeekdayOrderV1')||'null');
-      if(Array.isArray(saved)){
-        const valid=saved.map(Number).filter((v,i,a)=>Number.isInteger(v)&&v>=0&&v<=6&&a.indexOf(v)===i);
-        order=[...valid,...order.filter(v=>!valid.includes(v))];
-      }
-    }catch(e){}
-    const visibleDays=order.filter(day=>daysWithLoans.has(day));
-    host.innerHTML=visibleDays.map(day=>'<div class="finance-item weekly-day-income-row"><div class="finance-row"><h3>'+esc(weekdayNames[day])+'</h3><strong>'+money(totals[day])+'</strong></div></div>').join('');
+    const orderKey='tnFinanceWeeklyWeekdayOrderV1';
+    let order=[];
+    // The collection weekday picker is the single source of truth: read its
+    // current DOM order so this summary always mirrors drag-and-drop exactly.
+    const picker=document.getElementById('faWeekdayPicker');
+    if(picker){
+      order=Array.from(picker.querySelectorAll('button[data-weekday]'))
+        .map(b=>Number(b.dataset.weekday))
+        .filter((v,i,a)=>Number.isInteger(v)&&v>=0&&v<=6&&a.indexOf(v)===i);
+    }
+    // Fallback to the persisted order if the picker is not yet available.
+    if(!order.length){
+      try{
+        const saved=JSON.parse(localStorage.getItem(orderKey)||'null');
+        if(Array.isArray(saved)) order=saved.map(Number).filter((v,i,a)=>Number.isInteger(v)&&v>=0&&v<=6&&a.indexOf(v)===i);
+      }catch(e){}
+    }
+    order=[...order,...[0,1,2,3,4,5,6].filter(v=>!order.includes(v))];
+    // Show all seven weekdays in precisely the same order as the collection picker.
+    host.innerHTML=order.map(day=>'<div class="finance-item weekly-day-income-row"><div class="finance-row"><h3>'+esc(weekdayNames[day])+'</h3><strong>'+money(totals[day])+'</strong></div></div>').join('');
   }
   window.addEventListener('tn-weekday-order-changed',renderWeeklyDayIncome);
+  // Also refresh after the picker itself changes order through other UI actions.
+  document.getElementById('faWeekdayPicker')?.addEventListener('sortupdate',renderWeeklyDayIncome);
   function render(){
     $('faCustomerCount').textContent=db.customers.length;
     $('faLoanCount').textContent=db.loans.filter(l=>balance(l)>0).length;
