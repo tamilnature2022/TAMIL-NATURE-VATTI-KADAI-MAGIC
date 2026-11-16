@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ta">
 <head>
-<meta name="app-version" content="V244">
+<meta name="app-version" content="V245">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#102a43">
@@ -537,6 +537,13 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
 <style id="v224-weekly-tab-isolation">
 /* V224: tab visibility is controlled by the dedicated weekly navigation handlers. */
 </style>
+<style>
+.daily-cash-summary .weekly-cash-left{background:linear-gradient(145deg,#173e66,#102a43);border:1.5px solid #31577d;color:#fff}
+.daily-cash-summary .weekly-cash-right{background:linear-gradient(145deg,#173e66,#102a43);border:1.5px solid #31577d;color:#fff}
+.daily-cash-summary .weekly-cash-stat small,.daily-cash-summary .weekly-cash-right span{color:#d7e5f2}
+.daily-cash-summary .weekly-cash-stat strong,.daily-cash-summary .weekly-cash-right strong{color:#fff}
+.daily-cash-summary .weekly-cash-right .weekly-cash-balance{border-top-color:#45617e}
+</style>
 </head>
 <body>
 <span id="faTodayCollected" class="finance-hidden" aria-hidden="true">₹0</span>
@@ -763,9 +770,21 @@ input[list]:focus{border-color:#d18b00!important;background-color:#fff8e6!import
   <section class="panel finance-hidden" data-fin-panel="daily">
     <h2>📆 தினசரி வசூல் / Daily Collection</h2>
     <div class="finance-grid">
-      <div class="finance-stat"><small>இன்று பெற்ற தொகை</small><strong id="faDailyReceived">₹0</strong></div>
+      <div class="finance-stat"><small id="faDailyDateLabel">இன்றைய தேதி</small><strong id="faDailyDate">--/--/----</strong><small style="display:block;margin-top:5px">இன்றைய வசூல்</small><strong id="faDailyReceived">₹0</strong></div>
       <div class="finance-stat"><small>இன்றைய தவணை நிலுவை</small><strong id="faDailyDue">₹0</strong></div>
-      <button type="button" data-main-fin-tab="dailyIncome" class="weekly-income-nav">தினசரி வசூல் வரவு செலவு</button>
+      <button type="button" data-main-fin-tab="dailyIncome" class="weekly-income-nav">வரவு செலவு</button>
+    </div>
+    <div class="weekly-cash-summary daily-cash-summary">
+      <div class="weekly-cash-left">
+        <div class="weekly-cash-stat"><small>வசூல்</small><strong id="faDailyCashReceived">₹0</strong></div>
+        <div class="weekly-cash-stat weekly-mahimai"><small>மகிமை</small><strong id="faDailyCashMahimai">₹0</strong></div>
+      </div>
+      <div class="weekly-cash-right">
+        <div><span>முன்னிருப்பு</span><strong id="faDailyCashOpening">₹0</strong></div>
+        <div><span>லோன்</span><strong id="faDailyCashLoan">₹0</strong></div>
+        <div><span>செலவு</span><strong id="faDailyCashExpense">₹0</strong></div>
+        <div class="weekly-cash-balance"><span>இருப்பு</span><strong id="faDailyCashBalance">₹0</strong></div>
+      </div>
     </div>
     <div class="weekly-view-tabs daily-view-tabs" role="tablist" aria-label="தினசரி வசூல் பிரிவுகள்">
       <button type="button" class="active" data-daily-view="collect" role="tab" aria-selected="true"><span>Collect</span><small>வசூல்</small></button>
@@ -1519,6 +1538,22 @@ document.addEventListener("DOMContentLoaded",()=>{
 
     const collected=db.payments.filter(p=>p.date===today() && db.loans.some(l=>l.id===p.loanId&&(freq==='weekly'?(l.frequency==='weekly'||l.frequency==='weekly_daily'):(l.frequency==='daily'||l.frequency==='weekly_daily')))).reduce((a,p)=>a+Number(p.amount),0);
     const dueTotal=loans.reduce((a,l)=>a+Math.min(dueNow(l,freq),balance(l)),0);
+    if(!isWeekly){
+      const day=today();
+      const dailyLoansIssued=db.loans.filter(l=>(l.frequency==='daily'||l.frequency==='weekly_daily')&&(l.loanDate||l.start)===day);
+      const dailyLoanAmount=dailyLoansIssued.reduce((sum,l)=>sum+Number(l.principal||0),0);
+      const dailyMahimaiAmount=dailyLoansIssued.reduce((sum,l)=>sum+Number(l.documentCharges||0),0);
+      const dailyExpenseAmount=db.expenses.filter(e=>e.date===day).reduce((sum,e)=>sum+Number(e.amount||0),0);
+      const dailyOpeningAmount=0;
+      const dailyCashBalance=dailyOpeningAmount+collected+dailyMahimaiAmount-dailyLoanAmount-dailyExpenseAmount;
+      $('faDailyDate').textContent=dateText(day);
+      $('faDailyCashReceived').textContent=money(collected);
+      $('faDailyCashMahimai').textContent=money(dailyMahimaiAmount);
+      $('faDailyCashOpening').textContent=money(dailyOpeningAmount);
+      $('faDailyCashLoan').textContent=money(dailyLoanAmount);
+      $('faDailyCashExpense').textContent=money(dailyExpenseAmount);
+      $('faDailyCashBalance').textContent=money(dailyCashBalance);
+    }
     if(isWeekly){
       const completedLoans=db.loans.filter(l=>(l.frequency==='weekly'||l.frequency==='weekly_daily')&&loanWeekday(l)===selectedWeekday&&weeklyPaidThisCycle(l)>0.009).slice().sort((a,b)=>String(b.loanDate||b.start||'').localeCompare(String(a.loanDate||a.start||'')));
       const completedBox=$('faWeeklyCompletedList');
